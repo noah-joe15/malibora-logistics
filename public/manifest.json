@@ -1,0 +1,15 @@
+{
+    "name": "Malibora Logistics",
+    "short_name": "Malibora",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#1e40af",
+    "theme_color": "#1e40af",
+    "icons": [
+      {
+        "src": "https://cdn-icons-png.flaticon.com/512/709/709743.png", 
+        "sizes": "512x512",
+        "type": "image/png"
+      }
+    ]
+  }
