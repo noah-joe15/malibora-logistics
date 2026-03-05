@@ -38,4 +38,43 @@ async function loadTrucksFromCloud() {
 // 3. Make sure it runs as soon as the page loads!
 window.onload = () => {
     loadTrucksFromCloud();
-};
+};// 4. The function to Send a NEW truck to the Cloud Database
+const truckForm = document.getElementById("truck-form"); // Change if your form has a different ID
+
+if (truckForm) {
+    truckForm.addEventListener("submit", async (event) => {
+        event.preventDefault(); // This stops the page from doing a hard reload
+
+        // Grab the text you typed into the boxes
+        const newPlate = document.getElementById("truck-plate").value; // Change if your input ID is different
+        const newModel = document.getElementById("truck-model").value; // Change if your input ID is different
+
+        try {
+            // Shoot the data to the FastAPI server
+            const response = await fetch(`${API_URL}/api/trucks`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-API-Key": API_KEY 
+                },
+                // Package the data exactly how Python expects it
+                body: JSON.stringify({ plate: newPlate, model: newModel })
+            });
+
+            if (response.ok) {
+                console.log("New truck safely locked in the cloud!");
+                
+                // Clear the text boxes so they are empty for the next truck
+                document.getElementById("truck-plate").value = "";
+                document.getElementById("truck-model").value = "";
+                
+                // Magically refresh the list on the screen so the new truck appears instantly!
+                loadTrucksFromCloud();
+            } else {
+                console.error("The server rejected the truck.");
+            }
+        } catch (error) {
+            console.error("Failed to connect to the cloud:", error);
+        }
+    });
+}
