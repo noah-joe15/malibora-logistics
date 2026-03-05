@@ -138,7 +138,45 @@ def add_inventory(item: InventoryItem, api_key: str = Depends(get_api_key)):
 def check_maintenance(truck: Truck, api_key: str = Depends(get_api_key)):
     print(f"\n🚨 [AUTOMATED SMS SENT TO ADMIN]: Truck {truck.plate} has recorded a new trip and requires immediate mechanical review!\n")
     return {"alert_triggered": True}
+# ---------------------------------------------------------
+# GET ENDPOINTS (Reading from Supabase!)
+# ---------------------------------------------------------
+@app.get("/api/trucks")
+def get_trucks(api_key: str = Depends(get_api_key)):
+    try:
+        with engine.connect() as connection:
+            # Grab all trucks, newest first
+            result = connection.execute(text("SELECT id, plate, model FROM trucks ORDER BY id DESC"))
+            return [dict(row._mapping) for row in result]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/api/drivers")
+def get_drivers(api_key: str = Depends(get_api_key)):
+    try:
+        with engine.connect() as connection:
+            result = connection.execute(text("SELECT id, name FROM drivers ORDER BY id DESC"))
+            return [dict(row._mapping) for row in result]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/expenses")
+def get_expenses(api_key: str = Depends(get_api_key)):
+    try:
+        with engine.connect() as connection:
+            result = connection.execute(text("SELECT id, description, amount, is_fine FROM expenses ORDER BY id DESC"))
+            return [dict(row._mapping) for row in result]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/inventory")
+def get_inventory(api_key: str = Depends(get_api_key)):
+    try:
+        with engine.connect() as connection:
+            result = connection.execute(text("SELECT id, item_type, serial_number, assigned_truck, cost FROM inventory ORDER BY id DESC"))
+            return [dict(row._mapping) for row in result]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 # Serve Uploads & Frontend
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 app.mount("/", StaticFiles(directory=PUBLIC_DIR, html=True), name="public")
