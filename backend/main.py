@@ -12,10 +12,7 @@ app = FastAPI()
 # ---------------------------------------------------------
 # DATABASE SETUP: The Supabase Brain
 # ---------------------------------------------------------
-# Replace YOUR_ACTUAL_PASSWORD with your real database password!
 DATABASE_URL = "postgresql://postgres.yzvjutqqujbpvalelbld:jorsavantcally15@aws-1-eu-central-1.pooler.supabase.com:5432/postgres"
-
-# This creates the physical cable to the Supabase Brain
 engine = create_engine(DATABASE_URL)
 
 @app.get("/test-db")
@@ -37,11 +34,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- FOLDER SETUP FOR IMAGE UPLOADS ---
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PUBLIC_DIR = os.path.join(BASE_DIR, "public")
 UPLOAD_DIR = os.path.join(PUBLIC_DIR, "uploads")
-os.makedirs(UPLOAD_DIR, exist_ok=True) # Creates an 'uploads' folder if it doesn't exist
+os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 # ---------------------------------------------------------
 # SECURITY: API Key Authentication
@@ -76,37 +72,72 @@ class InventoryItem(BaseModel):
     cost: int
 
 # ---------------------------------------------------------
-# API ENDPOINTS (Secured)
+# API ENDPOINTS (Now connected to Supabase!)
 # ---------------------------------------------------------
 @app.post("/api/upload")
 async def upload_receipt(file: UploadFile = File(...), api_key: str = Depends(get_api_key)):
-    # Handles Proof of Delivery and Fuel Receipts
     file_path = os.path.join(UPLOAD_DIR, file.filename)
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
     return {"filename": file.filename, "url": f"/uploads/{file.filename}"}
 
-@app.post("/api/inventory")
-def add_inventory(item: InventoryItem, api_key: str = Depends(get_api_key)):
-    return {"message": f"{item.item_type} added successfully!"}
-
-@app.post("/api/check-maintenance")
-def check_maintenance(truck: Truck, api_key: str = Depends(get_api_key)):
-    # FEATURE 4: Simulated WhatsApp/SMS Alert Trigger
-    print(f"\n🚨 [AUTOMATED SMS SENT TO ADMIN]: Truck {truck.plate} has recorded a new trip and requires immediate mechanical review!\n")
-    return {"alert_triggered": True}
-
 @app.post("/api/trucks")
 def add_truck(truck: Truck, api_key: str = Depends(get_api_key)):
-    return {"message": "Truck added!"}
+    try:
+        with engine.connect() as connection:
+            # Insert the new truck into the Supabase table
+            connection.execute(
+                text("INSERT INTO trucks (plate, model) VALUES (:plate, :model)"),
+                {"plate": truck.plate, "model": truck.model}
+            )
+            connection.commit() # Save the changes
+        return {"message": f"Truck {truck.plate} permanently saved to the cloud!"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/drivers")
 def add_driver(driver: Driver, api_key: str = Depends(get_api_key)):
-    return {"message": "Driver added!"}
+    try:
+        with engine.connect() as connection:
+            connection.execute(
+                text("INSERT INTO drivers (name) VALUES (:name)"),
+                {"name": driver.name}
+            )
+            connection.commit()
+        return {"message": f"Driver {driver.name} permanently saved to the cloud!"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/expenses")
 def add_expense(expense: Expense, api_key: str = Depends(get_api_key)):
-    return {"message": "Expense recorded!"}
+    try:
+        with engine.connect() as connection:
+            connection.execute(
+                text("INSERT INTO expenses (description, amount, is_fine) VALUES (:description, :amount, :is_fine)"),
+                {"description": expense.description, "amount": expense.amount, "is_fine": expense.is_fine}
+            )
+            connection.commit()
+        return {"message": "Expense permanently recorded!"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/inventory")
+def add_inventory(item: InventoryItem, api_key: str = Depends(get_api_key)):
+    try:
+        with engine.connect() as connection:
+            connection.execute(
+                text("INSERT INTO inventory (item_type, serial_number, assigned_truck, cost) VALUES (:item_type, :serial_number, :assigned_truck, :cost)"),
+                {"item_type": item.item_type, "serial_number": item.serial_number, "assigned_truck": item.assigned_truck, "cost": item.cost}
+            )
+            connection.commit()
+        return {"message": f"Inventory {item.item_type} permanently recorded!"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/check-maintenance")
+def check_maintenance(truck: Truck, api_key: str = Depends(get_api_key)):
+    print(f"\n🚨 [AUTOMATED SMS SENT TO ADMIN]: Truck {truck.plate} has recorded a new trip and requires immediate mechanical review!\n")
+    return {"alert_triggered": True}
 
 # Serve Uploads & Frontend
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
