@@ -13,7 +13,7 @@ app = FastAPI()
 # DATABASE SETUP: The Supabase Brain
 # ---------------------------------------------------------
 # Replace YOUR_ACTUAL_PASSWORD with your real database password!
-DATABASE_URL = "postgresql://postgres:jorsavantcally15@db.yzvjutqqujbpvalelbld.supabase.co:5432/postgres"
+DATABASE_URL = "postgresql://postgres.yzvjutqqujbpvalelbld:jorsavantcally15@aws-1-eu-central-1.pooler.supabase.com:5432/postgres"
 
 # This creates the physical cable to the Supabase Brain
 engine = create_engine(DATABASE_URL)
