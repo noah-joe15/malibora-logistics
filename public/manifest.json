@@ -1,15 +1,21 @@
 {
   "name": "Malibora Logistics",
   "short_name": "Malibora",
+  "description": "Enterprise Logistics and Truck Management System",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#111111",
-  "theme_color": "#111111",
+  "background_color": "#1e40af",
+  "theme_color": "#1e40af",
   "icons": [
     {
-      "src": "data:image/svg+xml;charset=UTF-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><defs><linearGradient id='glassGradient' x1='0%25' y1='0%25' x2='0%25' y2='100%25'><stop offset='0%25' style='stop-color:%23ffffff;stop-opacity:0.6'/><stop offset='50%25' style='stop-color:%23ffffff;stop-opacity:0.2'/><stop offset='100%25' style='stop-color:%23ffffff;stop-opacity:0.4'/></linearGradient><filter id='glow'><feGaussianBlur stdDeviation='10' result='coloredBlur'/><feMerge><feMergeNode in='coloredBlur'/><feMergeNode in='SourceGraphic'/></feMerge></filter></defs><rect width='512' height='512' rx='100' fill='%23111111'/><path d='M464 256h-64v-64c0-17.67-14.33-32-32-32H320V96h-64v64h-32c-17.67 0-32 14.33-32 32v64h-64v64h192v32h-64v32H160c-17.67 0-32 14.33-32 32s14.33 32 32 32h192c17.67 0 32-14.33 32-32s-14.33-32-32-32H256v-32h192v-64z' fill='%2322d3ee' filter='url(%23glow)'/><path d='M416 336H96c-17.67 0-32 14.33-32 32s14.33 32 32 32h320c17.67 0 32-14.33 32-32s-14.33-32-32-32z' fill='%2322d3ee'/><path d='M448 240H128V112c0-17.67 14.33-32 32-32h192c17.67 0 32 14.33 32 32v128z' fill='url(%23glassGradient)'/></svg>",
+      "src": "https://dummyimage.com/192x192/1e40af/ffffff.png&text=Truck",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://dummyimage.com/512x512/1e40af/ffffff.png&text=Truck",
       "sizes": "512x512",
-      "type": "image/svg+xml"
+      "type": "image/png"
     }
   ]
 }
