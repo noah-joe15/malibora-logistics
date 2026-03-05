@@ -3,3 +3,5 @@ uvicorn
 pydantic
 python-multipart
 africastalking
+sqlalchemy
+psycopg2-binary

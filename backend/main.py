@@ -3,11 +3,33 @@ from fastapi.security.api_key import APIKeyHeader
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import create_engine, text
 import os
 import shutil
 
 app = FastAPI()
 
+# ---------------------------------------------------------
+# DATABASE SETUP: The Supabase Brain
+# ---------------------------------------------------------
+# Replace YOUR_ACTUAL_PASSWORD with your real database password!
+DATABASE_URL = "postgresql://postgres:jorsavantcally15db.yzvjutqqujbpvalelbld.supabase.co:5432/postgres"
+
+# This creates the physical cable to the Supabase Brain
+engine = create_engine(DATABASE_URL)
+
+@app.get("/test-db")
+def test_database():
+    try:
+        with engine.connect() as connection:
+            result = connection.execute(text("SELECT version();"))
+            return {"status": "SUCCESS!", "message": "The Supabase Brain is officially online."}
+    except Exception as e:
+        return {"status": "FAILED", "error": str(e)}
+
+# ---------------------------------------------------------
+# MIDDLEWARE & FOLDER SETUP
+# ---------------------------------------------------------
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"], 
@@ -32,7 +54,9 @@ def get_api_key(api_key: str = Security(api_key_header)):
         return api_key
     raise HTTPException(status_code=403, detail="Access Denied")
 
-# --- Data Models ---
+# ---------------------------------------------------------
+# DATA MODELS
+# ---------------------------------------------------------
 class Truck(BaseModel):
     plate: str
     model: str
@@ -52,9 +76,8 @@ class InventoryItem(BaseModel):
     cost: int
 
 # ---------------------------------------------------------
-# API Endpoints (Secured)
+# API ENDPOINTS (Secured)
 # ---------------------------------------------------------
-
 @app.post("/api/upload")
 async def upload_receipt(file: UploadFile = File(...), api_key: str = Depends(get_api_key)):
     # Handles Proof of Delivery and Fuel Receipts
