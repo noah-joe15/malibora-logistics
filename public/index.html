@@ -62,6 +62,39 @@
             </form>
             <ul id="inventory-list"></ul>
         </section>
+    </div>
+
+    <script src="/script.js"></script>
+
+</body>
+</html>            </form>
+            <ul id="driver-list"></ul>
+        </section>
+        <hr>
+
+        <section id="expenses" style="padding: 20px;">
+            <h3>Expenses</h3>
+            <form id="expense-form">
+                <input type="text" id="expense-desc" placeholder="Description" required>
+                <input type="number" id="expense-amount" placeholder="Amount" required>
+                <label><input type="checkbox" id="expense-fine"> Is Fine?</label>
+                <button type="submit">Add Expense</button>
+            </form>
+            <ul id="expense-list"></ul>
+        </section>
+        <hr>
+
+        <section id="inventory" style="padding: 20px;">
+            <h3>Inventory</h3>
+            <form id="inventory-form">
+                <input type="text" id="inventory-type" placeholder="Item Type" required>
+                <input type="text" id="inventory-serial" placeholder="Serial Number" required>
+                <input type="text" id="inventory-truck" placeholder="Assigned Truck">
+                <input type="number" id="inventory-cost" placeholder="Cost">
+                <button type="submit">Add to Inventory</button>
+            </form>
+            <ul id="inventory-list"></ul>
+        </section>
     </div> <script src="/script.js"></script>
 
 </body>
