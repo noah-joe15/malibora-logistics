@@ -649,6 +649,10 @@
             </div>
         </div>
         
+        <div class="panel" style="background:#fef2f2; border:1px solid #fca5a5; margin-top:20px;">
+            <h3 class="text-danger" data-key="danger_zone">Danger Zone</h3>
+            <button class="btn btn-outline" style="color:var(--danger); border-color:var(--danger);" onclick="wipeData()" data-key="factory_reset">Factory Reset App</button>
+        </div>
     </div>
 </div>
 
@@ -978,11 +982,23 @@
         const date = document.getElementById('opDate').value;
         if(!truckRaw || !driver || !date) { alert("Fill Truck, Driver, Date"); return; }
 
-        let tx = { id: Date.now(), date, truck: truckRaw, driver, desc: document.getElementById('opDesc').value, method: document.getElementById('opMethod').value, bank: document.getElementById('opMethod').value === 'Bank' ? document.getElementById('opBank').value : '', type: mode };
+        let fileUrl = null;
+        const fileInput = document.getElementById('opFile');
+        if (fileInput.files.length > 0) {
+            const file = fileInput.files[0];
+            fileUrl = await new Promise((resolve) => {
+                const reader = new FileReader(); reader.onloadend = () => resolve(reader.result); reader.readAsDataURL(file);
+            });
+            let formData = new FormData(); formData.append("file", file);
+            fetch('/api/upload', { method: 'POST', headers: {'X-API-Key': API_KEY}, body: formData }).catch(e=>{});
+        }
+
+        let tx = { id: Date.now(), date, truck: truckRaw, driver, desc: document.getElementById('opDesc').value, method: document.getElementById('opMethod').value, bank: document.getElementById('opMethod').value === 'Bank' ? document.getElementById('opBank').value : '', type: mode, fileUrl: fileUrl };
 
         if (mode === 'income') {
             tx.customer = document.getElementById('opCustomer').value || 'Unknown';
             tx.dist = parseFloat(document.getElementById('opDist').value)||0;
+            
             tx.total = parseFloat(document.getElementById('opTotal').value)||0;
             tx.paid = parseFloat(document.getElementById('opPaid').value)||0;
             tx.bal = tx.total - tx.paid;
@@ -1026,7 +1042,7 @@
         }
 
         db.txs.push(tx); saveLocal(); alert("Transaction Saved to Cloud!");
-        document.getElementById('opDesc').value = ''; document.getElementById('opTotal').value = ''; document.getElementById('opPaid').value = ''; document.getElementById('opExpAmount').value = ''; document.getElementById('opLiters').value = ''; document.getElementById('opDist').value = ''; document.getElementById('opCargoType').value = ''; 
+        document.getElementById('opDesc').value = ''; document.getElementById('opTotal').value = ''; document.getElementById('opPaid').value = ''; document.getElementById('opExpAmount').value = ''; document.getElementById('opLiters').value = ''; document.getElementById('opDist').value = ''; document.getElementById('opCargoType').value = ''; document.getElementById('opFile').value = '';
         document.getElementById('routeRows').innerHTML = ''; addRouteLeg(); addRouteLeg();
         
         syncDashboardWithCloud(); 
@@ -1035,13 +1051,14 @@
     async function addInventory() {
         const item = { id: Date.now(), type: document.getElementById('invType').value, serial: document.getElementById('invSerial').value, cost: parseFloat(document.getElementById('invCost').value)||0, truck: document.getElementById('invTruck').value };
         if(!item.serial) return alert("Enter serial number!");
+        db.inventory.push(item);
         
-        try { 
-            await fetch('/api/inventory', { method: 'POST', headers: {'Content-Type': 'application/json', 'X-API-Key': API_KEY}, body: JSON.stringify({item_type: item.type, serial_number: item.serial, assigned_truck: item.truck, cost: item.cost, company_id: currentCompanyId}) }); 
-        } catch(e){}
-
-        alert("Inventory Added to Cloud!"); document.getElementById('invSerial').value = ''; document.getElementById('invCost').value = '';
-        syncDashboardWithCloud(); 
+        if(item.truck !== 'Warehouse' && item.cost > 0) {
+            db.txs.push({ id: Date.now()+1, date: new Date().toISOString().slice(0,10), truck: item.truck, driver: "System Auto-Log", desc: `Inventory Applied: ${item.type} (Serial: ${item.serial})`, type: 'expense', cat: item.type, amount: item.cost });
+        }
+        
+        try { fetch('/api/inventory', { method: 'POST', headers: {'Content-Type': 'application/json', 'X-API-Key': API_KEY}, body: JSON.stringify({item_type: item.type, serial_number: item.serial, assigned_truck: item.truck, cost: item.cost, company_id: currentCompanyId}) }).catch(e=>{}); } catch(e){}
+        saveLocal(); renderAll(); alert("Inventory Added!"); document.getElementById('invSerial').value = ''; document.getElementById('invCost').value = '';
     }
 
     function endTrip(txId) {
