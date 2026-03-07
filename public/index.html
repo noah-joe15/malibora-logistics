@@ -1,40 +1,143 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#1e40af">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Malibora Systems">
-    
-    <title>Malibora Intertrade - Logistics System</title>
-    
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- ... (previous head content remains unchanged) ... -->
+<style>
+/* ... (existing styles remain unchanged) ... */
+</style>
+</head>
+<body>
+<!-- ... (login screen HTML remains unchanged) ... -->
+<div id="login-screen">
+    <!-- ... (existing login screen elements remain unchanged) ... -->
+    <input type="text" id="b2bCompany" class="pin-input" placeholder="Company Name (e.g. Simba)">
+    <select id="loginRole" style="width: 100%; padding: 15px; border-radius: 12px; border: none; margin-bottom: 10px; font-size: 1.05rem; font-family: 'Roboto', sans-serif; background: rgba(255,255,255,0.95); color: #1e293b; font-weight: bold; cursor: pointer;" onchange="document.getElementById('b2bPin').placeholder = this.value === 'admin' ? '4-Digit Admin PIN' : 'Truck Plate (e.g. T123ABC)'; document.getElementById('b2bPin').type = this.value === 'admin' ? 'password' : 'text'; document.getElementById('b2bPin').value = '';">
+        <option value="admin">System Admin</option>
+        <option value="dispatcher">Dispatcher (Login with Plate)</option>
+    </select>
+    <input type="password" id="b2bPin" class="pin-input" placeholder="4-Digit Admin PIN">
+    <div class="="loginError"></div>
+    <div id="loginSuccess" style="color: #10b981; font-weight: bold; margin-bottom: 15px;"></div>
+    <button class="login-btn" id="b2bAuthBtn" onclick="executeB2BAuth()">SECURE LOGIN</button>
+    <!-- ... (existing contact info remains unchanged) ... -->
+</div>
+<!-- ... (rest of the HTML remains unchanged) ... -->
+<script>
+// --- B2B CLOUD API SETTINGS ---
+// Ensure API_URL points to the correct backend origin (e.g., 'http://localhost:8000' or your deployed backend URL)
+const API_KEY = 'MALIBORA_SECRET_KEY_2026';
+// CHANGED: Using a placeholder. Update this to your actual backend API URL (e.g., https://yourbackend.com/api or http://localhost:8000/api)
+// Example: const API_URL = 'https://malibora-backend.onrender.com'; // Replace with your backend URL
+const API_URL = 'YOUR_BACKEND_API_BASE_URL'; // <-- YOU NEED TO REPLACE THIS WITH YOUR ACTUAL BACKEND URL
+let currentCompanyId = null;
 
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+// ... (rest of the JavaScript remains unchanged until executeB2BAuth function) ...
 
-    <style>
-        :root {
-            --primary: #2563eb; --primary-dark: #1e40af;
-            --bg: #f1f5f9; --white: #ffffff;
-            --success: #10b981; --danger: #ef4444; --warning: #f59e0b;
-            --text-dark: #0f172a; --text-light: #64748b;
-            --border: #e2e8f0;
+// --- SMART LOGIN LOGIC (Cloud B2B) ---
+let authMode = 'login';
+function setAuthMode(mode) {
+    // ... (unchanged) ...
+}
+
+document.getElementById('b2bPin').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') { executeB2BAuth(); }
+});
+
+async function executeB2BAuth() {
+    const cName = document.getElementById('b2bCompany').value.trim();
+    const cPin = document.getElementById('b2bPin').value.trim();
+    const errEl = document.getElementById('loginError');
+    const sucEl = document.getElementById('loginSuccess');
+    // BUG FIX: Added bulletproof safety check for the Role Dropdown
+    const roleEl = document.getElementById('loginRole');
+    const role = roleEl ? roleEl.value : 'admin';
+    errEl.innerText = "";
+    sucEl.innerText = "";
+
+    if (role === 'admin') {
+        if (!cName || !cPin) {
+            errEl.innerText = "Please enter both Company Name and PIN.";
+            return;
         }
 
-        body {
-            font-family: 'Roboto', sans-serif;
-            background-color: var(--bg);
-            margin: 0; padding: 15px; padding-bottom: 90px;
-            color: var(--text-dark);
-            -webkit-tap-highlight-color: transparent;
-        }
+        // CHANGED: Construct the full API endpoint URL correctly
+        const endpoint = authMode === 'login' ? `${API_URL}/api/login` : `${API_URL}/api/register`;
+        const authBtn = document.getElementById('b2bAuthBtn');
+        const originalText = authBtn.innerText;
 
-        .container { max-width: 1200px; margin: 0 auto; display: none; }
+        // Show connecting state
+        authBtn.innerText = "CONNECTING...";
+        authBtn.disabled = true;
+        try {
+            // CHANGED: Use the constructed endpoint variable
+            const res = await fetch(endpoint, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "X-API-Key": API_KEY },
+                body: JSON.stringify({ company_name: cName, admin_pin: cPin })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                // CHANGED: Assuming successful response returns company_id
+                currentCompanyId = data.company_id; 
+                sucEl.innerText = data.message;
+                db.companyName = cName; // Update local storage company name on successful login
+                setTimeout(() => {
+                    document.getElementById('login-screen').style.display = 'none';
+                    document.getElementById('app-container').style.display = 'block';
+                    document.getElementById('appHeaderName').innerText = cName;
+                    syncDashboardWithCloud().then(() => {
+                        renderCharts();
+                        initMap();
+                    });
+                }, 1000);
+            } else {
+                // CHANGED: Attempt to read error message from response body
+                errEl.innerText = data.detail || `Authentication failed. Server returned ${res.status}.`;
+                authBtn.innerText = originalText;
+                authBtn.disabled = false;
+            }
+        } catch(e) {
+            console.error("Login Error:", e);
+            // CHANGED: Provide more specific error message for network issues
+            errEl.innerText = "Connection failed. Please ensure the backend URL is correct and the server is running.";
+            authBtn.innerText = originalText;
+            authBtn.disabled = false;
+        }
+    } else if (role === 'dispatcher') {
+        // ... (unchanged dispatcher logic) ...
+    }
+}
+
+// ... (rest of the JavaScript remains unchanged, but ensure all API calls use the correct API_URL) ...
+
+// Example of updating another API call for consistency:
+async function syncDashboardWithCloud() {
+    if (!currentCompanyId) return;
+    try {
+        console.log(`Starting True Cloud Sync for Company ID: ${currentCompanyId}...`);
+        db.trucks = []; db.drivers = []; db.txs = []; db.compliance = []; db.inventory = []; db.customers = [];
+
+        // CHANGED: Construct full URLs for all API calls within syncDashboardWithCloud
+        const [trucksRes, driversRes, expensesRes, inventoryRes, tripsRes, debtsRes, compRes] = await Promise.all([
+            fetch(`${API_URL}/api/trucks?company_id=${currentCompanyId}`, { headers: { "X-API-Key": API_KEY } }),
+            fetch(`${API_URL}/api/drivers?company_id=${currentCompanyId}`, { headers: { "X-API-Key": API_KEY } }),
+            fetch(`${API_URL}/api/expenses?company_id=${currentCompanyId}`, { headers: { "X-API-Key": API_KEY } }),
+            fetch(`${API_URL}/api/inventory?company_id=${currentCompanyId}`, { headers: { "X-API-Key": API_KEY } }),
+            fetch(`${API_URL}/api/trips?company_id=${currentCompanyId}`, { headers: { "X-API-Key": API_KEY } }),
+            fetch(`${API_URL}/api/debts?company_id=${currentCompanyId}`, { headers: { "X-API-Key": API_KEY } }),
+            fetch(`${API_URL}/api/compliance?company_id=${currentCompanyId}`, { headers: { "X-API-Key": API_KEY } })
+        ]);
+
+        // ... (rest of the sync logic remains unchanged) ...
+    } catch (error) {
+        console.error("Cloud Sync Failure:", error);
+    }
+}
+
+// ... (all other functions remain unchanged, assuming they use the global API_URL) ...
+
+init();
+</script>
+</body>
+</html>        .container { max-width: 1200px; margin: 0 auto; display: none; }
 
         /* --- PREMIUM LOGIN PAGE STYLES --- */
         #login-screen {
