@@ -51,10 +51,11 @@ def get_api_key(api_key: str = Security(api_key_header)):
     raise HTTPException(status_code=403, detail="Access Denied")
 
 # ---------------------------------------------------------
-# DATA MODELS (Now with company_id!)
+# DATA MODELS (Now with company_id and Auth!)
 # ---------------------------------------------------------
-class Company(BaseModel):
+class CompanyAuth(BaseModel):
     company_name: str
+    admin_pin: str
 
 class Truck(BaseModel):
     plate: str
@@ -79,30 +80,50 @@ class InventoryItem(BaseModel):
     company_id: int
 
 # ---------------------------------------------------------
-# API ENDPOINTS (The B2B Multi-Tenant Logic)
+# AUTH ENDPOINTS: Register & Login (SaaS Ready)
 # ---------------------------------------------------------
-@app.post("/api/companies")
-def register_or_login(company: Company, api_key: str = Depends(get_api_key)):
+@app.post("/api/register")
+def register_company(auth: CompanyAuth, api_key: str = Depends(get_api_key)):
     try:
         with engine.connect() as connection:
-            # Check if company already exists
-            result = connection.execute(
+            # 1. Check if name is already taken by someone else
+            check = connection.execute(
                 text("SELECT id FROM companies WHERE company_name = :name"),
-                {"name": company.company_name}
+                {"name": auth.company_name}
+            ).fetchone()
+            
+            if check:
+                raise HTTPException(status_code=400, detail="Company name is already taken!")
+            
+            # 2. Create the new company with their secure PIN
+            res = connection.execute(
+                text("INSERT INTO companies (company_name, admin_pin) VALUES (:name, :pin) RETURNING id"),
+                {"name": auth.company_name, "pin": auth.admin_pin}
+            )
+            new_id = res.fetchone()[0]
+            connection.commit()
+            return {"message": f"Account created for {auth.company_name}!", "company_id": new_id}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/login")
+def login_company(auth: CompanyAuth, api_key: str = Depends(get_api_key)):
+    try:
+        with engine.connect() as connection:
+            # Strictly verify Name AND Pin match the database
+            result = connection.execute(
+                text("SELECT id FROM companies WHERE company_name = :name AND admin_pin = :pin"),
+                {"name": auth.company_name, "pin": auth.admin_pin}
             ).fetchone()
             
             if result:
-                # Login successful
-                return {"message": f"Welcome back, {company.company_name}!", "company_id": result[0]}
+                return {"message": f"Welcome back, {auth.company_name}!", "company_id": result[0]}
             else:
-                # Register new company
-                res = connection.execute(
-                    text("INSERT INTO companies (company_name) VALUES (:name) RETURNING id"),
-                    {"name": company.company_name}
-                )
-                new_id = res.fetchone()[0]
-                connection.commit()
-                return {"message": f"New account created for {company.company_name}!", "company_id": new_id}
+                raise HTTPException(status_code=401, detail="Invalid Company Name or PIN!")
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
