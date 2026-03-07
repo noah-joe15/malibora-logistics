@@ -1,387 +1,111 @@
-const API_KEY = "MALIBORA_SECRET_KEY_2026";
-const API_URL = window.location.origin;
-
-// This is the master memory variable. It stays empty until someone logs in!
-let currentCompanyId = null; 
-
 // ==========================================
-// 0. B2B LOGIN SYSTEM
+// THE CLOUD SYNCHRONIZER (B2B SaaS Engine)
 // ==========================================
-const loginBtn = document.getElementById("login-btn");
-if (loginBtn) {
-    loginBtn.addEventListener("click", async () => {
-        const companyName = document.getElementById("company-name").value;
-        if (!companyName) {
-            alert("Please enter a company name!");
-            return;
-        }
+// This script runs in the background and silently syncs the cloud data
+// with the beautiful local dashboard UI.
 
-        try {
-            const response = await fetch(`${API_URL}/api/companies`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json", "X-API-Key": API_KEY },
-                body: JSON.stringify({ company_name: companyName })
-            });
+// These variables are already defined in index.html, but we reference them here
+// const API_KEY = 'MALIBORA_SECRET_KEY_2026';
+// const API_URL = window.location.origin;
+// let currentCompanyId = null; 
+// let db = { ... }
+// function renderAll() { ... }
 
-            const data = await response.json();
-            
-            if (response.ok) {
-                // Save the company ID into the app's memory
-                currentCompanyId = data.company_id;
-                document.getElementById("login-message").textContent = data.message;
-                
-                // Wait 1 second, then hide the login screen and show the main dashboard
-                setTimeout(() => {
-                    document.getElementById("login-screen").style.display = "none";
-                    document.getElementById("main-app").style.display = "block";
-                    
-                    // NOW load the data specifically for this company!
-                    loadTrucksFromCloud();
-                    loadDriversFromCloud();
-                    loadExpensesFromCloud();
-                    loadInventoryFromCloud();
-                }, 1000);
-            }
-        } catch (error) {
-            console.error("Login failed:", error);
-        }
-    });
-}
+/**
+ * MASTER CLOUD SYNC FUNCTION
+ * This is called automatically from index.html right after a successful login.
+ */
+async function syncDashboardWithCloud() {
+    if (!currentCompanyId) {
+        console.error("Cannot sync: No company logged in.");
+        return;
+    }
 
-// ==========================================
-// 1. TRUCKS CABIN
-// ==========================================
-async function loadTrucksFromCloud() {
     try {
-        const response = await fetch(`${API_URL}/api/trucks?company_id=${currentCompanyId}`, { method: "GET", headers: { "X-API-Key": API_KEY } });
-        const trucks = await response.json();
-        const truckListElement = document.getElementById("truck-list");
-        if (truckListElement) {
-            truckListElement.innerHTML = ""; 
-            trucks.forEach(truck => {
-                const li = document.createElement("li");
-                li.textContent = `Plate: ${truck.plate} | Model: ${truck.model}`;
-                truckListElement.appendChild(li);
-            });
-        }
-    } catch (error) { console.error("Database connection failed:", error); }
-}
+        console.log(`Starting Cloud Sync for Company ID: ${currentCompanyId}...`);
 
-const truckForm = document.getElementById("truck-form");
-if (truckForm) {
-    truckForm.addEventListener("submit", async (event) => {
-        event.preventDefault();
-        const newPlate = document.getElementById("truck-plate").value;
-        const newModel = document.getElementById("truck-model").value;
+        // 1. Fetch all data in parallel for maximum speed
+        const [trucksRes, driversRes, expensesRes, inventoryRes] = await Promise.all([
+            fetch(`${API_URL}/api/trucks?company_id=${currentCompanyId}`, { headers: { "X-API-Key": API_KEY } }),
+            fetch(`${API_URL}/api/drivers?company_id=${currentCompanyId}`, { headers: { "X-API-Key": API_KEY } }),
+            fetch(`${API_URL}/api/expenses?company_id=${currentCompanyId}`, { headers: { "X-API-Key": API_KEY } }),
+            fetch(`${API_URL}/api/inventory?company_id=${currentCompanyId}`, { headers: { "X-API-Key": API_KEY } })
+        ]);
 
-        try {
-            const response = await fetch(`${API_URL}/api/trucks`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json", "X-API-Key": API_KEY },
-                body: JSON.stringify({ plate: newPlate, model: newModel, company_id: currentCompanyId })
-            });
-            if (response.ok) {
-                document.getElementById("truck-plate").value = "";
-                document.getElementById("truck-model").value = "";
-                loadTrucksFromCloud();
-            }
-        } catch (error) { console.error("Failed to connect:", error); }
-    });
-}
+        // 2. Unpack the JSON data
+        const cloudTrucks = await trucksRes.json();
+        const cloudDrivers = await driversRes.json();
+        const cloudExpenses = await expensesRes.json();
+        const cloudInventory = await inventoryRes.json();
 
-// ==========================================
-// 2. DRIVERS CABIN
-// ==========================================
-async function loadDriversFromCloud() {
-    try {
-        const response = await fetch(`${API_URL}/api/drivers?company_id=${currentCompanyId}`, { method: "GET", headers: { "X-API-Key": API_KEY } });
-        const data = await response.json();
-        const listElement = document.getElementById("driver-list");
-        if (listElement) {
-            listElement.innerHTML = "";
-            data.forEach(d => {
-                const li = document.createElement("li");
-                li.textContent = `Name: ${d.name}`;
-                listElement.appendChild(li);
-            });
-        }
-    } catch (error) { console.error("Database connection failed:", error); }
-}
-
-const driverForm = document.getElementById("driver-form");
-if (driverForm) {
-    driverForm.addEventListener("submit", async (event) => {
-        event.preventDefault();
-        const newName = document.getElementById("driver-name").value;
-        try {
-            const response = await fetch(`${API_URL}/api/drivers`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json", "X-API-Key": API_KEY },
-                body: JSON.stringify({ name: newName, company_id: currentCompanyId })
-            });
-            if (response.ok) {
-                document.getElementById("driver-name").value = "";
-                loadDriversFromCloud();
-            }
-        } catch (error) { console.error("Failed to connect:", error); }
-    });
-}
-
-// ==========================================
-// 3. EXPENSES CABIN
-// ==========================================
-async function loadExpensesFromCloud() {
-    try {
-        const response = await fetch(`${API_URL}/api/expenses?company_id=${currentCompanyId}`, { method: "GET", headers: { "X-API-Key": API_KEY } });
-        const data = await response.json();
-        const listElement = document.getElementById("expense-list");
-        if (listElement) {
-            listElement.innerHTML = "";
-            data.forEach(e => {
-                const li = document.createElement("li");
-                li.textContent = `Desc: ${e.description} | Amount: ${e.amount} | Fine: ${e.is_fine}`;
-                listElement.appendChild(li);
-            });
-        }
-    } catch (error) { console.error("Database connection failed:", error); }
-}
-
-const expenseForm = document.getElementById("expense-form");
-if (expenseForm) {
-    expenseForm.addEventListener("submit", async (event) => {
-        event.preventDefault();
-        const newDesc = document.getElementById("expense-desc").value;
-        const newAmount = parseInt(document.getElementById("expense-amount").value);
-        const newIsFine = document.getElementById("expense-fine") ? document.getElementById("expense-fine").checked : false;
+        // 3. Translate Cloud Data into Dashboard Format
         
-        try {
-            const response = await fetch(`${API_URL}/api/expenses`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json", "X-API-Key": API_KEY },
-                body: JSON.stringify({ description: newDesc, amount: newAmount, is_fine: newIsFine, company_id: currentCompanyId })
-            });
-            if (response.ok) {
-                document.getElementById("expense-desc").value = "";
-                document.getElementById("expense-amount").value = "";
-                loadExpensesFromCloud();
-            }
-        } catch (error) { console.error("Failed to connect:", error); }
-    });
-}
+        // A. Format Trucks
+        db.trucks = cloudTrucks.map(t => ({
+            id: t.id,
+            plate: t.plate,
+            model: t.model,
+            trailers: 0, // Defaulting for now
+            interval: 5000, 
+            odo: 0, 
+            lastServiceOdo: 0
+        }));
 
-// ==========================================
-// 4. INVENTORY CABIN
-// ==========================================
-async function loadInventoryFromCloud() {
-    try {
-        const response = await fetch(`${API_URL}/api/inventory?company_id=${currentCompanyId}`, { method: "GET", headers: { "X-API-Key": API_KEY } });
-        const data = await response.json();
-        const listElement = document.getElementById("inventory-list");
-        if (listElement) {
-            listElement.innerHTML = "";
-            data.forEach(i => {
-                const li = document.createElement("li");
-                li.textContent = `Item: ${i.item_type} | SN: ${i.serial_number} | Truck: ${i.assigned_truck} | Cost: ${i.cost}`;
-                listElement.appendChild(li);
-            });
-        }
-    } catch (error) { console.error("Database connection failed:", error); }
-}
+        // B. Format Drivers
+        db.drivers = cloudDrivers.map(d => ({
+            id: d.id,
+            name: d.name,
+            customer: "", 
+            truck: "" 
+        }));
 
-const inventoryForm = document.getElementById("inventory-form");
-if (inventoryForm) {
-    inventoryForm.addEventListener("submit", async (event) => {
-        event.preventDefault();
-        const newType = document.getElementById("inventory-type").value;
-        const newSerial = document.getElementById("inventory-serial").value;
-        const newTruck = document.getElementById("inventory-truck").value;
-        const newCost = parseInt(document.getElementById("inventory-cost").value);
+        // C. Format Inventory
+        db.inventory = cloudInventory.map(i => ({
+            id: i.id,
+            type: i.item_type,
+            serial: i.serial_number,
+            truck: i.assigned_truck,
+            cost: i.cost
+        }));
+
+        // D. Format Expenses (Adding them to the transaction history)
+        // We will filter out old pure-cloud expenses to prevent duplicates, then inject fresh ones
+        db.txs = db.txs.filter(tx => tx.type !== 'expense' || !tx.isCloudSync); 
         
-        try {
-            const response = await fetch(`${API_URL}/api/inventory`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json", "X-API-Key": API_KEY },
-                body: JSON.stringify({ item_type: newType, serial_number: newSerial, assigned_truck: newTruck, cost: newCost, company_id: currentCompanyId })
-            });
-            if (response.ok) {
-                document.getElementById("inventory-type").value = "";
-                document.getElementById("inventory-serial").value = "";
-                document.getElementById("inventory-truck").value = "";
-                document.getElementById("inventory-cost").value = "";
-                loadInventoryFromCloud();
+        const expenseTxs = cloudExpenses.map(e => {
+            // Try to split the Python description back into Category and Desc
+            let cat = "Other";
+            let desc = e.description;
+            if(e.description && e.description.includes(" - ")) {
+                let parts = e.description.split(" - ");
+                cat = parts[0];
+                desc = parts.slice(1).join(" - ");
             }
-        } catch (error) { console.error("Failed to connect:", error); }
-    });
-}
-// 3. Make sure it runs as soon as the page loads!
-// 3. Make sure ALL data loads as soon as the page opens!
-window.onload = () => {
-    loadTrucksFromCloud();
-    loadDriversFromCloud();
-    loadExpensesFromCloud();
-    loadInventoryFromCloud();
-};
-// 4. The function to Send a NEW truck to the Cloud Database
-const truckForm = document.getElementById("truck-form"); // Change if your form has a different ID
 
-if (truckForm) {
-    truckForm.addEventListener("submit", async (event) => {
-        event.preventDefault(); // This stops the page from doing a hard reload
+            return {
+                id: e.id,
+                date: new Date().toISOString().slice(0, 10), // Default to today since we didn't store date in phase 1
+                truck: "N/A", // Defaulting for simple expenses
+                driver: "System",
+                desc: desc,
+                cat: cat,
+                amount: e.amount,
+                type: 'expense',
+                isCloudSync: true // Marker so we know it came from Supabase
+            };
+        });
 
-        // Grab the text you typed into the boxes
-        const newPlate = document.getElementById("truck-plate").value; // Change if your input ID is different
-        const newModel = document.getElementById("truck-model").value; // Change if your input ID is different
+        // Merge cloud expenses into the dashboard history
+        db.txs = [...db.txs, ...expenseTxs];
 
-        try {
-            // Shoot the data to the FastAPI server
-            const response = await fetch(`${API_URL}/api/trucks`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-API-Key": API_KEY 
-                },
-                // Package the data exactly how Python expects it
-                body: JSON.stringify({ plate: newPlate, model: newModel })
-            });
-
-            if (response.ok) {
-                console.log("New truck safely locked in the cloud!");
-                
-                // Clear the text boxes so they are empty for the next truck
-                document.getElementById("truck-plate").value = "";
-                document.getElementById("truck-model").value = "";
-                
-                // Magically refresh the list on the screen so the new truck appears instantly!
-                loadTrucksFromCloud();
-            } else {
-                console.error("The server rejected the truck.");
-            }
-        } catch (error) {
-            console.error("Failed to connect to the cloud:", error);
-        }
-    });
-}
-// ==========================================
-// 1. DRIVERS CABIN
-// ==========================================
-async function loadDriversFromCloud() {
-    try {
-        const response = await fetch(`${API_URL}/api/drivers`, { method: "GET", headers: { "X-API-Key": API_KEY } });
-        const data = await response.json();
-        const listElement = document.getElementById("driver-list");
-        if (listElement) {
-            listElement.innerHTML = "";
-            data.forEach(d => {
-                const li = document.createElement("li");
-                li.textContent = `Name: ${d.name}`;
-                listElement.appendChild(li);
-            });
-        }
-    } catch (error) { console.error("Database connection failed:", error); }
-}
-
-const driverForm = document.getElementById("driver-form");
-if (driverForm) {
-    driverForm.addEventListener("submit", async (event) => {
-        event.preventDefault();
-        const newName = document.getElementById("driver-name").value;
-        try {
-            const response = await fetch(`${API_URL}/api/drivers`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json", "X-API-Key": API_KEY },
-                body: JSON.stringify({ name: newName })
-            });
-            if (response.ok) {
-                document.getElementById("driver-name").value = "";
-                loadDriversFromCloud();
-            }
-        } catch (error) { console.error("Failed to connect to the cloud:", error); }
-    });
-}
-
-// ==========================================
-// 2. EXPENSES CABIN
-// ==========================================
-async function loadExpensesFromCloud() {
-    try {
-        const response = await fetch(`${API_URL}/api/expenses`, { method: "GET", headers: { "X-API-Key": API_KEY } });
-        const data = await response.json();
-        const listElement = document.getElementById("expense-list");
-        if (listElement) {
-            listElement.innerHTML = "";
-            data.forEach(e => {
-                const li = document.createElement("li");
-                li.textContent = `Desc: ${e.description} | Amount: ${e.amount} | Fine: ${e.is_fine}`;
-                listElement.appendChild(li);
-            });
-        }
-    } catch (error) { console.error("Database connection failed:", error); }
-}
-
-const expenseForm = document.getElementById("expense-form");
-if (expenseForm) {
-    expenseForm.addEventListener("submit", async (event) => {
-        event.preventDefault();
-        const newDesc = document.getElementById("expense-desc").value;
-        const newAmount = parseInt(document.getElementById("expense-amount").value);
-        const newIsFine = document.getElementById("expense-fine") ? document.getElementById("expense-fine").checked : false;
+        // 4. Save to local memory buffer and draw the UI!
+        saveLocal(); // Assuming this is defined in index.html
+        renderAll(); // Refresh the beautiful dashboard!
         
-        try {
-            const response = await fetch(`${API_URL}/api/expenses`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json", "X-API-Key": API_KEY },
-                body: JSON.stringify({ description: newDesc, amount: newAmount, is_fine: newIsFine })
-            });
-            if (response.ok) {
-                document.getElementById("expense-desc").value = "";
-                document.getElementById("expense-amount").value = "";
-                loadExpensesFromCloud();
-            }
-        } catch (error) { console.error("Failed to connect to the cloud:", error); }
-    });
-}
+        console.log("Cloud Sync Complete! Dashboard is live.");
 
-// ==========================================
-// 3. INVENTORY CABIN
-// ==========================================
-async function loadInventoryFromCloud() {
-    try {
-        const response = await fetch(`${API_URL}/api/inventory`, { method: "GET", headers: { "X-API-Key": API_KEY } });
-        const data = await response.json();
-        const listElement = document.getElementById("inventory-list");
-        if (listElement) {
-            listElement.innerHTML = "";
-            data.forEach(i => {
-                const li = document.createElement("li");
-                li.textContent = `Item: ${i.item_type} | SN: ${i.serial_number} | Truck: ${i.assigned_truck} | Cost: ${i.cost}`;
-                listElement.appendChild(li);
-            });
-        }
-    } catch (error) { console.error("Database connection failed:", error); }
-}
-
-const inventoryForm = document.getElementById("inventory-form");
-if (inventoryForm) {
-    inventoryForm.addEventListener("submit", async (event) => {
-        event.preventDefault();
-        const newType = document.getElementById("inventory-type").value;
-        const newSerial = document.getElementById("inventory-serial").value;
-        const newTruck = document.getElementById("inventory-truck").value;
-        const newCost = parseInt(document.getElementById("inventory-cost").value);
-        
-        try {
-            const response = await fetch(`${API_URL}/api/inventory`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json", "X-API-Key": API_KEY },
-                body: JSON.stringify({ item_type: newType, serial_number: newSerial, assigned_truck: newTruck, cost: newCost })
-            });
-            if (response.ok) {
-                document.getElementById("inventory-type").value = "";
-                document.getElementById("inventory-serial").value = "";
-                document.getElementById("inventory-truck").value = "";
-                document.getElementById("inventory-cost").value = "";
-                loadInventoryFromCloud();
-            }
-        } catch (error) { console.error("Failed to connect to the cloud:", error); }
-    });
+    } catch (error) {
+        console.error("Critical Cloud Sync Failure:", error);
+        alert("Warning: Could not pull live data from the cloud. Please check your connection.");
+    }
 }
