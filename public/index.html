@@ -532,6 +532,11 @@
 
                 <label data-key="lbl_desc">Description</label><textarea id="opDesc" rows="2"></textarea>
 
+                <div style="background:#e0f2fe; border: 1px solid #bae6fd; padding:15px; border-radius:10px; margin-bottom:15px;">
+                    <label style="color:#0284c7; margin-bottom:5px;">📸 Upload Proof (Receipt or Waybill)</label>
+                    <input type="file" id="opFile" accept="image/*" style="margin-bottom:0; background:white;">
+                </div>
+
                 <label data-key="lbl_method">Payment Method</label>
                 <select id="opMethod" onchange="toggleBank()">
                     <option value="Cash">Cash</option><option value="Bank">Bank</option><option value="Mobile">Mobile</option>
@@ -587,6 +592,18 @@
     </div>
 
     <div id="settings" class="section">
+        
+        <div class="panel" style="background: #fdf2f8; border: 1px solid #fbcfe8;">
+            <h3 style="color:#be185d; margin-top:0;">🔒 Security Options</h3>
+            <p style="font-size: 0.9rem; color: #be185d;">Change your 4-digit Admin PIN.</p>
+            <div class="form-row three-col">
+                <div><label>Current PIN</label><input type="password" id="currentPin" placeholder="****" maxlength="4"></div>
+                <div><label>New PIN</label><input type="password" id="newPin" placeholder="****" maxlength="4"></div>
+                <div><label>Confirm New PIN</label><input type="password" id="confirmNewPin" placeholder="****" maxlength="4"></div>
+            </div>
+            <button class="btn btn-primary" onclick="changePin()" style="margin-top: 10px; background:#be185d;">Change Cloud PIN</button>
+        </div>
+
         <div class="split-layout">
             <div class="panel">
                 <h3 data-key="mng_trucks">Manage Trucks</h3>
@@ -703,7 +720,6 @@
                     document.getElementById('app-container').style.display = 'block';
                     document.getElementById('appHeaderName').innerText = cName;
                     
-                    // CALL CLOUD SYNC HERE BEFORE RENDERING
                     syncDashboardWithCloud().then(() => {
                         renderCharts(); 
                         initMap(); 
@@ -719,25 +735,14 @@
         }
     }
 
-    /**
-     * MASTER CLOUD SYNC FUNCTION: 
-     * Wipes local memory and builds a 100% true copy from Supabase
-     */
     async function syncDashboardWithCloud() {
         if (!currentCompanyId) return;
 
         try {
             console.log(`Starting True Cloud Sync for Company ID: ${currentCompanyId}...`);
 
-            // 1. WIPE THE LOCAL MEMORY! Destroy the "Ghost in the Machine"
-            db.trucks = [];
-            db.drivers = [];
-            db.txs = [];
-            db.compliance = [];
-            db.inventory = [];
-            db.customers = [];
+            db.trucks = []; db.drivers = []; db.txs = []; db.compliance = []; db.inventory = []; db.customers = [];
 
-            // 2. Fetch everything from all 7 cloud tables at the same time
             const [trucksRes, driversRes, expensesRes, inventoryRes, tripsRes, debtsRes, compRes] = await Promise.all([
                 fetch(`${API_URL}/api/trucks?company_id=${currentCompanyId}`, { headers: { "X-API-Key": API_KEY } }),
                 fetch(`${API_URL}/api/drivers?company_id=${currentCompanyId}`, { headers: { "X-API-Key": API_KEY } }),
@@ -756,13 +761,11 @@
             const cloudDebts = await debtsRes.json();
             const cloudComp = await compRes.json();
 
-            // 3. Map Data into Dashboard Memory
             db.trucks = cloudTrucks.map(t => ({ id: t.id, plate: t.plate, model: t.model, trailers: 0, interval: 5000, odo: 0, lastServiceOdo: 0 }));
             db.drivers = cloudDrivers.map(d => ({ id: d.id, name: d.name, truck: "" }));
             db.inventory = cloudInventory.map(i => ({ id: i.id, type: i.item_type, serial: i.serial_number, truck: i.assigned_truck, cost: i.cost }));
             db.compliance = cloudComp.map(c => ({ id: c.id, type: c.record_type, truck: c.truck, date: c.expiry_date, amount: c.amount, ref: c.reference_no, status: c.status }));
 
-            // 4. Rebuild the Main Transaction List (Trips + Expenses + Debts)
             const expenseTxs = cloudExpenses.map(e => {
                 let cat = "Other"; let desc = e.description;
                 if(e.description && e.description.includes(" - ")) { let p = e.description.split(" - "); cat = p[0]; desc = p.slice(1).join(" - "); }
@@ -778,11 +781,10 @@
                 id: d.id, type: 'debt', date: d.date, customer: d.customer, amount: d.amount, desc: d.description, method: d.payment_method, bank: d.bank_name, truck: 'N/A', driver: ''
             }));
 
-            db.txs = [...tripTxs, ...expenseTxs, ...debtTxs].sort((a,b) => new Date(a.date) - new Date(b.date)); // Sort chronologically
+            db.txs = [...tripTxs, ...expenseTxs, ...debtTxs].sort((a,b) => new Date(a.date) - new Date(b.date)); 
 
-            // 5. Extract Unique Customers from Trips and Debts
             let allCust = [...tripTxs.map(t=>t.customer), ...debtTxs.map(d=>d.customer)];
-            db.customers = [...new Set(allCust)].filter(Boolean); // Remove duplicates and blanks
+            db.customers = [...new Set(allCust)].filter(Boolean); 
 
             saveLocal(); 
             renderAll(); 
@@ -790,14 +792,12 @@
 
         } catch (error) {
             console.error("Cloud Sync Failure:", error);
-            alert("Could not load data from the cloud.");
         }
     }
 
 
     function logout() { location.reload(); }
 
-    // --- CONSTANTS ---
     const FUEL_PRICE_TZ = 3430; 
     
     const REGION_COORDS = { "Arusha": [-3.3667, 36.6833], "Dar es Salaam": [-6.8235, 39.2695], "Dodoma": [-6.1630, 35.7516], "Geita": [-2.8694, 32.2330], "Iringa": [-7.7667, 35.7000], "Kagera": [-1.3292, 31.8126], "Katavi": [-6.3667, 31.1333], "Kigoma": [-4.8769, 29.6267], "Kilimanjaro": [-3.3500, 37.3333], "Lindi": [-9.9969, 39.7145], "Manyara": [-4.2167, 35.7500], "Mara": [-1.5000, 33.8000], "Mbeya": [-8.9000, 33.4500], "Morogoro": [-6.8278, 37.6611], "Mtwara": [-10.2736, 40.1828], "Mwanza": [-2.5167, 32.9000], "Njombe": [-9.3333, 34.7667], "Pemba North": [-5.0333, 39.7833], "Pemba South": [-5.3500, 39.7667], "Pwani": [-6.7667, 38.9167], "Rukwa": [-7.9667, 31.6167], "Ruvuma": [-10.6833, 35.6500], "Shinyanga": [-3.6667, 33.4333], "Simiyu": [-2.8000, 33.9833], "Singida": [-4.8167, 34.7500], "Songwe": [-9.1167, 32.9333], "Tabora": [-5.0167, 32.8000], "Tanga": [-5.0667, 39.0983], "Unguja North": [-5.9333, 39.2833], "Unguja South": [-6.2667, 39.4333], "Mjini Magharibi": [-6.1600, 39.2000] };
@@ -824,6 +824,20 @@
     let db = { trucks: [], drivers: [], customers: [], categories: tzExpenses, txs: [], compliance: [], inventory: [], invTypes: ["Tyre", "Spare Part", "Battery", "Filter"], companyName: "International Logistics System" };
 
     function init() {
+        const saved = localStorage.getItem(DB_KEY);
+        if(saved) {
+            try {
+                let temp = JSON.parse(saved);
+                if (temp) {
+                    if(!temp.inventory) temp.inventory = [];
+                    if(!temp.invTypes) temp.invTypes = ["Tyre", "Spare Part", "Battery", "Filter"];
+                    if(!temp.companyName) temp.companyName = "International Logistics System";
+                    db = temp;
+                    db.trucks.forEach(t => { if(typeof t === 'object'){ if(t.odo===undefined) t.odo=0; if(t.interval===undefined) t.interval=5000; if(t.lastServiceOdo===undefined) t.lastServiceOdo=0; }});
+                }
+            } catch(e) { console.error("Database initialization failed.", e); }
+        }
+        
         const headerEl = document.getElementById('appHeaderName');
         if (headerEl) headerEl.innerText = db.companyName;
 
@@ -836,10 +850,7 @@
         fillRegions(); checkCargo(); applyLanguage(); renderAll(); addRouteLeg(); addRouteLeg();
     }
 
-    function saveLocal() { 
-        // We still save locally so map functions and chart draws don't crash when switching tabs
-        localStorage.setItem(DB_KEY, JSON.stringify(db)); 
-    }
+    function saveLocal() { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
 
     function nav(id) {
         document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
@@ -989,7 +1000,6 @@
                 tx.from = document.getElementById('opFrom').value; tx.to = document.getElementById('opTo').value; tx.routeFull = `${tx.from} ➝ ${tx.to}`; tx.routeStops = [tx.from, tx.to];
             }
 
-            // POST TO CLOUD (TRIPS)
             try { 
                 await fetch('/api/trips', { 
                     method: 'POST', headers: {'Content-Type': 'application/json', 'X-API-Key': API_KEY}, 
@@ -1007,7 +1017,6 @@
             tx.amount = parseFloat(document.getElementById('opExpAmount').value)||0;
             if(tx.cat === 'Fuel') tx.liters = parseFloat(document.getElementById('opLiters').value)||0;
             
-            // POST TO CLOUD (EXPENSES)
             try { 
                 await fetch('/api/expenses', { 
                     method: 'POST', headers: {'Content-Type': 'application/json', 'X-API-Key': API_KEY}, 
@@ -1020,7 +1029,7 @@
         document.getElementById('opDesc').value = ''; document.getElementById('opTotal').value = ''; document.getElementById('opPaid').value = ''; document.getElementById('opExpAmount').value = ''; document.getElementById('opLiters').value = ''; document.getElementById('opDist').value = ''; document.getElementById('opCargoType').value = ''; 
         document.getElementById('routeRows').innerHTML = ''; addRouteLeg(); addRouteLeg();
         
-        syncDashboardWithCloud(); // Refresh the screen automatically!
+        syncDashboardWithCloud(); 
     }
 
     async function addInventory() {
@@ -1141,7 +1150,7 @@
 
         [...db.txs].reverse().forEach(t => {
             let row = '', amountDisplay = '', actionBtn = `<button onclick="deleteTx(${t.id})" style="color:#cbd5e1; border:none; background:none;">×</button>`;
-
+            
             let chkTruck = '';
             if (t.truck && typeof t.truck === 'string') {
                 chkTruck = t.truck.includes('(') ? t.truck.split(' ')[0] : t.truck;
@@ -1235,6 +1244,39 @@
         const lbl=Object.keys(iM).sort();
         chartP = new Chart(cP.getContext('2d'), {type:'bar', data:{labels:lbl, datasets:[{label:"Income",data:lbl.map(m=>iM[m]),backgroundColor:'#10b981'},{label:"Expense",data:lbl.map(m=>eM[m]),backgroundColor:'#ef4444'}]}, options:{responsive:true,maintainAspectRatio:false}});
         chartE = new Chart(cE.getContext('2d'), {type:'doughnut', data:{labels:Object.keys(cT), datasets:[{data:Object.values(cT),backgroundColor:['#f59e0b','#ef4444','#3b82f6','#6366f1','#8b5cf6','#10b981','#64748b']}]}, options:{responsive:true,maintainAspectRatio:false}});
+    }
+
+    // --- SECURE CLOUD PIN UPDATE ---
+    async function changePin() {
+        const c = document.getElementById('currentPin').value;
+        const n = document.getElementById('newPin').value;
+        const cf = document.getElementById('confirmNewPin').value;
+        
+        if (!c || !n || !cf) return alert("Please fill all fields.");
+        if (n.length !== 4 || n !== cf) return alert("New PIN must be exactly 4 digits and match.");
+        if (!currentCompanyId) return alert("You must be logged in to change the PIN.");
+
+        try {
+            const res = await fetch(`${API_URL}/api/update-pin`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "X-API-Key": API_KEY },
+                body: JSON.stringify({ company_id: currentCompanyId, current_pin: c, new_pin: n })
+            });
+            
+            const data = await res.json();
+            
+            if (res.ok) {
+                alert("PIN Changed Successfully in the Cloud!");
+                document.getElementById('currentPin').value = '';
+                document.getElementById('newPin').value = '';
+                document.getElementById('confirmNewPin').value = '';
+            } else {
+                alert(data.detail || "Failed to change PIN. Did you type the current PIN correctly?");
+            }
+        } catch(e) {
+            console.error(e);
+            alert("Cloud server connection failed.");
+        }
     }
 
     init();
