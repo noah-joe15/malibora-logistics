@@ -2,64 +2,70 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#1e40af">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Malibora Systems">
-    
-    <title>Malibora Intertrade - Logistics System</title>
-    
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Malibora B2B Logistics</title>
+</head>
+<body style="font-family: Arial, sans-serif; margin: 0; padding: 0;">
 
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <div id="login-screen" style="text-align: center; padding: 50px; background: #f4f4f4; border-bottom: 2px solid #ccc;">
+        <h2>Welcome to Malibora B2B Logistics</h2>
+        <p>Please enter your Company Name to access your fleet:</p>
+        <input type="text" id="company-name" placeholder="e.g., Simba Logistics" style="padding: 10px; width: 250px;">
+        <button id="login-btn" style="padding: 10px 20px; background: #007bff; color: white; border: none; cursor: pointer;">Enter System</button>
+        <p id="login-message" style="color: green; margin-top: 10px; font-weight: bold;"></p>
+    </div>
 
-    <style>
-        :root {
-            --primary: #2563eb; --primary-dark: #1e40af;
-            --bg: #f1f5f9; --white: #ffffff;
-            --success: #10b981; --danger: #ef4444; --warning: #f59e0b;
-            --text-dark: #0f172a; --text-light: #64748b;
-            --border: #e2e8f0;
-        }
+    <div id="main-app" style="display: none;">
+        <h1 style="text-align: center; background: #333; color: white; padding: 15px; margin: 0;">Malibora Logistics Dashboard</h1>
 
-        body {
-            font-family: 'Roboto', sans-serif;
-            background-color: var(--bg);
-            margin: 0; padding: 15px; padding-bottom: 90px;
-            color: var(--text-dark);
-            -webkit-tap-highlight-color: transparent;
-        }
+        <section id="trucks" style="padding: 20px;">
+            <h3>Trucks</h3>
+            <form id="truck-form">
+                <input type="text" id="truck-plate" placeholder="Plate Number" required>
+                <input type="text" id="truck-model" placeholder="Truck Model" required>
+                <button type="submit">Add Truck</button>
+            </form>
+            <ul id="truck-list"></ul>
+        </section>
+        <hr>
 
-        .container { max-width: 1200px; margin: 0 auto; display: none; /* Hidden until login */ }
+        <section id="drivers" style="padding: 20px;">
+            <h3>Drivers</h3>
+            <form id="driver-form">
+                <input type="text" id="driver-name" placeholder="Driver Name" required>
+                <button type="submit">Add Driver</button>
+            </form>
+            <ul id="driver-list"></ul>
+        </section>
+        <hr>
 
-        /* --- PREMIUM LOGIN PAGE STYLES --- */
-        #login-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-image: linear-gradient(rgba(30, 64, 175, 0.85), rgba(15, 23, 42, 0.95)), url('https://images.unsplash.com/photo-1519003722824-194d4455a60c?q=80&w=2075&auto=format&fit=crop');
-            background-size: cover; background-position: center;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 9999; color: white; text-align: center; padding: 20px; box-sizing: border-box;
-        }
-        .login-box {
-            background: rgba(255, 255, 255, 0.08); 
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            padding: 40px 30px; border-radius: 24px; 
-            width: 100%; max-width: 380px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.2);
-            border-top: 1px solid rgba(255,255,255,0.4); 
-            border-left: 1px solid rgba(255,255,255,0.4);
-        }
-        .login-box h1 { margin: 15px 0 5px; font-size: 2rem; letter-spacing: 2px; font-weight: 900; text-shadow: 0 2px 4px rgba(0,0,0,0.4); }
-        .login-box p { margin: 0 0 30px; font-size: 0.95rem; color: #cbd5e1; font-weight: 400; }
-        
-        #loginRole {
-            width: 100%; padding: 14px; border-radius: 12px; border: none;
+        <section id="expenses" style="padding: 20px;">
+            <h3>Expenses</h3>
+            <form id="expense-form">
+                <input type="text" id="expense-desc" placeholder="Description" required>
+                <input type="number" id="expense-amount" placeholder="Amount" required>
+                <label><input type="checkbox" id="expense-fine"> Is Fine?</label>
+                <button type="submit">Add Expense</button>
+            </form>
+            <ul id="expense-list"></ul>
+        </section>
+        <hr>
+
+        <section id="inventory" style="padding: 20px;">
+            <h3>Inventory</h3>
+            <form id="inventory-form">
+                <input type="text" id="inventory-type" placeholder="Item Type" required>
+                <input type="text" id="inventory-serial" placeholder="Serial Number" required>
+                <input type="text" id="inventory-truck" placeholder="Assigned Truck">
+                <input type="number" id="inventory-cost" placeholder="Cost">
+                <button type="submit">Add to Inventory</button>
+            </form>
+            <ul id="inventory-list"></ul>
+        </section>
+    </div> <script src="/script.js"></script>
+
+</body>
+</html>            width: 100%; padding: 14px; border-radius: 12px; border: none;
             margin-bottom: 15px; outline: none; font-size: 1.05rem;
             font-family: 'Roboto', sans-serif; background: rgba(255,255,255,0.95);
             color: #1e293b; font-weight: bold; cursor: pointer;
