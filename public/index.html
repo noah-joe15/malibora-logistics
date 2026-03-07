@@ -689,7 +689,6 @@
         }
     }
 
-    // Support hitting Enter to submit
     document.getElementById('b2bPin').addEventListener('keypress', function(e) {
         if (e.key === 'Enter') { executeB2BAuth(); }
     });
@@ -722,15 +721,19 @@
             if (res.ok) {
                 currentCompanyId = data.company_id;
                 sucEl.innerText = data.message;
-                db.companyName = cName; // Update local app name
+                db.companyName = cName; 
                 
                 setTimeout(() => {
                     document.getElementById('login-screen').style.display = 'none';
                     document.getElementById('app-container').style.display = 'block';
                     document.getElementById('appHeaderName').innerText = cName;
-                    renderCharts(); 
-                    initMap(); 
-                    renderAll();
+                    
+                    // CALL CLOUD SYNC HERE BEFORE RENDERING
+                    syncDashboardWithCloud().then(() => {
+                        renderCharts(); 
+                        initMap(); 
+                    });
+
                 }, 1000);
             } else {
                 errEl.innerText = data.detail || "Authentication failed.";
@@ -740,6 +743,97 @@
             errEl.innerText = "Cloud server connection failed. Please wait for Render to build.";
         }
     }
+
+    /**
+     * MASTER CLOUD SYNC FUNCTION
+     */
+    async function syncDashboardWithCloud() {
+        if (!currentCompanyId) {
+            console.error("Cannot sync: No company logged in.");
+            return;
+        }
+
+        try {
+            console.log(`Starting Cloud Sync for Company ID: ${currentCompanyId}...`);
+
+            const [trucksRes, driversRes, expensesRes, inventoryRes] = await Promise.all([
+                fetch(`${API_URL}/api/trucks?company_id=${currentCompanyId}`, { headers: { "X-API-Key": API_KEY } }),
+                fetch(`${API_URL}/api/drivers?company_id=${currentCompanyId}`, { headers: { "X-API-Key": API_KEY } }),
+                fetch(`${API_URL}/api/expenses?company_id=${currentCompanyId}`, { headers: { "X-API-Key": API_KEY } }),
+                fetch(`${API_URL}/api/inventory?company_id=${currentCompanyId}`, { headers: { "X-API-Key": API_KEY } })
+            ]);
+
+            const cloudTrucks = await trucksRes.json();
+            const cloudDrivers = await driversRes.json();
+            const cloudExpenses = await expensesRes.json();
+            const cloudInventory = await inventoryRes.json();
+
+            // A. Format Trucks
+            db.trucks = cloudTrucks.map(t => ({
+                id: t.id,
+                plate: t.plate,
+                model: t.model,
+                trailers: 0, 
+                interval: 5000, 
+                odo: 0, 
+                lastServiceOdo: 0
+            }));
+
+            // B. Format Drivers
+            db.drivers = cloudDrivers.map(d => ({
+                id: d.id,
+                name: d.name,
+                customer: "", 
+                truck: "" 
+            }));
+
+            // C. Format Inventory
+            db.inventory = cloudInventory.map(i => ({
+                id: i.id,
+                type: i.item_type,
+                serial: i.serial_number,
+                truck: i.assigned_truck,
+                cost: i.cost
+            }));
+
+            // D. Format Expenses
+            db.txs = db.txs.filter(tx => tx.type !== 'expense' || !tx.isCloudSync); 
+            
+            const expenseTxs = cloudExpenses.map(e => {
+                let cat = "Other";
+                let desc = e.description;
+                if(e.description && e.description.includes(" - ")) {
+                    let parts = e.description.split(" - ");
+                    cat = parts[0];
+                    desc = parts.slice(1).join(" - ");
+                }
+
+                return {
+                    id: e.id,
+                    date: new Date().toISOString().slice(0, 10), 
+                    truck: "N/A", 
+                    driver: "System",
+                    desc: desc,
+                    cat: cat,
+                    amount: e.amount,
+                    type: 'expense',
+                    isCloudSync: true 
+                };
+            });
+
+            db.txs = [...db.txs, ...expenseTxs];
+
+            saveLocal(); 
+            renderAll(); 
+            
+            console.log("Cloud Sync Complete! Dashboard is live.");
+
+        } catch (error) {
+            console.error("Critical Cloud Sync Failure:", error);
+            alert("Warning: Could not pull live data from the cloud. Please check your connection.");
+        }
+    }
+
 
     function logout() { location.reload(); }
 
