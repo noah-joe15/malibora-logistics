@@ -56,19 +56,11 @@
             border-left: 1px solid rgba(255,255,255,0.4);
         }
         .login-box h1 { margin: 15px 0 5px; font-size: 2rem; letter-spacing: 2px; font-weight: 900; text-shadow: 0 2px 4px rgba(0,0,0,0.4); }
-        .login-box p { margin: 0 0 30px; font-size: 0.95rem; color: #cbd5e1; font-weight: 400; }
+        .login-box p { margin: 0 0 25px; font-size: 0.95rem; color: #cbd5e1; font-weight: 400; }
         
-        #loginRole {
-            width: 100%; padding: 14px; border-radius: 12px; border: none;
-            margin-bottom: 15px; outline: none; font-size: 1.05rem;
-            font-family: 'Roboto', sans-serif; background: rgba(255,255,255,0.95);
-            color: #1e293b; font-weight: bold; cursor: pointer;
-        }
-
         .pin-input {
             width: 100%; padding: 15px; border-radius: 12px; border: none;
             text-align: center; font-size: 1.1rem; 
-            letter-spacing: 2px; 
             margin-bottom: 10px; outline: none; background: rgba(255,255,255,0.95); color: #1e293b;
             font-family: 'Roboto', sans-serif; font-weight: bold;
             box-sizing: border-box; transition: 0.3s;
@@ -84,7 +76,7 @@
         .login-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6); }
         .login-btn:active { transform: scale(0.98); }
         
-        .contact-info { margin-top: 30px; font-size: 0.8rem; color: #94a3b8; line-height: 1.6; }
+        .contact-info { margin-top: 25px; font-size: 0.8rem; color: #94a3b8; line-height: 1.6; }
         .error-msg { color: #fca5a5; font-size: 0.9rem; margin-bottom: 15px; min-height: 20px; font-weight: bold; }
 
         /* --- APP HEADER & NAV --- */
@@ -113,10 +105,6 @@
             font-family: 'Roboto', sans-serif; cursor: pointer;
         }
         .nav-btn.active { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); }
-
-        /* ROLE HIDING CLASSES */
-        .hidden-role { display: none !important; }
-        .dispatcher-only { display: none; }
 
         /* --- DASHBOARD CARDS --- */
         .kpi-grid {
@@ -158,35 +146,18 @@
         input:focus, select:focus { border-color: var(--primary); background: #fff; }
         label { display: block; margin-bottom: 6px; font-weight: 500; font-size: 0.85rem; color: var(--text-dark); }
 
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 0px; 
-        }
-        .form-row.three-col {
-            grid-template-columns: 1fr 1fr 1fr;
-        }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 0px; }
+        .form-row.three-col { grid-template-columns: 1fr 1fr 1fr; }
 
         /* --- BUTTONS --- */
-        .btn {
-            width: 100%; padding: 14px; border: none; border-radius: 12px;
-            font-weight: 700; cursor: pointer; font-size: 1rem; transition: 0.2s;
-            font-family: 'Roboto', sans-serif;
-        }
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 1rem; transition: 0.2s; font-family: 'Roboto', sans-serif; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-primary:active { transform: scale(0.98); }
         .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-light); }
         .btn-sm { padding: 5px 10px; font-size: 0.8rem; width: auto; display: inline-block; }
         
-        .mode-switcher {
-            display: flex; background: #f1f5f9; padding: 4px; border-radius: 12px; margin-bottom: 20px;
-        }
-        .mode-btn {
-            flex: 1; padding: 10px; border: none; background: transparent;
-            font-weight: 600; color: var(--text-light); border-radius: 10px; cursor: pointer;
-            font-family: 'Roboto', sans-serif;
-        }
+        .mode-switcher { display: flex; background: #f1f5f9; padding: 4px; border-radius: 12px; margin-bottom: 20px; }
+        .mode-btn { flex: 1; padding: 10px; border: none; background: transparent; font-weight: 600; color: var(--text-light); border-radius: 10px; cursor: pointer; font-family: 'Roboto', sans-serif; }
         .mode-btn.active.inc { background: var(--white); color: var(--success); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .mode-btn.active.exp { background: var(--white); color: var(--danger); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .mode-btn.active.debt { background: var(--white); color: var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
@@ -211,12 +182,7 @@
 
         /* HISTORY PAGE STYLES */
         .history-search { margin-bottom: 20px; }
-        .history-card {
-            background: white; border-radius: 12px; padding: 15px;
-            margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.03);
-            border-left: 4px solid transparent; display: flex;
-            justify-content: space-between; align-items: center;
-        }
+        .history-card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); border-left: 4px solid transparent; display: flex; justify-content: space-between; align-items: center; }
         .history-card.income { border-left-color: var(--success); }
         .history-card.expense { border-left-color: var(--danger); }
         .history-card.debt { border-left-color: var(--primary); }
@@ -225,26 +191,16 @@
         .h-title { font-weight: 700; font-size: 1rem; margin: 2px 0; color: #334155; }
         .h-sub { font-size: 0.85rem; color: #64748b; }
         .h-amt { font-weight: 800; font-size: 1rem; }
-        .h-status { 
-            font-size: 0.7rem; padding: 3px 8px; border-radius: 20px; text-transform: uppercase; font-weight: 700; margin-top: 5px; display: inline-block;
-        }
+        .h-status { font-size: 0.7rem; padding: 3px 8px; border-radius: 20px; text-transform: uppercase; font-weight: 700; margin-top: 5px; display: inline-block; }
         .st-done { background: #dcfce7; color: #15803d; }
         .st-transit { background: #fef3c7; color: #b45309; }
 
         /* COMPLIANCE STYLES */
-        .comp-header {
-            background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
-            color: white; padding: 25px; border-radius: 16px;
-            margin-bottom: 20px; display: flex; align-items: center;
-            gap: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-        }
+        .comp-header { background: linear-gradient(135deg, #0f172a 0%, #334155 100%); color: white; padding: 25px; border-radius: 16px; margin-bottom: 20px; display: flex; align-items: center; gap: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); }
         .comp-icon { font-size: 2.5rem; display: flex; align-items: center; justify-content: center; }
 
         /* MAINTENANCE STYLES */
-        .maint-alert-box {
-            background: #fefce8; border: 1px solid #fde047; padding: 15px; border-radius: 12px; 
-            margin-bottom: 20px; display: none;
-        }
+        .maint-alert-box { background: #fefce8; border: 1px solid #fde047; padding: 15px; border-radius: 12px; margin-bottom: 20px; display: none; }
         .maint-row { display: flex; align-items: center; justify-content: space-between; color: #854d0e; font-size: 0.9rem; margin-bottom: 8px; padding-bottom: 5px; border-bottom: 1px dashed #fde047; }
         .maint-row:last-child { border-bottom: none; margin-bottom: 0; }
         .progress-bar-bg { background: #e2e8f0; height: 6px; border-radius: 10px; width: 100%; margin-top: 5px; overflow: hidden;}
@@ -262,10 +218,7 @@
         .btn-add-stop { background: #e2e8f0; color: #334155; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; font-weight: bold; }
 
         /* MAP STYLES */
-        #map {
-            height: 500px; width: 100%; border-radius: 16px;
-            z-index: 1; margin-bottom: 10px; border: 2px solid #e2e8f0;
-        }
+        #map { height: 500px; width: 100%; border-radius: 16px; z-index: 1; margin-bottom: 10px; border: 2px solid #e2e8f0; }
         .map-item-card { background: #fff; padding: 10px; margin-bottom: 5px; border-radius: 8px; border-left: 4px solid #ccc; cursor: pointer; font-size: 0.85rem; }
         .map-item-card:hover { background: #f8fafc; }
 
@@ -296,16 +249,20 @@
         </svg>
 
         <h1>MALIBORA</h1>
-        <p>Enterprise Logistics System</p>
+        <p id="authSubtitle">Enterprise Cloud Platform</p>
         
-        <select id="loginRole" onchange="document.getElementById('pinInput').placeholder = this.value === 'admin' ? 'Admin PIN (e.g. 1234)' : 'Truck Plate (e.g. T123ABC)'; document.getElementById('pinInput').type = this.value === 'admin' ? 'password' : 'text'; document.getElementById('pinInput').value = '';">
-            <option value="admin">System Admin</option>
-            <option value="dispatcher">Dispatcher (Login with Plate)</option>
-        </select>
+        <div style="display:flex; margin-bottom:20px; border-radius:12px; overflow:hidden; border:1px solid rgba(255,255,255,0.3);">
+            <button id="btnTabLogin" onclick="setAuthMode('login')" style="flex:1; padding:12px; background:rgba(255,255,255,0.2); border:none; color:white; font-weight:bold; cursor:pointer; transition:0.3s;">Login</button>
+            <button id="btnTabReg" onclick="setAuthMode('register')" style="flex:1; padding:12px; background:transparent; border:none; color:#cbd5e1; font-weight:normal; cursor:pointer; transition:0.3s;">Register</button>
+        </div>
 
-        <input type="password" id="pinInput" class="pin-input" placeholder="Admin PIN (e.g. 1234)">
+        <input type="text" id="b2bCompany" class="pin-input" placeholder="Company Name (e.g. Simba)">
+        <input type="password" id="b2bPin" class="pin-input" placeholder="4-Digit Admin PIN" maxlength="4">
+        
         <div class="error-msg" id="loginError"></div>
-        <button class="login-btn" onclick="attemptLogin()">SECURE LOGIN</button>
+        <div id="loginSuccess" style="color: #10b981; font-weight: bold; margin-bottom: 15px;"></div>
+        
+        <button class="login-btn" id="b2bAuthBtn" onclick="executeB2BAuth()">SECURE LOGIN</button>
 
         <div class="contact-info">
             <p><strong>Need Help? Contact Support:</strong><br>
@@ -314,8 +271,8 @@
             📍 Dar es Salaam, Tanzania</p>
         </div>
     </div>
-    <div style="position: absolute; bottom: 20px; font-size: 0.75rem; opacity: 0.7; font-weight: 500; text-shadow: 0 1px 2px rgba(0,0,0,0.8);">
-        ILTM System v8.4 | Secure Gateway
+    <div style="position: absolute; bottom: 20px; font-size: 0.75rem; opacity: 0.7; font-weight: 500; color: white;">
+        ILTM SaaS Platform | Scalable to 1000+ Fleets
     </div>
 </div>
 
@@ -323,31 +280,30 @@
     <div class="header">
         <div>
             <h1 style="margin:0;" id="appHeaderName">International Logistics Truck Management System (ILTM)</h1>
-            <small style="color:#64748b;">TruckTracker Pro v8.4 | User: <b id="uiRoleDisplay" style="color:var(--primary);">ADMIN</b></small>
+            <small style="color:#64748b;">TruckTracker Pro v8.4 | System Admin</small>
         </div>
         <div style="display:flex; align-items:center;">
             <button class="lang-btn" onclick="toggleLanguage()" id="btnLang">🇹🇿 SW</button>
-            <button onclick="exportData()" class="admin-only" style="background:none; border:none; font-size: 1.5rem; cursor:pointer;">📥</button>
+            <button onclick="exportData()" style="background:none; border:none; font-size: 1.5rem; cursor:pointer;">📥</button>
             <button onclick="logout()" style="background:none; border:none; font-size: 1.2rem; cursor:pointer; margin-left:10px;">🔒</button>
         </div>
     </div>
 
     <div class="nav-scroller">
         <div class="nav-menu">
-            <button class="nav-btn admin-only active" onclick="nav('dashboard')" data-key="nav_dash">Dashboard</button>
-            <button class="nav-btn dispatcher-only" id="btn-truck-dash" onclick="nav('truck-dashboard')">My Truck Stats</button>
+            <button class="nav-btn active" onclick="nav('dashboard')" data-key="nav_dash">Dashboard</button>
             <button class="nav-btn" onclick="nav('map-section')" data-key="nav_map">🗺️ Live Map</button>
             <button class="nav-btn" onclick="nav('history')" data-key="nav_hist">📜 History</button>
             <button class="nav-btn" onclick="nav('operations')" data-key="nav_ops">OPERATIONS</button>
-            <button class="nav-btn admin-only" onclick="nav('analytics')" data-key="nav_analytics">📊 Analytics</button>
-            <button class="nav-btn admin-only" onclick="nav('debt')" data-key="nav_debt">💰 Collect Debt</button>
-            <button class="nav-btn admin-only" onclick="nav('inventory')" data-key="nav_inv">🛠️ Inventory</button>
+            <button class="nav-btn" onclick="nav('analytics')" data-key="nav_analytics">📊 Analytics</button>
+            <button class="nav-btn" onclick="nav('debt')" data-key="nav_debt">💰 Collect Debt</button>
+            <button class="nav-btn" onclick="nav('inventory')" data-key="nav_inv">🛠️ Inventory</button>
             <button class="nav-btn" onclick="nav('compliance')" data-key="nav_comp">🛡️ Compliance</button>
-            <button class="nav-btn admin-only" onclick="nav('settings')" data-key="nav_set">Settings</button>
+            <button class="nav-btn" onclick="nav('settings')" data-key="nav_set">Settings</button>
         </div>
     </div>
 
-    <div id="dashboard" class="section active admin-only">
+    <div id="dashboard" class="section active">
         <div id="maint-alert-box" class="maint-alert-box">
             <h3 style="margin:0 0 10px; color:#a16207;">⚠️ Maintenance Required</h3>
             <div id="maint-list"></div>
@@ -392,19 +348,7 @@
         </div>
     </div>
 
-    <div id="truck-dashboard" class="section dispatcher-only hidden-role">
-        <div class="panel" style="background: #eff6ff; border: 1px solid #bae6fd;">
-            <h2 style="margin-top:0; color:#0369a1;">My Truck: <span id="myTruckTitle"></span></h2>
-            <p style="margin-bottom:0;">Welcome! Here is your personal operational dashboard.</p>
-        </div>
-        <div class="kpi-grid">
-            <div class="card income"><h3>Total Revenue Brought In</h3><p id="my-truck-rev" style="color:var(--success)">0</p></div>
-            <div class="card expense"><h3>Total Operational Expenses</h3><p id="my-truck-exp" style="color:var(--danger)">0</p></div>
-            <div class="card pending"><h3>Current Odometer</h3><p id="my-truck-odo" style="color:var(--warning)">0 km</p></div>
-        </div>
-    </div>
-
-    <div id="inventory" class="section admin-only">
+    <div id="inventory" class="section">
         <div class="split-layout">
             <div class="panel">
                 <h3 data-key="inv_add">Register New Inventory Item</h3>
@@ -454,12 +398,12 @@
         </div>
     </div>
 
-    <div id="analytics" class="section admin-only">
+    <div id="analytics" class="section">
         <div class="panel"><h3 data-key="chart_income">Income vs Expense (This Year)</h3><canvas id="chartProfit" style="max-height: 250px;"></canvas></div>
         <div class="panel"><h3 data-key="chart_breakdown">Expense Breakdown</h3><canvas id="chartExpense" style="max-height: 250px;"></canvas></div>
     </div>
 
-    <div id="debt" class="section admin-only">
+    <div id="debt" class="section">
         <div class="panel" style="background: #fffbeb; border: 1px solid #fcd34d;">
             <h3 data-key="nav_debt">Collect Debt Payment</h3>
             <p style="margin:0 0 15px; font-size: 0.9rem; color: #b45309;" data-key="debt_desc">Receive payment for past debt.</p>
@@ -563,7 +507,7 @@
 
                     <label data-key="lbl_cust">Customer (Auto-Filled)</label><select id="opCustomer"></select>
                     
-                    <div class="admin-only" style="background: #f0f9ff; padding: 15px; border-radius: 10px; border: 1px solid #bae6fd; margin-bottom: 15px;">
+                    <div style="background: #f0f9ff; padding: 15px; border-radius: 10px; border: 1px solid #bae6fd; margin-bottom: 15px;">
                         <div class="form-row">
                             <div><label data-key="lbl_total">Total Price</label><input type="number" id="opTotal" oninput="calcBal()"></div>
                             <div><label data-key="lbl_paid">Paid Now</label><input type="number" id="opPaid" oninput="calcBal()"></div>
@@ -608,7 +552,7 @@
                 <button class="btn btn-primary" onclick="saveOp()" data-key="btn_save">SAVE TRANSACTION</button>
             </div>
 
-            <div class="panel admin-only">
+            <div class="panel">
                 <h3 data-key="recent_act">Recent Activity (Editable)</h3>
                 <div id="txList" style="max-height: 400px; overflow-y: auto;"></div>
             </div>
@@ -647,28 +591,7 @@
         </div>
     </div>
 
-    <div id="settings" class="section admin-only">
-        
-        <div class="panel" style="background: #f0fdf4; border: 1px solid #bbf7d0;">
-            <h3 style="color:#166534; margin-top:0;">🏢 Custom App Branding</h3>
-            <p style="font-size: 0.9rem; color: #166534;">Change the name of the app inside the dashboard.</p>
-            <div style="display:flex; gap:10px;">
-                <input type="text" id="companyNameInput" placeholder="Enter your company name" style="margin:0; flex:1;">
-                <button class="btn btn-primary" style="width:auto; background:#16a34a;" onclick="updateCompanyName()">Save Name</button>
-            </div>
-        </div>
-        
-        <div class="panel">
-            <h3>🔒 Security Options</h3>
-            <p style="font-size: 0.9rem; color: #64748b; margin-top: 0;">Change your 4-digit Admin PIN.</p>
-            <div class="form-row three-col">
-                <div><label>Current PIN</label><input type="password" id="currentPin" placeholder="****" maxlength="4"></div>
-                <div><label>New PIN</label><input type="password" id="newPin" placeholder="****" maxlength="4"></div>
-                <div><label>Confirm New PIN</label><input type="password" id="confirmNewPin" placeholder="****" maxlength="4"></div>
-            </div>
-            <button class="btn btn-primary" onclick="changePin()" style="margin-top: 10px;">Change PIN</button>
-        </div>
-
+    <div id="settings" class="section">
         <div class="panel">
             <h3 data-key="set_backup">💾 Data Backup</h3>
             <div class="form-row">
@@ -738,10 +661,90 @@
 </div>
 
 <script>
+    // --- B2B CLOUD API SETTINGS ---
+    const API_KEY = 'MALIBORA_SECRET_KEY_2026';
+    const API_URL = window.location.origin;
+    let currentCompanyId = null; 
+
+    // --- SMART LOGIN LOGIC (Cloud B2B) ---
+    let authMode = 'login';
+
+    function setAuthMode(mode) {
+        authMode = mode;
+        const btnLogin = document.getElementById('btnTabLogin');
+        const btnReg = document.getElementById('btnTabReg');
+        const authBtn = document.getElementById('b2bAuthBtn');
+        const subtitle = document.getElementById('authSubtitle');
+        
+        if (mode === 'login') {
+            btnLogin.style.background = 'rgba(255,255,255,0.2)'; btnLogin.style.color = 'white'; btnLogin.style.fontWeight = 'bold';
+            btnReg.style.background = 'transparent'; btnReg.style.color = '#cbd5e1'; btnReg.style.fontWeight = 'normal';
+            authBtn.innerText = 'SECURE LOGIN';
+            subtitle.innerText = 'Enterprise Cloud Platform';
+        } else {
+            btnReg.style.background = 'rgba(255,255,255,0.2)'; btnReg.style.color = 'white'; btnReg.style.fontWeight = 'bold';
+            btnLogin.style.background = 'transparent'; btnLogin.style.color = '#cbd5e1'; btnLogin.style.fontWeight = 'normal';
+            authBtn.innerText = 'CREATE NEW ACCOUNT';
+            subtitle.innerText = 'Register Your Fleet Company';
+        }
+    }
+
+    // Support hitting Enter to submit
+    document.getElementById('b2bPin').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') { executeB2BAuth(); }
+    });
+
+    async function executeB2BAuth() {
+        const cName = document.getElementById('b2bCompany').value.trim();
+        const cPin = document.getElementById('b2bPin').value.trim();
+        const errEl = document.getElementById('loginError');
+        const sucEl = document.getElementById('loginSuccess');
+        
+        errEl.innerText = "";
+        sucEl.innerText = "";
+
+        if (!cName || !cPin) {
+            errEl.innerText = "Please enter both Company Name and PIN.";
+            return;
+        }
+
+        const endpoint = authMode === 'login' ? '/api/login' : '/api/register';
+        
+        try {
+            const res = await fetch(`${API_URL}${endpoint}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "X-API-Key": API_KEY },
+                body: JSON.stringify({ company_name: cName, admin_pin: cPin })
+            });
+            
+            const data = await res.json();
+            
+            if (res.ok) {
+                currentCompanyId = data.company_id;
+                sucEl.innerText = data.message;
+                db.companyName = cName; // Update local app name
+                
+                setTimeout(() => {
+                    document.getElementById('login-screen').style.display = 'none';
+                    document.getElementById('app-container').style.display = 'block';
+                    document.getElementById('appHeaderName').innerText = cName;
+                    renderCharts(); 
+                    initMap(); 
+                    renderAll();
+                }, 1000);
+            } else {
+                errEl.innerText = data.detail || "Authentication failed.";
+            }
+        } catch(e) {
+            console.error(e);
+            errEl.innerText = "Cloud server connection failed. Please wait for Render to build.";
+        }
+    }
+
+    function logout() { location.reload(); }
+
     // --- CONSTANTS ---
     const FUEL_PRICE_TZ = 3430; 
-    let currentUserRole = 'admin'; 
-    const API_KEY = 'MALIBORA_SECRET_KEY_2026';
     
     const REGION_COORDS = { "Arusha": [-3.3667, 36.6833], "Dar es Salaam": [-6.8235, 39.2695], "Dodoma": [-6.1630, 35.7516], "Geita": [-2.8694, 32.2330], "Iringa": [-7.7667, 35.7000], "Kagera": [-1.3292, 31.8126], "Katavi": [-6.3667, 31.1333], "Kigoma": [-4.8769, 29.6267], "Kilimanjaro": [-3.3500, 37.3333], "Lindi": [-9.9969, 39.7145], "Manyara": [-4.2167, 35.7500], "Mara": [-1.5000, 33.8000], "Mbeya": [-8.9000, 33.4500], "Morogoro": [-6.8278, 37.6611], "Mtwara": [-10.2736, 40.1828], "Mwanza": [-2.5167, 32.9000], "Njombe": [-9.3333, 34.7667], "Pemba North": [-5.0333, 39.7833], "Pemba South": [-5.3500, 39.7667], "Pwani": [-6.7667, 38.9167], "Rukwa": [-7.9667, 31.6167], "Ruvuma": [-10.6833, 35.6500], "Shinyanga": [-3.6667, 33.4333], "Simiyu": [-2.8000, 33.9833], "Singida": [-4.8167, 34.7500], "Songwe": [-9.1167, 32.9333], "Tabora": [-5.0167, 32.8000], "Tanga": [-5.0667, 39.0983], "Unguja North": [-5.9333, 39.2833], "Unguja South": [-6.2667, 39.4333], "Mjini Magharibi": [-6.1600, 39.2000] };
     const REGIONS_TZ = Object.keys(REGION_COORDS);
@@ -761,73 +764,6 @@
         if(typeof renderCharts === "function") renderCharts(); 
     }
 
-    // --- SMART LOGIN LOGIC ---
-    // Added "Enter" key listener for better experience
-    document.getElementById('pinInput').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') { attemptLogin(); }
-    });
-
-    function attemptLogin() {
-        const role = document.getElementById('loginRole').value;
-        const pinInput = document.getElementById('pinInput').value.trim();
-        
-        if (role === 'admin') {
-            const correctPin = localStorage.getItem('malibora_pin') || '1234';
-            if (pinInput === correctPin) {
-                completeLoginFlow('admin', 'ADMIN');
-            } else {
-                document.getElementById('loginError').innerText = "Incorrect Admin PIN";
-                setTimeout(() => document.getElementById('loginError').innerText = "", 2000);
-            }
-        } else if (role === 'dispatcher') {
-            const matchedTruck = db.trucks.find(t => {
-                let plate = typeof t === 'object' ? t.plate : t;
-                return plate.toUpperCase() === pinInput.toUpperCase();
-            });
-
-            if (matchedTruck) {
-                let actualPlate = typeof matchedTruck === 'object' ? matchedTruck.plate : matchedTruck;
-                completeLoginFlow(actualPlate, actualPlate);
-            } else {
-                document.getElementById('loginError').innerText = "Truck Plate Not Found.";
-                setTimeout(() => document.getElementById('loginError').innerText = "", 2000);
-            }
-        }
-    }
-
-    function completeLoginFlow(internalRole, displayRole) {
-        currentUserRole = internalRole;
-        document.getElementById('uiRoleDisplay').innerText = displayRole.toUpperCase();
-
-        if (internalRole !== 'admin') {
-            document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden-role'));
-            document.querySelectorAll('.dispatcher-only').forEach(el => el.classList.remove('hidden-role'));
-            document.getElementById('myTruckTitle').innerText = displayRole;
-            document.getElementById('opTruck').value = displayRole;
-            document.getElementById('opTruck').disabled = true;
-        } else {
-            document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden-role'));
-            document.querySelectorAll('.dispatcher-only').forEach(el => el.classList.add('hidden-role'));
-            document.getElementById('opTruck').disabled = false;
-        }
-
-        document.getElementById('login-screen').style.display = 'none';
-        document.getElementById('app-container').style.display = 'block';
-        
-        if (internalRole !== 'admin') {
-            nav('truck-dashboard');
-            document.getElementById('btn-truck-dash').classList.add('active');
-        } else {
-            nav('dashboard');
-        }
-
-        renderCharts(); 
-        initMap(); 
-        renderAll();
-    }
-
-    function logout() { location.reload(); }
-
     const DB_KEY = 'truck_v55_db';
     const tzExpenses = ["Fuel", "Driver Allowance", "Turnboy Allowance", "Road License", "Insurance", "LATRA Fee", "Traffic Fine", "Parking", "Gate Fee", "Loading (Vibarua)", "Unloading", "Weighbridge (Mizani)", "Dalali (Broker)", "Mechanic Labor", "Oil Change", "Office Rent"];
 
@@ -838,7 +774,7 @@
         if(saved) {
             try {
                 let temp = JSON.parse(saved);
-                if (temp) { // Safety check to prevent app freezing if storage was corrupted
+                if (temp) {
                     if(!temp.inventory) temp.inventory = [];
                     if(!temp.invTypes) temp.invTypes = ["Tyre", "Spare Part", "Battery", "Filter"];
                     if(!temp.companyName) temp.companyName = "International Logistics System";
@@ -862,19 +798,12 @@
 
     function saveLocal() { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
 
-    function updateCompanyName() {
-        const newName = document.getElementById('companyNameInput').value;
-        if(newName) { db.companyName = newName; saveLocal(); document.getElementById('appHeaderName').innerText = newName; alert("App Name Updated!"); document.getElementById('companyNameInput').value = ''; }
-    }
-
     function nav(id) {
         document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
         const targetSection = document.getElementById(id);
         if(targetSection) targetSection.classList.add('active');
         
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        
-        // Safety wrapper to prevent event missing crashes
         try {
             if (window.event && window.event.currentTarget) {
                 window.event.currentTarget.classList.add('active');
@@ -1011,11 +940,10 @@
         if (mode === 'income') {
             tx.customer = document.getElementById('opCustomer').value;
             tx.dist = parseFloat(document.getElementById('opDist').value)||0;
-            if(currentUserRole === 'admin') {
-                tx.total = parseFloat(document.getElementById('opTotal').value)||0;
-                tx.paid = parseFloat(document.getElementById('opPaid').value)||0;
-                tx.bal = tx.total - tx.paid;
-            } else { tx.total = 0; tx.paid = 0; tx.bal = 0; }
+            
+            tx.total = parseFloat(document.getElementById('opTotal').value)||0;
+            tx.paid = parseFloat(document.getElementById('opPaid').value)||0;
+            tx.bal = tx.total - tx.paid;
 
             tx.tripType = document.getElementById('opTripType').value;
             tx.status = document.getElementById('opLoadStatus').value;
@@ -1133,11 +1061,6 @@
         fill('invTruck', invTruckOpts);
 
         let drv = document.getElementById('opDriver'); if(drv){ drv.innerHTML='<option value="">Select...</option>'; db.drivers.forEach(d => drv.innerHTML+=`<option>${typeof d==='object'?d.name:d}</option>`); }
-        
-        if (currentUserRole !== 'admin') {
-            const trkDrop = document.getElementById('opTruck');
-            for(let i=0; i<trkDrop.options.length; i++) { if(trkDrop.options[i].text.includes(currentUserRole)) { trkDrop.selectedIndex = i; break; } }
-        }
 
         const mList = (id, l, t) => { let el=document.getElementById(id); if(el) el.innerHTML=l.map((i,x)=>{ let disp=i; if(t==='trucks'&&typeof i==='object')disp=`<b>${i.plate}</b> <small>${i.model}</small>`; if(t==='drivers'&&typeof i==='object')disp=`<b>${i.name}</b> <small>${i.truck||''}</small>`; return `<div style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid #eee;"><span>${disp}</span><span onclick="remReg('${t}',${x})" style="color:red;cursor:pointer;">×</span></div>`}).join(''); };
         mList('lst-trucks', db.trucks, 'trucks'); mList('lst-customers', db.customers, 'customers'); mList('lst-drivers', db.drivers, 'drivers'); mList('lst-categories', db.categories, 'categories'); mList('lst-invTypes', db.invTypes, 'invTypes');
@@ -1152,7 +1075,6 @@
             let row = '', amountDisplay = '', actionBtn = `<button onclick="deleteTx(${t.id})" style="color:#cbd5e1; border:none; background:none;">×</button>`;
             let imgTag = t.fileUrl ? `<br><img src="${t.fileUrl}" style="max-height:50px; border-radius:5px; margin-top:5px;">` : '';
 
-            // Safe truck string split parsing
             let chkTruck = '';
             if (t.truck && typeof t.truck === 'string') {
                 chkTruck = t.truck.includes('(') ? t.truck.split(' ')[0] : t.truck;
@@ -1166,8 +1088,7 @@
             
             if(t.type==='income'){ 
                 adminCash+=t.paid; pend+=t.bal; 
-                if(chkTruck===currentUserRole) myRev+=t.total;
-                amountDisplay = currentUserRole === 'admin' ? `<span class="text-success">+${t.paid.toLocaleString()}</span>` : `<span style="color:#64748b;">Income Logged</span>`;
+                amountDisplay = `<span class="text-success">+${t.paid.toLocaleString()}</span>`;
                 
                 let sBadge = t.tripStatus==='Completed'?`<br><span class="status-badge status-complete">✅ Completed</span>` : `<br><span class="status-badge status-transit">🚚 In Transit</span>`;
                 if(t.tripStatus!=='Completed') actionBtn = `<button class="btn-end-trip" onclick="endTrip(${t.id})">🏁 End Trip</button> <button onclick="deleteTx(${t.id})" style="color:red; border:none; background:none; margin-left:10px;">×</button>`;
@@ -1176,7 +1097,6 @@
 
             } else if(t.type==='expense'){ 
                 adminExp+=t.amount; 
-                if(chkTruck===currentUserRole) myExp+=t.amount;
                 amountDisplay = `<span class="text-danger">-${t.amount.toLocaleString()}</span>`;
                 row = `<td><b>${t.date}</b><br>${t.truck}<br><small>👤 ${t.driver}</small></td><td>${t.cat}<br><small>${t.desc}</small>${t.cat==='Fuel'&&t.liters?`<div class="fuel-badge">⛽ ${t.liters}L</div>`:''}${imgTag}</td><td style="text-align:right">${amountDisplay}</td>`;
             } else if(t.type==='debt'){ 
@@ -1195,16 +1115,6 @@
         if(document.getElementById('kpi-expense')) document.getElementById('kpi-expense').innerText = adminExp.toLocaleString();
         if(document.getElementById('kpi-profit')) document.getElementById('kpi-profit').innerText = (adminCash-adminExp).toLocaleString();
 
-        if(document.getElementById('my-truck-rev')) document.getElementById('my-truck-rev').innerText = myRev.toLocaleString() + " TZS";
-        if(document.getElementById('my-truck-exp')) document.getElementById('my-truck-exp').innerText = myExp.toLocaleString() + " TZS";
-
-        if (currentUserRole !== 'admin') {
-            let myT = db.trucks.find(t => (typeof t === 'object' ? t.plate : t) === currentUserRole);
-            if(myT && typeof myT === 'object' && document.getElementById('my-truck-odo')) {
-                document.getElementById('my-truck-odo').innerText = (myT.odo || 0).toLocaleString() + " km";
-            }
-        }
-
         const fList = document.getElementById('fuelList'), mListEl = document.getElementById('maint-list');
         if(fList) fList.innerHTML=''; if(mListEl) mListEl.innerHTML=''; let mAlert=false;
         db.trucks.forEach(tObj => {
@@ -1213,7 +1123,7 @@
             const pft = s.inc-s.exp; const kRun = (tObj.odo||0)-(tObj.lastServiceOdo||0); const kRem = (tObj.interval||5000)-kRun; const pct = Math.min(100,(kRun/(tObj.interval||5000))*100);
             let bCol='#10b981'; if(pct>75)bCol='#f59e0b'; if(pct>=100)bCol='#ef4444';
             if(kRem<=500){ mAlert=true; if(mListEl) mListEl.innerHTML+=`<div class="maint-row"><span><b style="color:${kRem<=0?'red':'orange'}">${kRem<=0?'OVERDUE':'DUE SOON'}:</b> ${nm} (${kRem}km)</span><button class="btn-sm" style="background:${kRem<=0?'red':'orange'};color:white;border:none;" onclick="resetService('${tObj.plate}')">Done</button></div>`; }
-            if(fList) fList.innerHTML+=`<tr><td><b>${tObj.plate}</b></td><td style="color:${pft>=0?'var(--primary)':'red'}">${currentUserRole==='admin'?pft.toLocaleString():'--'}</td><td>${s.liters>0?(s.km/s.liters).toFixed(2):'-'}</td><td><div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${pct}%;background:${bCol};"></div></div></td><td><button onclick="resetService('${tObj.plate}')" style="border:none;background:none;cursor:pointer">🔧</button></td></tr>`;
+            if(fList) fList.innerHTML+=`<tr><td><b>${tObj.plate}</b></td><td style="color:${pft>=0?'var(--primary)':'red'}">${pft.toLocaleString()}</td><td>${s.liters>0?(s.km/s.liters).toFixed(2):'-'}</td><td><div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${pct}%;background:${bCol};"></div></div></td><td><button onclick="resetService('${tObj.plate}')" style="border:none;background:none;cursor:pointer">🔧</button></td></tr>`;
         });
         if(document.getElementById('maint-alert-box')) document.getElementById('maint-alert-box').style.display = mAlert?'block':'none';
         
@@ -1226,25 +1136,24 @@
 
     function renderHistory() {
         const hDiv = document.getElementById('historyList'); const srch = document.getElementById('histSearch').value.toLowerCase(); hDiv.innerHTML='';
-        let visibleTxs = currentUserRole === 'admin' ? [...db.txs].reverse() : [...db.txs].filter(t => (t.truck && t.truck.includes(currentUserRole))).reverse();
+        let visibleTxs = [...db.txs].reverse();
         
         visibleTxs.filter(t=> (t.driver+(t.truck||'')+t.customer+t.cat+t.desc).toLowerCase().includes(srch)).forEach(t => {
             let sHtml='', cCls='', tit='', sub='', am='<span style="color:#cbd5e1">Classified</span>';
             let imgHtml = t.fileUrl ? `<br><img src="${t.fileUrl}" style="max-height:80px; border-radius:5px; margin-top:10px; border: 1px solid #ccc;">` : '';
 
-            if(t.type==='income'){ cCls='income'; tit=`TRIP: ${t.customer}`; sub=`${t.routeFull?t.routeFull:t.truck} • ${t.driver}`; if(currentUserRole==='admin')am=`<span class="text-success">+${t.paid.toLocaleString()}</span>`; sHtml=t.tripStatus==='Completed'?`<div class="h-status st-done">Done</div>`:`<div class="h-status st-transit">In Transit</div> <button class="btn-sm btn-primary" onclick="endTrip(${t.id})">End</button>`; }
+            if(t.type==='income'){ cCls='income'; tit=`TRIP: ${t.customer}`; sub=`${t.routeFull?t.routeFull:t.truck} • ${t.driver}`; am=`<span class="text-success">+${t.paid.toLocaleString()}</span>`; sHtml=t.tripStatus==='Completed'?`<div class="h-status st-done">Done</div>`:`<div class="h-status st-transit">In Transit</div> <button class="btn-sm btn-primary" onclick="endTrip(${t.id})">End</button>`; }
             else if(t.type==='expense'){ cCls='expense'; tit=`EXP: ${t.cat}`; sub=`${t.desc} • ${t.truck}`; am=`<span class="text-danger">-${t.amount.toLocaleString()}</span>`; }
-            else if(t.type==='debt'){ if(currentUserRole!=='admin')return; cCls='debt'; tit=`DEBT: ${t.customer}`; sub=t.desc; am=`<span class="text-success">+${t.amount.toLocaleString()}</span>`; }
+            else if(t.type==='debt'){ cCls='debt'; tit=`DEBT: ${t.customer}`; sub=t.desc; am=`<span class="text-success">+${t.amount.toLocaleString()}</span>`; }
             
             hDiv.innerHTML += `<div class="history-card ${cCls}"><div style="flex:1;"><div class="h-date">${t.date}</div><div class="h-title">${tit}</div><div class="h-sub">${sub}</div>${imgHtml}<br>${sHtml}</div><div style="text-align:right;"><div class="h-amt">${am}</div><button onclick="deleteTx(${t.id})" style="color:#cbd5e1;border:none;background:none;">×</button></div></div>`;
         });
     }
 
-    // --- REGISTRY ---
     function addReg(t, id) { let v=document.getElementById(id).value; if(v){db[t].push(v);saveLocal();document.getElementById(id).value='';renderAll();}}
-    async function addTruck() { let p=document.getElementById('newTruckPlate').value, m=document.getElementById('newTruckModel').value, tr=document.getElementById('newTruckTrailers').value, i=parseInt(document.getElementById('newTruckInterval').value)||5000; if(p){ try{fetch('/api/trucks',{method:'POST',headers:{'Content-Type':'application/json','X-API-Key':API_KEY},body:JSON.stringify({plate:p,model:m})}).catch(e=>{});}catch(e){} db.trucks.push({plate:p,model:m,trailers:tr,interval:i,odo:0,lastServiceOdo:0}); saveLocal(); document.getElementById('newTruckPlate').value=''; renderAll();} }
+    async function addTruck() { let p=document.getElementById('newTruckPlate').value, m=document.getElementById('newTruckModel').value, tr=document.getElementById('newTruckTrailers').value, i=parseInt(document.getElementById('newTruckInterval').value)||5000; if(p){ try{fetch('/api/trucks',{method:'POST',headers:{'Content-Type':'application/json','X-API-Key':API_KEY},body:JSON.stringify({plate:p,model:m,company_id:currentCompanyId})}).catch(e=>{});}catch(e){} db.trucks.push({plate:p,model:m,trailers:tr,interval:i,odo:0,lastServiceOdo:0}); saveLocal(); document.getElementById('newTruckPlate').value=''; renderAll();} }
     function checkTruckAssignment(el) { let p=el.value, err=document.getElementById('truck-assign-error'); if(!p){err.style.display='none';el.style.borderColor='';return true;} if(db.drivers.some(d=>(typeof d==='object'?d.truck:'')===p)){err.style.display='block';el.style.borderColor='red';return false;} err.style.display='none';el.style.borderColor='';return true; }
-    async function addDriver() { let n=document.getElementById('newDriver').value, c=document.getElementById('newDriverCust').value, ts=document.getElementById('newDriverTruck'); if(!n||(ts.value&&!checkTruckAssignment(ts)))return; try{fetch('/api/drivers',{method:'POST',headers:{'Content-Type':'application/json','X-API-Key':API_KEY},body:JSON.stringify({name:n})}).catch(e=>{});}catch(e){} db.drivers.push({name:n,customer:c,truck:ts.value}); saveLocal(); document.getElementById('newDriver').value=''; renderAll(); }
+    async function addDriver() { let n=document.getElementById('newDriver').value, c=document.getElementById('newDriverCust').value, ts=document.getElementById('newDriverTruck'); if(!n||(ts.value&&!checkTruckAssignment(ts)))return; try{fetch('/api/drivers',{method:'POST',headers:{'Content-Type':'application/json','X-API-Key':API_KEY},body:JSON.stringify({name:n,company_id:currentCompanyId})}).catch(e=>{});}catch(e){} db.drivers.push({name:n,customer:c,truck:ts.value}); saveLocal(); document.getElementById('newDriver').value=''; renderAll(); }
     function remReg(t, idx) { if(confirm("Remove?")){db[t].splice(idx,1);saveLocal();renderAll();} }
 
     function backupData() { const a=document.createElement('a'); a.href="data:text/json;charset=utf-8,"+encodeURIComponent(JSON.stringify(db)); a.download="backup_"+new Date().toISOString().slice(0,10)+".json"; document.body.appendChild(a); a.click(); a.remove(); }
@@ -1254,18 +1163,12 @@
 
     let chartP=null, chartE=null;
     function renderCharts() {
-        const cP=document.getElementById('chartProfit'), cE=document.getElementById('chartExpense'); if(!cP||!cE||currentUserRole!=='admin')return;
+        const cP=document.getElementById('chartProfit'), cE=document.getElementById('chartExpense'); if(!cP||!cE)return;
         if(chartP) chartP.destroy(); if(chartE) chartE.destroy();
         let iM={}, eM={}, cT={}; db.txs.forEach(t=>{let m=t.date.substring(0,7); if(!iM[m]){iM[m]=0;eM[m]=0;} if(t.type==='income')iM[m]+=t.total; if(t.type==='expense'){eM[m]+=t.amount; cT[t.cat]=(cT[t.cat]||0)+t.amount;} });
         const lbl=Object.keys(iM).sort();
         chartP = new Chart(cP.getContext('2d'), {type:'bar', data:{labels:lbl, datasets:[{label:"Income",data:lbl.map(m=>iM[m]),backgroundColor:'#10b981'},{label:"Expense",data:lbl.map(m=>eM[m]),backgroundColor:'#ef4444'}]}, options:{responsive:true,maintainAspectRatio:false}});
         chartE = new Chart(cE.getContext('2d'), {type:'doughnut', data:{labels:Object.keys(cT), datasets:[{data:Object.values(cT),backgroundColor:['#f59e0b','#ef4444','#3b82f6','#6366f1','#8b5cf6','#10b981','#64748b']}]}, options:{responsive:true,maintainAspectRatio:false}});
-    }
-
-    function changePin() {
-        const c=document.getElementById('currentPin').value, n=document.getElementById('newPin').value, cf=document.getElementById('confirmNewPin').value;
-        if(c!==(localStorage.getItem('malibora_pin')||'1234')) return alert("Wrong current PIN"); if(n.length!==4||n!==cf) return alert("PIN must be 4 digits and match");
-        localStorage.setItem('malibora_pin', n); alert("PIN Changed!"); document.getElementById('currentPin').value=''; document.getElementById('newPin').value=''; document.getElementById('confirmNewPin').value='';
     }
 
     init();
