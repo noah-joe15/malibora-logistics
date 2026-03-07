@@ -58,6 +58,11 @@ class CompanyAuth(BaseModel):
     company_name: str
     admin_pin: str
 
+class PinUpdate(BaseModel):
+    company_id: int
+    current_pin: str
+    new_pin: str
+
 class Truck(BaseModel):
     plate: str
     model: str
@@ -117,7 +122,7 @@ class Compliance(BaseModel):
     status: Optional[str] = "Pending"
 
 # ---------------------------------------------------------
-# AUTH ENDPOINTS: Register & Login (SaaS Ready)
+# AUTH ENDPOINTS: Register, Login, & Change PIN
 # ---------------------------------------------------------
 @app.post("/api/register")
 def register_company(auth: CompanyAuth, api_key: str = Depends(get_api_key)):
@@ -160,6 +165,27 @@ def login_company(auth: CompanyAuth, api_key: str = Depends(get_api_key)):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/update-pin")
+def update_pin(data: PinUpdate, api_key: str = Depends(get_api_key)):
+    try:
+        with engine.connect() as connection:
+            # Safely verify the old PIN before saving the new one
+            result = connection.execute(
+                text("UPDATE companies SET admin_pin = :new_pin WHERE id = :company_id AND admin_pin = :current_pin RETURNING id"),
+                {"new_pin": data.new_pin, "company_id": data.company_id, "current_pin": data.current_pin}
+            ).fetchone()
+            
+            if result:
+                connection.commit()
+                return {"message": "PIN updated securely in the cloud!"}
+            else:
+                raise HTTPException(status_code=401, detail="Incorrect Current PIN!")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.post("/api/upload")
 async def upload_receipt(file: UploadFile = File(...), api_key: str = Depends(get_api_key)):
