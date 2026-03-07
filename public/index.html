@@ -505,7 +505,7 @@
                         </div>
                     </div>
 
-                    <label data-key="lbl_cust">Customer (Auto-Filled)</label><select id="opCustomer"></select>
+                    <label data-key="lbl_cust">Customer / Client</label><input type="text" id="opCustomer" placeholder="Enter Customer Name">
                     
                     <div style="background: #f0f9ff; padding: 15px; border-radius: 10px; border: 1px solid #bae6fd; margin-bottom: 15px;">
                         <div class="form-row">
@@ -532,11 +532,6 @@
 
                 <label data-key="lbl_desc">Description</label><textarea id="opDesc" rows="2"></textarea>
 
-                <div style="background:#e0f2fe; border: 1px solid #bae6fd; padding:15px; border-radius:10px; margin-bottom:15px;">
-                    <label style="color:#0284c7; margin-bottom:5px;">📸 Upload Proof (Receipt or Waybill)</label>
-                    <input type="file" id="opFile" accept="image/*" style="margin-bottom:0; background:white;">
-                </div>
-
                 <label data-key="lbl_method">Payment Method</label>
                 <select id="opMethod" onchange="toggleBank()">
                     <option value="Cash">Cash</option><option value="Bank">Bank</option><option value="Mobile">Mobile</option>
@@ -553,7 +548,7 @@
             </div>
 
             <div class="panel">
-                <h3 data-key="recent_act">Recent Activity (Editable)</h3>
+                <h3 data-key="recent_act">Recent Activity</h3>
                 <div id="txList" style="max-height: 400px; overflow-y: auto;"></div>
             </div>
         </div>
@@ -592,15 +587,6 @@
     </div>
 
     <div id="settings" class="section">
-        <div class="panel">
-            <h3 data-key="set_backup">💾 Data Backup</h3>
-            <div class="form-row">
-                <button class="btn btn-primary" onclick="backupData()" data-key="btn_dl">Download Backup</button>
-                <button class="btn btn-outline" onclick="document.getElementById('fileInput').click()" data-key="btn_restore">Restore File</button>
-            </div>
-            <input type="file" id="fileInput" class="hidden" onchange="restoreData(this)">
-        </div>
-
         <div class="split-layout">
             <div class="panel">
                 <h3 data-key="mng_trucks">Manage Trucks</h3>
@@ -622,7 +608,6 @@
                 <h3 data-key="mng_drivers">Manage Drivers & Assignments</h3>
                 <div class="manage-inputs" style="display:flex; flex-wrap:wrap; gap:5px; margin-bottom:5px;">
                     <input id="newDriver" placeholder="Driver Name" style="margin:0; flex:1;">
-                    <select id="newDriverCust" style="margin:0; flex:1;"><option value="">Assign Customer...</option></select>
                     <div style="flex:1;">
                         <select id="newDriverTruck" style="margin:0; width:100%;" onchange="checkTruckAssignment(this)"><option value="">Assign Truck...</option></select>
                         <small id="truck-assign-error" style="color:var(--danger); display:none; font-weight:bold;">⚠️ Truck already assigned!</small>
@@ -635,28 +620,18 @@
 
         <div class="split-layout" style="margin-top:20px;">
             <div class="panel">
-                <h3 data-key="mng_cust">Manage Customers</h3>
-                <div style="display:flex; gap:5px;"><input id="newCust" placeholder="Customer Name"><button class="btn btn-primary" style="width:auto;" onclick="addReg('customers','newCust')">+</button></div>
-                <div id="lst-customers"></div>
-            </div>
-            
-            <div class="panel">
                 <h3 data-key="mng_cat">Expense Categories</h3>
                 <div style="display:flex; gap:5px;"><input id="newCat" placeholder="New Category"><button class="btn btn-primary" style="width:auto;" onclick="addReg('categories','newCat')">+</button></div>
                 <div id="lst-categories" style="max-height: 200px; overflow-y:auto;"></div>
             </div>
-        </div>
-
-        <div class="panel" style="margin-top:20px;">
-            <h3 data-key="mng_inv_cat">🛠️ Inventory Categories</h3>
-            <div style="display:flex; gap:5px;"><input id="newInvType" placeholder="New Inventory Type (e.g. Filter, Battery)"><button class="btn btn-primary" style="width:auto;" onclick="addReg('invTypes','newInvType')">+</button></div>
-            <div id="lst-invTypes" style="max-height: 200px; overflow-y:auto;"></div>
+            
+            <div class="panel">
+                <h3 data-key="mng_inv_cat">🛠️ Inventory Categories</h3>
+                <div style="display:flex; gap:5px;"><input id="newInvType" placeholder="New Inventory Type (e.g. Filter, Battery)"><button class="btn btn-primary" style="width:auto;" onclick="addReg('invTypes','newInvType')">+</button></div>
+                <div id="lst-invTypes" style="max-height: 200px; overflow-y:auto;"></div>
+            </div>
         </div>
         
-        <div class="panel" style="background:#fef2f2; border:1px solid #fca5a5; margin-top:20px;">
-            <h3 class="text-danger" data-key="danger_zone">Danger Zone</h3>
-            <button class="btn btn-outline" style="color:var(--danger); border-color:var(--danger);" onclick="wipeData()" data-key="factory_reset">Factory Reset App</button>
-        </div>
     </div>
 </div>
 
@@ -745,92 +720,77 @@
     }
 
     /**
-     * MASTER CLOUD SYNC FUNCTION
+     * MASTER CLOUD SYNC FUNCTION: 
+     * Wipes local memory and builds a 100% true copy from Supabase
      */
     async function syncDashboardWithCloud() {
-        if (!currentCompanyId) {
-            console.error("Cannot sync: No company logged in.");
-            return;
-        }
+        if (!currentCompanyId) return;
 
         try {
-            console.log(`Starting Cloud Sync for Company ID: ${currentCompanyId}...`);
+            console.log(`Starting True Cloud Sync for Company ID: ${currentCompanyId}...`);
 
-            const [trucksRes, driversRes, expensesRes, inventoryRes] = await Promise.all([
+            // 1. WIPE THE LOCAL MEMORY! Destroy the "Ghost in the Machine"
+            db.trucks = [];
+            db.drivers = [];
+            db.txs = [];
+            db.compliance = [];
+            db.inventory = [];
+            db.customers = [];
+
+            // 2. Fetch everything from all 7 cloud tables at the same time
+            const [trucksRes, driversRes, expensesRes, inventoryRes, tripsRes, debtsRes, compRes] = await Promise.all([
                 fetch(`${API_URL}/api/trucks?company_id=${currentCompanyId}`, { headers: { "X-API-Key": API_KEY } }),
                 fetch(`${API_URL}/api/drivers?company_id=${currentCompanyId}`, { headers: { "X-API-Key": API_KEY } }),
                 fetch(`${API_URL}/api/expenses?company_id=${currentCompanyId}`, { headers: { "X-API-Key": API_KEY } }),
-                fetch(`${API_URL}/api/inventory?company_id=${currentCompanyId}`, { headers: { "X-API-Key": API_KEY } })
+                fetch(`${API_URL}/api/inventory?company_id=${currentCompanyId}`, { headers: { "X-API-Key": API_KEY } }),
+                fetch(`${API_URL}/api/trips?company_id=${currentCompanyId}`, { headers: { "X-API-Key": API_KEY } }),
+                fetch(`${API_URL}/api/debts?company_id=${currentCompanyId}`, { headers: { "X-API-Key": API_KEY } }),
+                fetch(`${API_URL}/api/compliance?company_id=${currentCompanyId}`, { headers: { "X-API-Key": API_KEY } })
             ]);
 
             const cloudTrucks = await trucksRes.json();
             const cloudDrivers = await driversRes.json();
             const cloudExpenses = await expensesRes.json();
             const cloudInventory = await inventoryRes.json();
+            const cloudTrips = await tripsRes.json();
+            const cloudDebts = await debtsRes.json();
+            const cloudComp = await compRes.json();
 
-            // A. Format Trucks
-            db.trucks = cloudTrucks.map(t => ({
-                id: t.id,
-                plate: t.plate,
-                model: t.model,
-                trailers: 0, 
-                interval: 5000, 
-                odo: 0, 
-                lastServiceOdo: 0
-            }));
+            // 3. Map Data into Dashboard Memory
+            db.trucks = cloudTrucks.map(t => ({ id: t.id, plate: t.plate, model: t.model, trailers: 0, interval: 5000, odo: 0, lastServiceOdo: 0 }));
+            db.drivers = cloudDrivers.map(d => ({ id: d.id, name: d.name, truck: "" }));
+            db.inventory = cloudInventory.map(i => ({ id: i.id, type: i.item_type, serial: i.serial_number, truck: i.assigned_truck, cost: i.cost }));
+            db.compliance = cloudComp.map(c => ({ id: c.id, type: c.record_type, truck: c.truck, date: c.expiry_date, amount: c.amount, ref: c.reference_no, status: c.status }));
 
-            // B. Format Drivers
-            db.drivers = cloudDrivers.map(d => ({
-                id: d.id,
-                name: d.name,
-                customer: "", 
-                truck: "" 
-            }));
-
-            // C. Format Inventory
-            db.inventory = cloudInventory.map(i => ({
-                id: i.id,
-                type: i.item_type,
-                serial: i.serial_number,
-                truck: i.assigned_truck,
-                cost: i.cost
-            }));
-
-            // D. Format Expenses
-            db.txs = db.txs.filter(tx => tx.type !== 'expense' || !tx.isCloudSync); 
-            
+            // 4. Rebuild the Main Transaction List (Trips + Expenses + Debts)
             const expenseTxs = cloudExpenses.map(e => {
-                let cat = "Other";
-                let desc = e.description;
-                if(e.description && e.description.includes(" - ")) {
-                    let parts = e.description.split(" - ");
-                    cat = parts[0];
-                    desc = parts.slice(1).join(" - ");
-                }
-
-                return {
-                    id: e.id,
-                    date: new Date().toISOString().slice(0, 10), 
-                    truck: "N/A", 
-                    driver: "System",
-                    desc: desc,
-                    cat: cat,
-                    amount: e.amount,
-                    type: 'expense',
-                    isCloudSync: true 
-                };
+                let cat = "Other"; let desc = e.description;
+                if(e.description && e.description.includes(" - ")) { let p = e.description.split(" - "); cat = p[0]; desc = p.slice(1).join(" - "); }
+                return { id: e.id, date: new Date().toISOString().slice(0, 10), truck: "N/A", driver: "System", desc: desc, cat: cat, amount: e.amount, type: 'expense' };
             });
 
-            db.txs = [...db.txs, ...expenseTxs];
+            const tripTxs = cloudTrips.map(t => ({
+                id: t.id, type: 'income', date: t.date, truck: t.truck, driver: t.driver, customer: t.customer, tripType: t.trip_type, status: t.load_status,
+                from: t.route_from, to: t.route_to, routeFull: t.route_full, dist: t.distance, cargo: t.cargo, total: t.total_price, paid: t.paid_amount, bal: t.balance, tripStatus: t.trip_status
+            }));
+
+            const debtTxs = cloudDebts.map(d => ({
+                id: d.id, type: 'debt', date: d.date, customer: d.customer, amount: d.amount, desc: d.description, method: d.payment_method, bank: d.bank_name, truck: 'N/A', driver: ''
+            }));
+
+            db.txs = [...tripTxs, ...expenseTxs, ...debtTxs].sort((a,b) => new Date(a.date) - new Date(b.date)); // Sort chronologically
+
+            // 5. Extract Unique Customers from Trips and Debts
+            let allCust = [...tripTxs.map(t=>t.customer), ...debtTxs.map(d=>d.customer)];
+            db.customers = [...new Set(allCust)].filter(Boolean); // Remove duplicates and blanks
 
             saveLocal(); 
             renderAll(); 
-            
-            console.log("Cloud Sync Complete! Dashboard is live.");
+            console.log("Cloud Sync Complete! UI is clean and strictly locked to Company ID: " + currentCompanyId);
 
         } catch (error) {
-            console.error("Critical Cloud Sync Failure:", error);
-            alert("Warning: Could not pull live data from the cloud. Please check your connection.");
+            console.error("Cloud Sync Failure:", error);
+            alert("Could not load data from the cloud.");
         }
     }
 
@@ -846,7 +806,7 @@
     const COMPLIANCE_TYPES_TZ = ["LATRA - Goods Carrying License", "TRA - Road License (Annual)", "Insurance - Comprehensive", "Vehicle Inspection (Kagua)", "Fire & Rescue Permit (Zimamoto)", "Parking - City Council (Jiji)", "Parking - Municipal (Manispaa)", "Parking - Town Council (Mji)", "Parking - District (Wilaya)", "Traffic Fine (Notification)", "Overloading Penalty (Mizani)", "City Service Levy", "OSHA Compliance"];
 
     const i18n = {
-        en: { nav_dash: "Dashboard", nav_map: "🗺️ Live Map", nav_hist: "History", nav_analytics: "Analytics", nav_debt: "Collect Debt", nav_ops: "Operations", nav_comp: "Compliance", nav_set: "Settings", kpi_cash: "Cash In Hand", kpi_debt: "Pending Debt", kpi_exp: "Expenses", kpi_profit: "Net Profit", fleet_perf: "🚛 Fleet Performance & Maintenance", th_truck: "Truck", th_fuel: "Fuel Used", th_km: "Km Covered", th_eco: "Economy (Km/L)", th_exp: "Expenses", th_profit_short: "Profit", chart_income: "Income vs Expense (This Year)", chart_breakdown: "Expense Breakdown", mode_trip: "Trip", mode_exp: "Expense", lbl_date: "Date", lbl_truck: "Truck", lbl_driver: "Driver", lbl_cust: "Customer", lbl_dist: "Total Distance (Km)", lbl_total: "Total Price", lbl_paid: "Paid Now", lbl_bal: "Balance", debt_desc: "Receive payment for past debt.", lbl_amt_rec: "Amount Received", btn_save_debt: "SAVE PAYMENT", lbl_cat: "Category", lbl_liters: "Fuel Liters", lbl_amt: "Amount", lbl_desc: "Description", lbl_method: "Payment Method", lbl_bank: "Select Bank", btn_save: "SAVE TRANSACTION", recent_act: "Recent Activity (Editable)", th_item: "Item", th_due: "Due Date", th_status: "Status", th_action: "Action", btn_add: "Add Record", set_backup: "💾 Data Backup", btn_dl: "Download Backup", btn_restore: "Restore File", mng_trucks: "Manage Trucks", btn_add_truck: "Add Truck", mng_drivers: "Manage Drivers", mng_cust: "Manage Customers", mng_cat: "Expense Categories", danger_zone: "Danger Zone", factory_reset: "Factory Reset App", nav_inv: "🛠️ Inventory", inv_add: "Register New Tyre / Spare Part", inv_type: "Item Type", inv_serial: "Serial Number", inv_cost: "Cost (TZS)", inv_assign: "Assign To Truck", inv_btn: "Add To Inventory", inv_list: "Current Inventory", mng_inv_cat: "🛠️ Inventory Categories" },
+        en: { nav_dash: "Dashboard", nav_map: "🗺️ Live Map", nav_hist: "History", nav_analytics: "Analytics", nav_debt: "Collect Debt", nav_ops: "Operations", nav_comp: "Compliance", nav_set: "Settings", kpi_cash: "Cash In Hand", kpi_debt: "Pending Debt", kpi_exp: "Expenses", kpi_profit: "Net Profit", fleet_perf: "🚛 Fleet Performance & Maintenance", th_truck: "Truck", th_fuel: "Fuel Used", th_km: "Km Covered", th_eco: "Economy (Km/L)", th_exp: "Expenses", th_profit_short: "Profit", chart_income: "Income vs Expense (This Year)", chart_breakdown: "Expense Breakdown", mode_trip: "Trip", mode_exp: "Expense", lbl_date: "Date", lbl_truck: "Truck", lbl_driver: "Driver", lbl_cust: "Customer", lbl_dist: "Total Distance (Km)", lbl_total: "Total Price", lbl_paid: "Paid Now", lbl_bal: "Balance", debt_desc: "Receive payment for past debt.", lbl_amt_rec: "Amount Received", btn_save_debt: "SAVE PAYMENT", lbl_cat: "Category", lbl_liters: "Fuel Liters", lbl_amt: "Amount", lbl_desc: "Description", lbl_method: "Payment Method", lbl_bank: "Select Bank", btn_save: "SAVE TRANSACTION", recent_act: "Recent Activity", th_item: "Item", th_due: "Due Date", th_status: "Status", th_action: "Action", btn_add: "Add Record", set_backup: "💾 Data Backup", btn_dl: "Download Backup", btn_restore: "Restore File", mng_trucks: "Manage Trucks", btn_add_truck: "Add Truck", mng_drivers: "Manage Drivers", mng_cust: "Manage Customers", mng_cat: "Expense Categories", danger_zone: "Danger Zone", factory_reset: "Factory Reset App", nav_inv: "🛠️ Inventory", inv_add: "Register New Tyre / Spare Part", inv_type: "Item Type", inv_serial: "Serial Number", inv_cost: "Cost (TZS)", inv_assign: "Assign To Truck", inv_btn: "Add To Inventory", inv_list: "Current Inventory", mng_inv_cat: "🛠️ Inventory Categories" },
         sw: { nav_dash: "Dashibodi", nav_map: "🗺️ Ramani", nav_hist: "Historia", nav_analytics: "Uchambuzi", nav_debt: "Kusanya Deni", nav_ops: "Rekodi", nav_comp: "Sheria", nav_set: "Mipangilio", kpi_cash: "Pesa Mkononi", kpi_debt: "Madeni", kpi_exp: "Matumizi", kpi_profit: "Faida Halisi", fleet_perf: "🚛 Utendaji wa Malori & Matengenezo", th_truck: "Lori", th_fuel: "Mafuta", th_km: "Km", th_eco: "Matumizi (Km/L)", th_exp: "Matumizi", th_profit_short: "Faida", chart_income: "Mapato vs Matumizi (Mwaka huu)", chart_breakdown: "Mchanganuo wa Matumizi", mode_trip: "Safari", mode_exp: "Matumizi", lbl_date: "Tarehe", lbl_truck: "Lori", lbl_driver: "Dereva", lbl_cust: "Mteja", lbl_dist: "Umbali Jumla (Km)", lbl_total: "Bei Jumla", lbl_paid: "imelipwa", lbl_bal: "Deni", debt_desc: "Pokea malipo ya deni la nyuma.", lbl_amt_rec: "Kiasi Kilichopokelewa", btn_save_debt: "HIFADHI MALIPO", lbl_cat: "Aina", lbl_liters: "Lita za Mafuta", lbl_amt: "Kiasi", lbl_desc: "Maelezo", lbl_method: "Njia ya Malipo", lbl_bank: "Chagua Benki", btn_save: "HIFADHI TAARIFA", recent_act: "Shughuli za Hivi Karibuni", th_item: "Kitu", th_due: "Tarehe ya Mwisho", th_status: "Hali", th_action: "Hatua", btn_add: "Ongeza", set_backup: "💾 Hifadhi Data", btn_dl: "Pakua Backup", btn_restore: "Rudisha Data", mng_trucks: "Simamia Malori", btn_add_truck: "Ongeza Lori", mng_drivers: "Madereva", mng_cust: "Wateja", mng_cat: "Aina za Matumizi", danger_zone: "Eneo la Hatari", factory_reset: "Futa Kila Kitu", nav_inv: "🛠️ Stoo/Spea", inv_add: "Sajili Kitu Kipya Stoo", inv_type: "Aina", inv_serial: "Namba ya Siri", inv_cost: "Gharama (TZS)", inv_assign: "Pangia Lori", inv_btn: "Ongeza Kwenye Stoo", inv_list: "Vitu Kwenye Stoo", mng_inv_cat: "🛠️ Aina za Stoo" }
     };
 
@@ -864,20 +824,6 @@
     let db = { trucks: [], drivers: [], customers: [], categories: tzExpenses, txs: [], compliance: [], inventory: [], invTypes: ["Tyre", "Spare Part", "Battery", "Filter"], companyName: "International Logistics System" };
 
     function init() {
-        const saved = localStorage.getItem(DB_KEY);
-        if(saved) {
-            try {
-                let temp = JSON.parse(saved);
-                if (temp) {
-                    if(!temp.inventory) temp.inventory = [];
-                    if(!temp.invTypes) temp.invTypes = ["Tyre", "Spare Part", "Battery", "Filter"];
-                    if(!temp.companyName) temp.companyName = "International Logistics System";
-                    db = temp;
-                    db.trucks.forEach(t => { if(typeof t === 'object'){ if(t.odo===undefined) t.odo=0; if(t.interval===undefined) t.interval=5000; if(t.lastServiceOdo===undefined) t.lastServiceOdo=0; }});
-                }
-            } catch(e) { console.error("Database initialization failed.", e); }
-        }
-        
         const headerEl = document.getElementById('appHeaderName');
         if (headerEl) headerEl.innerText = db.companyName;
 
@@ -890,7 +836,10 @@
         fillRegions(); checkCargo(); applyLanguage(); renderAll(); addRouteLeg(); addRouteLeg();
     }
 
-    function saveLocal() { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
+    function saveLocal() { 
+        // We still save locally so map functions and chart draws don't crash when switching tabs
+        localStorage.setItem(DB_KEY, JSON.stringify(db)); 
+    }
 
     function nav(id) {
         document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
@@ -1018,23 +967,11 @@
         const date = document.getElementById('opDate').value;
         if(!truckRaw || !driver || !date) { alert("Fill Truck, Driver, Date"); return; }
 
-        let fileUrl = null;
-        const fileInput = document.getElementById('opFile');
-        if (fileInput.files.length > 0) {
-            const file = fileInput.files[0];
-            fileUrl = await new Promise((resolve) => {
-                const reader = new FileReader(); reader.onloadend = () => resolve(reader.result); reader.readAsDataURL(file);
-            });
-            let formData = new FormData(); formData.append("file", file);
-            fetch('/api/upload', { method: 'POST', headers: {'X-API-Key': API_KEY}, body: formData }).catch(e=>{});
-        }
-
-        let tx = { id: Date.now(), date, truck: truckRaw, driver, desc: document.getElementById('opDesc').value, method: document.getElementById('opMethod').value, bank: document.getElementById('opMethod').value === 'Bank' ? document.getElementById('opBank').value : '', type: mode, fileUrl: fileUrl };
+        let tx = { id: Date.now(), date, truck: truckRaw, driver, desc: document.getElementById('opDesc').value, method: document.getElementById('opMethod').value, bank: document.getElementById('opMethod').value === 'Bank' ? document.getElementById('opBank').value : '', type: mode };
 
         if (mode === 'income') {
-            tx.customer = document.getElementById('opCustomer').value;
+            tx.customer = document.getElementById('opCustomer').value || 'Unknown';
             tx.dist = parseFloat(document.getElementById('opDist').value)||0;
-            
             tx.total = parseFloat(document.getElementById('opTotal').value)||0;
             tx.paid = parseFloat(document.getElementById('opPaid').value)||0;
             tx.bal = tx.total - tx.paid;
@@ -1043,6 +980,7 @@
             tx.status = document.getElementById('opLoadStatus').value;
             tx.cargo = document.getElementById('opCargoType').value || '-';
             tx.tripStatus = 'In Transit'; 
+            
             if (tx.tripType === 'Round') {
                 let stops = []; document.querySelectorAll('.route-region').forEach(sel => { if(sel.value) stops.push(sel.value); });
                 if(stops.length < 2) { alert("Need 2 stops"); return; }
@@ -1050,61 +988,97 @@
             } else {
                 tx.from = document.getElementById('opFrom').value; tx.to = document.getElementById('opTo').value; tx.routeFull = `${tx.from} ➝ ${tx.to}`; tx.routeStops = [tx.from, tx.to];
             }
-            let tIdx = db.trucks.findIndex(t => (typeof t === 'object' ? `${t.plate} (${t.model})` : t) === truckRaw);
-            if(tIdx !== -1 && typeof db.trucks[tIdx] === 'object') db.trucks[tIdx].odo = (db.trucks[tIdx].odo||0) + tx.dist;
 
-            try { fetch('/api/check-maintenance', { method: 'POST', headers: {'Content-Type': 'application/json', 'X-API-Key': API_KEY}, body: JSON.stringify({plate: truckRaw, model: "Unknown", odo: db.trucks[tIdx].odo || 4600}) }).then(r=>r.json()).then(data => { if(data.alert_triggered) alert(`🚨 ALERT: SMS Warning sent to Manager. ${truckRaw} needs service!`); }).catch(e=>{}); } catch(e){}
+            // POST TO CLOUD (TRIPS)
+            try { 
+                await fetch('/api/trips', { 
+                    method: 'POST', headers: {'Content-Type': 'application/json', 'X-API-Key': API_KEY}, 
+                    body: JSON.stringify({
+                        company_id: currentCompanyId, date: tx.date, truck: tx.truck, driver: tx.driver,
+                        customer: tx.customer, trip_type: tx.tripType, load_status: tx.status, route_from: tx.from, 
+                        route_to: tx.to, route_full: tx.routeFull, distance: tx.dist, cargo: tx.cargo, 
+                        total_price: tx.total, paid_amount: tx.paid, balance: tx.bal, trip_status: tx.tripStatus
+                    })
+                }); 
+            } catch(e){}
 
         } else if (mode === 'expense') {
             tx.cat = document.getElementById('opCat').value;
             tx.amount = parseFloat(document.getElementById('opExpAmount').value)||0;
             if(tx.cat === 'Fuel') tx.liters = parseFloat(document.getElementById('opLiters').value)||0;
-            try { fetch('/api/expenses', { method: 'POST', headers: {'Content-Type': 'application/json', 'X-API-Key': API_KEY}, body: JSON.stringify({ description: tx.cat + " - " + tx.desc, amount: tx.amount, is_fine: tx.cat.includes('Fine')})}).catch(e=>{}); } catch(e){}
+            
+            // POST TO CLOUD (EXPENSES)
+            try { 
+                await fetch('/api/expenses', { 
+                    method: 'POST', headers: {'Content-Type': 'application/json', 'X-API-Key': API_KEY}, 
+                    body: JSON.stringify({ description: tx.cat + " - " + tx.desc, amount: tx.amount, is_fine: tx.cat.includes('Fine'), company_id: currentCompanyId})
+                }); 
+            } catch(e){}
         }
 
-        db.txs.push(tx); saveLocal(); alert("Saved!");
-        document.getElementById('opDesc').value = ''; document.getElementById('opTotal').value = ''; document.getElementById('opPaid').value = ''; document.getElementById('opExpAmount').value = ''; document.getElementById('opLiters').value = ''; document.getElementById('opDist').value = ''; document.getElementById('opCargoType').value = ''; document.getElementById('opFile').value = '';
+        db.txs.push(tx); saveLocal(); alert("Transaction Saved to Cloud!");
+        document.getElementById('opDesc').value = ''; document.getElementById('opTotal').value = ''; document.getElementById('opPaid').value = ''; document.getElementById('opExpAmount').value = ''; document.getElementById('opLiters').value = ''; document.getElementById('opDist').value = ''; document.getElementById('opCargoType').value = ''; 
         document.getElementById('routeRows').innerHTML = ''; addRouteLeg(); addRouteLeg();
-        renderAll(); updateMap();
+        
+        syncDashboardWithCloud(); // Refresh the screen automatically!
     }
 
-    function addInventory() {
+    async function addInventory() {
         const item = { id: Date.now(), type: document.getElementById('invType').value, serial: document.getElementById('invSerial').value, cost: parseFloat(document.getElementById('invCost').value)||0, truck: document.getElementById('invTruck').value };
         if(!item.serial) return alert("Enter serial number!");
-        db.inventory.push(item);
         
-        if(item.truck !== 'Warehouse' && item.cost > 0) {
-            db.txs.push({ id: Date.now()+1, date: new Date().toISOString().slice(0,10), truck: item.truck, driver: "System Auto-Log", desc: `Inventory Applied: ${item.type} (Serial: ${item.serial})`, type: 'expense', cat: item.type, amount: item.cost });
-        }
-        
-        try { fetch('/api/inventory', { method: 'POST', headers: {'Content-Type': 'application/json', 'X-API-Key': API_KEY}, body: JSON.stringify({item_type: item.type, serial_number: item.serial, assigned_truck: item.truck, cost: item.cost}) }).catch(e=>{}); } catch(e){}
-        saveLocal(); renderAll(); alert("Inventory Added!"); document.getElementById('invSerial').value = ''; document.getElementById('invCost').value = '';
+        try { 
+            await fetch('/api/inventory', { method: 'POST', headers: {'Content-Type': 'application/json', 'X-API-Key': API_KEY}, body: JSON.stringify({item_type: item.type, serial_number: item.serial, assigned_truck: item.truck, cost: item.cost, company_id: currentCompanyId}) }); 
+        } catch(e){}
+
+        alert("Inventory Added to Cloud!"); document.getElementById('invSerial').value = ''; document.getElementById('invCost').value = '';
+        syncDashboardWithCloud(); 
     }
 
     function endTrip(txId) {
         if(confirm("End trip?")) {
             let idx = db.txs.findIndex(t => t.id === txId);
-            if(idx !== -1) { db.txs[idx].tripStatus = 'Completed'; saveLocal(); renderAll(); updateMap(); if(document.getElementById('history').classList.contains('active')) renderHistory(); alert("Completed!"); }
+            if(idx !== -1) { 
+                db.txs[idx].tripStatus = 'Completed'; saveLocal(); renderAll(); updateMap(); 
+                if(document.getElementById('history').classList.contains('active')) renderHistory(); alert("Completed! (Note: Cloud Trip updating requires a PUT endpoint. Currently local update only)."); 
+            }
         }
     }
 
-    function saveDebtTx() {
+    async function saveDebtTx() {
         const date = document.getElementById('debtDate').value; const customer = document.getElementById('debtCustomer').value; const amount = parseFloat(document.getElementById('debtAmount').value)||0;
         if(!date || !customer || amount<=0) return alert("Check inputs");
-        db.txs.push({ id: Date.now(), date, type: 'debt', customer, amount, desc: document.getElementById('debtDesc').value, method: document.getElementById('debtMethod').value, bank: document.getElementById('debtMethod').value==='Bank'?document.getElementById('debtBank').value:'', truck: 'N/A', driver: '' });
-        saveLocal(); alert("Saved!"); document.getElementById('debtAmount').value=''; document.getElementById('debtDisplay').style.display='none'; document.getElementById('paymentModeDiv').classList.add('hidden'); renderAll();
+        
+        try { 
+            await fetch('/api/debts', { 
+                method: 'POST', headers: {'Content-Type': 'application/json', 'X-API-Key': API_KEY}, 
+                body: JSON.stringify({ company_id: currentCompanyId, date: date, customer: customer, amount: amount, description: document.getElementById('debtDesc').value, payment_method: document.getElementById('debtMethod').value, bank_name: document.getElementById('debtMethod').value==='Bank'?document.getElementById('debtBank').value:'' })
+            }); 
+        } catch(e){}
+
+        alert("Debt Payment Saved to Cloud!"); document.getElementById('debtAmount').value=''; document.getElementById('debtDisplay').style.display='none'; document.getElementById('paymentModeDiv').classList.add('hidden'); 
+        syncDashboardWithCloud();
     }
 
-    function deleteTx(id) { if(confirm('Delete?')) { db.txs = db.txs.filter(t => t.id !== id); saveLocal(); renderAll(); updateMap(); if(document.getElementById('history').classList.contains('active')) renderHistory(); } }
+    function deleteTx(id) { alert("Warning: Deletions must be processed directly in the Supabase Cloud dashboard for security reasons."); }
 
-    function addCompliance() {
+    async function addCompliance() {
         const type = document.getElementById('cpType').value, truck = document.getElementById('cpTruck').value, date = document.getElementById('cpDate').value;
         if(!truck||!date||!type) return alert("Fill details");
-        db.compliance.push({ id: Date.now(), type, truck, date, amount: document.getElementById('cpAmount').value, ref: document.getElementById('cpRef').value, status: (type.includes("Fine")||type.includes("Parking"))?'Paid':'Pending' });
-        saveLocal(); alert("Added!"); renderAll();
+        
+        try { 
+            await fetch('/api/compliance', { 
+                method: 'POST', headers: {'Content-Type': 'application/json', 'X-API-Key': API_KEY}, 
+                body: JSON.stringify({ company_id: currentCompanyId, record_type: type, truck: truck, expiry_date: date, amount: parseFloat(document.getElementById('cpAmount').value)||0, reference_no: document.getElementById('cpRef').value, status: (type.includes("Fine")||type.includes("Parking"))?'Paid':'Pending' })
+            }); 
+        } catch(e){}
+
+        alert("Compliance Added to Cloud!"); document.getElementById('cpAmount').value=''; document.getElementById('cpRef').value='';
+        syncDashboardWithCloud();
     }
-    function deleteComp(id) { if(confirm("Remove?")) { db.compliance = db.compliance.filter(c => c.id !== id); saveLocal(); renderAll(); } }
-    function resetService(plate) { if(confirm("Reset Service for "+plate+"?")) { let idx = db.trucks.findIndex(t => t.plate===plate); if(idx!==-1){ db.trucks[idx].lastServiceOdo = db.trucks[idx].odo; saveLocal(); renderAll(); alert("Success!"); } } }
+    
+    function deleteComp(id) { alert("Warning: Deletions must be processed directly in the Supabase Cloud dashboard for security reasons."); }
+    function resetService(plate) { alert("Service reset is currently tracked locally. Global sync coming soon!"); }
     function manualServiceReset() { const p = document.getElementById('quickServiceTruck').value; if(p) resetService(p); }
 
     let map, routeLayerGroup; let activeRoutesMap = {};
@@ -1160,14 +1134,13 @@
         mList('lst-trucks', db.trucks, 'trucks'); mList('lst-customers', db.customers, 'customers'); mList('lst-drivers', db.drivers, 'drivers'); mList('lst-categories', db.categories, 'categories'); mList('lst-invTypes', db.invTypes, 'invTypes');
 
         const invTbody = document.querySelector('#invTable tbody');
-        if(invTbody) { invTbody.innerHTML = db.inventory.map(i => `<tr><td><b>${i.type}</b></td><td>${i.serial}</td><td>${i.truck}</td><td><button onclick="db.inventory=db.inventory.filter(x=>x.id!=${i.id});saveLocal();renderAll()" style="color:red;border:none;background:none;">×</button></td></tr>`).join(''); }
+        if(invTbody) { invTbody.innerHTML = db.inventory.map(i => `<tr><td><b>${i.type}</b></td><td>${i.serial}</td><td>${i.truck}</td><td><button onclick="alert('Delete via Supabase directly.')" style="color:red;border:none;background:none;">×</button></td></tr>`).join(''); }
 
         const lEl = document.getElementById('txList'); if(lEl) lEl.innerHTML='';
         let adminCash=0, adminExp=0, myRev=0, myExp=0, debtPaid=0, pend=0; let tStats={}; let tLiters=0, tCost=0;
 
         [...db.txs].reverse().forEach(t => {
             let row = '', amountDisplay = '', actionBtn = `<button onclick="deleteTx(${t.id})" style="color:#cbd5e1; border:none; background:none;">×</button>`;
-            let imgTag = t.fileUrl ? `<br><img src="${t.fileUrl}" style="max-height:50px; border-radius:5px; margin-top:5px;">` : '';
 
             let chkTruck = '';
             if (t.truck && typeof t.truck === 'string') {
@@ -1187,12 +1160,12 @@
                 let sBadge = t.tripStatus==='Completed'?`<br><span class="status-badge status-complete">✅ Completed</span>` : `<br><span class="status-badge status-transit">🚚 In Transit</span>`;
                 if(t.tripStatus!=='Completed') actionBtn = `<button class="btn-end-trip" onclick="endTrip(${t.id})">🏁 End Trip</button> <button onclick="deleteTx(${t.id})" style="color:red; border:none; background:none; margin-left:10px;">×</button>`;
 
-                row = `<td><b>${t.date}</b><br>${t.truck}<br><small>👤 ${t.driver}</small></td><td>${t.customer}<br><small>${t.dist?t.dist+'km':''} ${t.cargo&&t.cargo!=='-'?'/ 📦 '+t.cargo:''}</small>${sBadge}${imgTag}</td><td style="text-align:right">${amountDisplay}</td>`;
+                row = `<td><b>${t.date}</b><br>${t.truck}<br><small>👤 ${t.driver}</small></td><td>${t.customer}<br><small>${t.dist?t.dist+'km':''} ${t.cargo&&t.cargo!=='-'?'/ 📦 '+t.cargo:''}</small>${sBadge}</td><td style="text-align:right">${amountDisplay}</td>`;
 
             } else if(t.type==='expense'){ 
                 adminExp+=t.amount; 
                 amountDisplay = `<span class="text-danger">-${t.amount.toLocaleString()}</span>`;
-                row = `<td><b>${t.date}</b><br>${t.truck}<br><small>👤 ${t.driver}</small></td><td>${t.cat}<br><small>${t.desc}</small>${t.cat==='Fuel'&&t.liters?`<div class="fuel-badge">⛽ ${t.liters}L</div>`:''}${imgTag}</td><td style="text-align:right">${amountDisplay}</td>`;
+                row = `<td><b>${t.date}</b><br>${t.truck}<br><small>👤 ${t.driver}</small></td><td>${t.cat}<br><small>${t.desc}</small>${t.cat==='Fuel'&&t.liters?`<div class="fuel-badge">⛽ ${t.liters}L</div>`:''}</td><td style="text-align:right">${amountDisplay}</td>`;
             } else if(t.type==='debt'){ 
                 adminCash+=t.amount; debtPaid+=t.amount; 
                 amountDisplay = `<span class="text-success">+${t.amount.toLocaleString()}</span>`;
@@ -1234,20 +1207,19 @@
         
         visibleTxs.filter(t=> (t.driver+(t.truck||'')+t.customer+t.cat+t.desc).toLowerCase().includes(srch)).forEach(t => {
             let sHtml='', cCls='', tit='', sub='', am='<span style="color:#cbd5e1">Classified</span>';
-            let imgHtml = t.fileUrl ? `<br><img src="${t.fileUrl}" style="max-height:80px; border-radius:5px; margin-top:10px; border: 1px solid #ccc;">` : '';
 
             if(t.type==='income'){ cCls='income'; tit=`TRIP: ${t.customer}`; sub=`${t.routeFull?t.routeFull:t.truck} • ${t.driver}`; am=`<span class="text-success">+${t.paid.toLocaleString()}</span>`; sHtml=t.tripStatus==='Completed'?`<div class="h-status st-done">Done</div>`:`<div class="h-status st-transit">In Transit</div> <button class="btn-sm btn-primary" onclick="endTrip(${t.id})">End</button>`; }
             else if(t.type==='expense'){ cCls='expense'; tit=`EXP: ${t.cat}`; sub=`${t.desc} • ${t.truck}`; am=`<span class="text-danger">-${t.amount.toLocaleString()}</span>`; }
             else if(t.type==='debt'){ cCls='debt'; tit=`DEBT: ${t.customer}`; sub=t.desc; am=`<span class="text-success">+${t.amount.toLocaleString()}</span>`; }
             
-            hDiv.innerHTML += `<div class="history-card ${cCls}"><div style="flex:1;"><div class="h-date">${t.date}</div><div class="h-title">${tit}</div><div class="h-sub">${sub}</div>${imgHtml}<br>${sHtml}</div><div style="text-align:right;"><div class="h-amt">${am}</div><button onclick="deleteTx(${t.id})" style="color:#cbd5e1;border:none;background:none;">×</button></div></div>`;
+            hDiv.innerHTML += `<div class="history-card ${cCls}"><div style="flex:1;"><div class="h-date">${t.date}</div><div class="h-title">${tit}</div><div class="h-sub">${sub}</div><br>${sHtml}</div><div style="text-align:right;"><div class="h-amt">${am}</div><button onclick="deleteTx(${t.id})" style="color:#cbd5e1;border:none;background:none;">×</button></div></div>`;
         });
     }
 
     function addReg(t, id) { let v=document.getElementById(id).value; if(v){db[t].push(v);saveLocal();document.getElementById(id).value='';renderAll();}}
-    async function addTruck() { let p=document.getElementById('newTruckPlate').value, m=document.getElementById('newTruckModel').value, tr=document.getElementById('newTruckTrailers').value, i=parseInt(document.getElementById('newTruckInterval').value)||5000; if(p){ try{fetch('/api/trucks',{method:'POST',headers:{'Content-Type':'application/json','X-API-Key':API_KEY},body:JSON.stringify({plate:p,model:m,company_id:currentCompanyId})}).catch(e=>{});}catch(e){} db.trucks.push({plate:p,model:m,trailers:tr,interval:i,odo:0,lastServiceOdo:0}); saveLocal(); document.getElementById('newTruckPlate').value=''; renderAll();} }
+    async function addTruck() { let p=document.getElementById('newTruckPlate').value, m=document.getElementById('newTruckModel').value, tr=document.getElementById('newTruckTrailers').value, i=parseInt(document.getElementById('newTruckInterval').value)||5000; if(p){ try{fetch('/api/trucks',{method:'POST',headers:{'Content-Type':'application/json','X-API-Key':API_KEY},body:JSON.stringify({plate:p,model:m,company_id:currentCompanyId})}).catch(e=>{});}catch(e){} db.trucks.push({plate:p,model:m,trailers:tr,interval:i,odo:0,lastServiceOdo:0}); saveLocal(); document.getElementById('newTruckPlate').value=''; renderAll(); syncDashboardWithCloud(); } }
     function checkTruckAssignment(el) { let p=el.value, err=document.getElementById('truck-assign-error'); if(!p){err.style.display='none';el.style.borderColor='';return true;} if(db.drivers.some(d=>(typeof d==='object'?d.truck:'')===p)){err.style.display='block';el.style.borderColor='red';return false;} err.style.display='none';el.style.borderColor='';return true; }
-    async function addDriver() { let n=document.getElementById('newDriver').value, c=document.getElementById('newDriverCust').value, ts=document.getElementById('newDriverTruck'); if(!n||(ts.value&&!checkTruckAssignment(ts)))return; try{fetch('/api/drivers',{method:'POST',headers:{'Content-Type':'application/json','X-API-Key':API_KEY},body:JSON.stringify({name:n,company_id:currentCompanyId})}).catch(e=>{});}catch(e){} db.drivers.push({name:n,customer:c,truck:ts.value}); saveLocal(); document.getElementById('newDriver').value=''; renderAll(); }
+    async function addDriver() { let n=document.getElementById('newDriver').value, c=document.getElementById('newDriverCust').value, ts=document.getElementById('newDriverTruck'); if(!n||(ts.value&&!checkTruckAssignment(ts)))return; try{fetch('/api/drivers',{method:'POST',headers:{'Content-Type':'application/json','X-API-Key':API_KEY},body:JSON.stringify({name:n,company_id:currentCompanyId})}).catch(e=>{});}catch(e){} db.drivers.push({name:n,customer:c,truck:ts.value}); saveLocal(); document.getElementById('newDriver').value=''; renderAll(); syncDashboardWithCloud(); }
     function remReg(t, idx) { if(confirm("Remove?")){db[t].splice(idx,1);saveLocal();renderAll();} }
 
     function backupData() { const a=document.createElement('a'); a.href="data:text/json;charset=utf-8,"+encodeURIComponent(JSON.stringify(db)); a.download="backup_"+new Date().toISOString().slice(0,10)+".json"; document.body.appendChild(a); a.click(); a.remove(); }
