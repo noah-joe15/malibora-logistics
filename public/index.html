@@ -438,6 +438,715 @@
         
         errEl.innerText = ""; sucEl.innerText = "";
 
+        if (!cName || !cPin) {
+            errEl.innerText = "Please enter both Company Name and PIN.";
+            return;
+        }
+
+        const originalText = authBtn.innerText;
+        authBtn.innerText = "CONNECTING TO CLOUD... ⏳";
+        authBtn.style.opacity = "0.7";
+        authBtn.disabled = true;
+
+        const endpoint = authMode === 'login' ? '/api/login' : '/api/register';
+        
+        try {
+            if(API_URL.includes("file://")) {
+                alert("You opened the file directly from your computer. Please use the Live Server or Render URL to log in.");
+                throw new Error("Local file execution blocked.");
+            }
+
+            const res = await fetch(`${API_URL}${endpoint}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "X-API-Key": API_KEY },
+                body: JSON.stringify({ company_name: cName, admin_pin: cPin })
+            });
+            
+            const data = await res.json();
+            
+            if (res.ok) {
+                currentCompanyId = data.company_id;
+                sucEl.innerText = data.message;
+                db.companyName = cName; 
+                authBtn.innerText = "SUCCESS! ENTERING...";
+                
+                setTimeout(() => {
+                    document.getElementById('login-screen').style.display = 'none';
+                    document.getElementById('app-container').style.display = 'block';
+                    document.getElementById('appHeaderName').innerText = cName;
+                    
+                    syncDashboardWithCloud().then(() => {
+                        renderCharts(); 
+                        initMap(); 
+                    });
+                }, 1000);
+            } else {
+                errEl.innerText = data.detail || "Authentication failed.";
+                authBtn.innerText = originalText;
+                authBtn.disabled = false;
+                authBtn.style.opacity = "1";
+            }
+        } catch(e) {
+            console.error(e);
+            errEl.innerText = "Cloud server is waking up. Try again in 30 seconds!";
+            authBtn.innerText = originalText;
+            authBtn.disabled = false;
+            authBtn.style.opacity = "1";
+        }
+    }
+
+    // --- THE MASTER CLOUD SYNC ---
+    async function syncDashboardWithCloud() {
+        if (!currentCompanyId) return;
+
+        try {
+            console.log(`Starting True Cloud Sync for Company ID: ${currentCompanyId}...`);
+            db.trucks = []; db.drivers = []; db.txs = []; db.compliance = []; db.inventory = []; db.customers = [];
+
+            const [trucksRes, driversRes, expensesRes, inventoryRes, tripsRes, debtsRes, compRes] = await Promise.all([
+                fetch(`${API_URL}/api/trucks?company_id=${currentCompanyId}`, { headers: { "X-API-Key": API_KEY } }),
+                fetch(`${API_URL}/api/drivers?company_id=${currentCompanyId}`, { headers: { "X-API-Key": API_KEY } }),
+                fetch(`${API_URL}/api/expenses?company_id=${currentCompanyId}`, { headers: { "X-API-Key": API_KEY } }),
+                fetch(`${API_URL}/api/inventory?company_id=${currentCompanyId}`, { headers: { "X-API-Key": API_KEY } }),
+                fetch(`${API_URL}/api/trips?company_id=${currentCompanyId}`, { headers: { "X-API-Key": API_KEY } }),
+                fetch(`${API_URL}/api/debts?company_id=${currentCompanyId}`, { headers: { "X-API-Key": API_KEY } }),
+                fetch(`${API_URL}/api/compliance?company_id=${currentCompanyId}`, { headers: { "X-API-Key": API_KEY } })
+            ]);
+
+            const cloudTrucks = await trucksRes.json();
+            const cloudDrivers = await driversRes.json();
+            const cloudExpenses = await expensesRes.json();
+            const cloudInventory = await inventoryRes.json();
+            const cloudTrips = await tripsRes.json();
+            const cloudDebts = await debtsRes.json();
+            const cloudComp = await compRes.json();
+
+            db.trucks = cloudTrucks.map(t => ({ id: t.id, plate: t.plate, model: t.model, trailers: 0, interval: 5000, odo: 0, lastServiceOdo: 0 }));
+            db.drivers = cloudDrivers.map(d => ({ id: d.id, name: d.name, truck: "" }));
+            db.inventory = cloudInventory.map(i => ({ id: i.id, type: i.item_type, serial: i.serial_number, truck: i.assigned_truck, cost: i.cost }));
+            db.compliance = cloudComp.map(c => ({ id: c.id, type: c.record_type, truck: c.truck, date: c.expiry_date, amount: c.amount, ref: c.reference_no, status: c.status }));
+
+            const expenseTxs = cloudExpenses.map(e => {
+                let cat = "Other"; let desc = e.description;
+                if(e.description && e.description.includes(" - ")) { let p = e.description.split(" - "); cat = p[0]; desc = p.slice(1).join(" - "); }
+                return { id: e.id, date: new Date().toISOString().slice(0, 10), truck: "N/A", driver: "System", desc: desc, cat: cat, amount: e.amount, type: 'expense' };
+            });
+
+            const tripTxs = cloudTrips.map(t => ({
+                id: t.id, type: 'income', date: t.date, truck: t.truck, driver: t.driver, customer: t.customer, tripType: t.trip_type, status: t.load_status,
+                from: t.route_from, to: t.route_to, routeFull: t.route_full, dist: t.distance, cargo: t.cargo, total: t.total_price, paid: t.paid_amount, bal: t.balance, tripStatus: t.trip_status
+            }));
+
+            const debtTxs = cloudDebts.map(d => ({
+                id: d.id, type: 'debt', date: d.date, customer: d.customer, amount: d.amount, desc: d.description, method: d.payment_method, bank: d.bank_name, truck: 'N/A', driver: ''
+            }));
+
+            db.txs = [...tripTxs, ...expenseTxs, ...debtTxs].sort((a,b) => new Date(a.date) - new Date(b.date)); 
+
+            let allCust = [...tripTxs.map(t=>t.customer), ...debtTxs.map(d=>d.customer)];
+            db.customers = [...new Set(allCust)].filter(Boolean); 
+
+            renderAll(); 
+            console.log("Cloud Sync Complete!");
+
+        } catch (error) {
+            console.error("Cloud Sync Failure:", error);
+        }
+    }
+
+    function logout() { location.reload(); }
+
+    const REGIONS_TZ = ["Dar es Salaam", "Dodoma", "Arusha", "Mbeya", "Mwanza", "Tanga"];
+    const COMPLIANCE_TYPES_TZ = ["LATRA", "TRA", "Insurance"];
+
+    const i18n = { en: {}, sw: {} };
+    let curLang = 'en';
+    function toggleLanguage() { curLang = curLang === 'en' ? 'sw' : 'en'; document.getElementById('btnLang').innerText = curLang === 'en' ? "🇹🇿 SW" : "🇺🇸 EN"; }
+    function applyLanguage() { }
+
+    let db = { trucks: [], drivers: [], customers: [], categories: ["Fuel", "Maintenance"], txs: [], compliance: [], inventory: [], invTypes: ["Tyre", "Filter"], companyName: "Logistics System" };
+
+    function init() {
+        document.getElementById('opDate').valueAsDate = new Date();
+        document.getElementById('debtDate').valueAsDate = new Date();
+        document.getElementById('cpDate').valueAsDate = new Date();
+        
+        let opts = `<option value="">Select...</option>` + REGIONS_TZ.map(r => `<option>${r}</option>`).join('');
+        document.getElementById('opFrom').innerHTML = opts; document.getElementById('opTo').innerHTML = opts;
+    }
+
+    function nav(id) {
+        document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        if(window.event && window.event.currentTarget) window.event.currentTarget.classList.add('active');
+        if(id === 'analytics') renderCharts();
+        if(id === 'map-section' && map) setTimeout(() => map.invalidateSize(), 100);
+    }
+
+    function setMode(mode) {
+        document.getElementById('opMode').value = mode;
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+        document.querySelector(`.mode-btn.${mode === 'income' ? 'inc' : 'exp'}`).classList.add('active');
+        document.getElementById('grp-income').classList.toggle('hidden', mode !== 'income');
+        document.getElementById('grp-expense').classList.toggle('hidden', mode !== 'expense');
+    }
+
+    function calcBal() { document.getElementById('lblBal').innerText = ((parseFloat(document.getElementById('opTotal').value)||0) - (parseFloat(document.getElementById('opPaid').value)||0)).toLocaleString(); }
+
+    async function saveOp() {
+        const mode = document.getElementById('opMode').value;
+        const truck = document.getElementById('opTruck').value; 
+        const driver = document.getElementById('opDriver').value;
+        const date = document.getElementById('opDate').value;
+        if(!truck || !driver || !date) return alert("Fill Truck, Driver, Date"); 
+
+        if (mode === 'income') {
+            try { 
+                await fetch('/api/trips', { 
+                    method: 'POST', headers: {'Content-Type': 'application/json', 'X-API-Key': API_KEY}, 
+                    body: JSON.stringify({ company_id: currentCompanyId, date: date, truck: truck, driver: driver, customer: document.getElementById('opCustomer').value || 'Unknown', total_price: parseFloat(document.getElementById('opTotal').value)||0, paid_amount: parseFloat(document.getElementById('opPaid').value)||0, balance: (parseFloat(document.getElementById('opTotal').value)||0) - (parseFloat(document.getElementById('opPaid').value)||0) })
+                }); 
+            } catch(e){}
+        } else {
+            try { 
+                await fetch('/api/expenses', { 
+                    method: 'POST', headers: {'Content-Type': 'application/json', 'X-API-Key': API_KEY}, 
+                    body: JSON.stringify({ description: document.getElementById('opCat').value + " - " + document.getElementById('opDesc').value, amount: parseFloat(document.getElementById('opExpAmount').value)||0, company_id: currentCompanyId})
+                }); 
+            } catch(e){}
+        }
+        alert("Saved to Cloud!"); syncDashboardWithCloud(); 
+    }
+
+    async function saveDebtTx() {
+        try { 
+            await fetch('/api/debts', { 
+                method: 'POST', headers: {'Content-Type': 'application/json', 'X-API-Key': API_KEY}, 
+                body: JSON.stringify({ company_id: currentCompanyId, date: document.getElementById('debtDate').value, customer: document.getElementById('debtCustomer').value, amount: parseFloat(document.getElementById('debtAmount').value)||0, description: document.getElementById('debtDesc').value })
+            }); 
+        } catch(e){}
+        alert("Debt Saved!"); syncDashboardWithCloud();
+    }
+
+    async function addCompliance() {
+        try { 
+            await fetch('/api/compliance', { 
+                method: 'POST', headers: {'Content-Type': 'application/json', 'X-API-Key': API_KEY}, 
+                body: JSON.stringify({ company_id: currentCompanyId, record_type: document.getElementById('cpType').value, truck: document.getElementById('cpTruck').value, expiry_date: document.getElementById('cpDate').value, amount: parseFloat(document.getElementById('cpAmount').value)||0 })
+            }); 
+        } catch(e){}
+        alert("Compliance Added!"); syncDashboardWithCloud();
+    }
+
+    async function addInventory() {
+        try { 
+            await fetch('/api/inventory', { method: 'POST', headers: {'Content-Type': 'application/json', 'X-API-Key': API_KEY}, body: JSON.stringify({item_type: document.getElementById('invType').value, serial_number: document.getElementById('invSerial').value, assigned_truck: document.getElementById('invTruck').value, cost: parseFloat(document.getElementById('invCost').value)||0, company_id: currentCompanyId}) }); 
+        } catch(e){}
+        alert("Inventory Added!"); syncDashboardWithCloud(); 
+    }
+
+    async function addTruck() { 
+        let p=document.getElementById('newTruckPlate').value, m=document.getElementById('newTruckModel').value;
+        if(p){ try{ await fetch('/api/trucks',{method:'POST',headers:{'Content-Type':'application/json','X-API-Key':API_KEY},body:JSON.stringify({plate:p,model:m,company_id:currentCompanyId})}); }catch(e){} document.getElementById('newTruckPlate').value=''; syncDashboardWithCloud(); } 
+    }
+    
+    async function addDriver() { 
+        let n=document.getElementById('newDriver').value;
+        if(n){ try{ await fetch('/api/drivers',{method:'POST',headers:{'Content-Type':'application/json','X-API-Key':API_KEY},body:JSON.stringify({name:n,company_id:currentCompanyId})}); }catch(e){} document.getElementById('newDriver').value=''; syncDashboardWithCloud(); } 
+    }
+
+    // --- CLOUD DELETE & FACTORY RESET ENGINES ---
+    async function deleteTx(id) { 
+        if(confirm('Permanently delete from cloud?')) { 
+            let tx = db.txs.find(t => t.id === id); if(!tx) return;
+            let table = tx.type === 'expense' ? 'expenses' : (tx.type === 'debt' ? 'debts' : 'trips');
+            try { await fetch(`${API_URL}/api/delete-record?table=${table}&record_id=${id}&company_id=${currentCompanyId}`, { method: 'DELETE', headers: {'X-API-Key': API_KEY} }); } catch(e){}
+            syncDashboardWithCloud(); 
+        } 
+    }
+
+    async function deleteComp(id) { 
+        if(confirm("Remove from cloud?")) { 
+            try { await fetch(`${API_URL}/api/delete-record?table=compliance&record_id=${id}&company_id=${currentCompanyId}`, { method: 'DELETE', headers: {'X-API-Key': API_KEY} }); } catch(e){}
+            syncDashboardWithCloud(); 
+        } 
+    }
+
+    async function remReg(t, idx) { 
+        if(confirm("Permanently remove?")) {
+            let item = db[t][idx];
+            if(item && item.id) { try { await fetch(`${API_URL}/api/delete-record?table=${t}&record_id=${item.id}&company_id=${currentCompanyId}`, { method: 'DELETE', headers: {'X-API-Key': API_KEY} }); } catch(e){} }
+            syncDashboardWithCloud();
+        } 
+    }
+
+    async function wipeData() { 
+        if(confirm("CRITICAL WARNING: This will permanently delete ALL your company's data from the cloud. Proceed?")) {
+            let pass = prompt("Type 'YES' to confirm cloud wipe:");
+            if(pass === "YES") {
+                try { await fetch(`${API_URL}/api/wipe-company?company_id=${currentCompanyId}`, { method: 'DELETE', headers: {'X-API-Key': API_KEY} }); } catch(e){}
+                location.reload();
+            }
+        } 
+    }
+
+    async function changePin() {
+        const c = document.getElementById('currentPin').value;
+        const n = document.getElementById('newPin').value;
+        const cf = document.getElementById('confirmNewPin').value;
+        if (!c || !n || !cf) return alert("Please fill all fields.");
+        if (n.length !== 4 || n !== cf) return alert("New PIN must be exactly 4 digits and match.");
+        if (!currentCompanyId) return alert("You must be logged in.");
+
+        try {
+            const res = await fetch(`${API_URL}/api/update-pin`, { method: "POST", headers: { "Content-Type": "application/json", "X-API-Key": API_KEY }, body: JSON.stringify({ company_id: currentCompanyId, current_pin: c, new_pin: n }) });
+            if (res.ok) { alert("PIN Changed Successfully in Cloud!"); } else { alert("Failed to change PIN."); }
+        } catch(e) { alert("Cloud connection failed."); }
+    }
+
+    let map;
+    function initMap() { if(!map) { map = L.map('map').setView([-6.369, 34.888], 6); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map); } }
+
+    function renderAll() {
+        const fill = (id, list) => { let el = document.getElementById(id); if(el){ el.innerHTML='<option value="">Select...</option>'; list.forEach(i=>el.innerHTML+=`<option>${i.plate||i.name||i}</option>`);} };
+        fill('opTruck', db.trucks); fill('cpTruck', db.trucks); fill('opCustomer', db.customers); fill('debtCustomer', db.customers); fill('opCat', db.categories); fill('opDriver', db.drivers); fill('cpType', COMPLIANCE_TYPES_TZ); fill('invType', db.invTypes);
+        
+        const mList = (id, l, t) => { let el=document.getElementById(id); if(el) el.innerHTML=l.map((i,x)=>`<div style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid #eee;"><span>${i.plate||i.name||i}</span><span onclick="remReg('${t}',${x})" style="color:red;cursor:pointer;">×</span></div>`).join(''); };
+        mList('lst-trucks', db.trucks, 'trucks'); mList('lst-drivers', db.drivers, 'drivers');
+
+        let adminCash=0, adminExp=0;
+        let hHtml = '';
+        db.txs.forEach(t => {
+            if(t.type==='income') adminCash+=t.paid;
+            if(t.type==='expense') adminExp+=t.amount;
+            if(t.type==='debt') adminCash+=t.amount;
+            hHtml += `<div class="history-card ${t.type}"><div style="flex:1;"><div class="h-date">${t.date}</div><div class="h-title">${t.type.toUpperCase()}: ${t.customer||t.cat}</div></div><div style="text-align:right;"><div class="h-amt">${t.amount||t.paid}</div><button onclick="deleteTx(${t.id})" style="color:#cbd5e1;border:none;background:none;">×</button></div></div>`;
+        });
+        
+        document.getElementById('historyList').innerHTML = hHtml;
+        document.getElementById('kpi-cash').innerText = adminCash.toLocaleString();
+        document.getElementById('kpi-expense').innerText = adminExp.toLocaleString();
+        document.getElementById('kpi-profit').innerText = (adminCash-adminExp).toLocaleString();
+        
+        document.querySelector('#cpTable tbody').innerHTML = db.compliance.map(c => `<tr><td>${c.type}</td><td>${c.truck}</td><td>${c.date}</td><td><button onclick="deleteComp(${c.id})" style="color:red;border:none;background:none;">×</button></td></tr>`).join('');
+    }
+
+    let chartP=null, chartE=null;
+    function renderCharts() {
+        const cP=document.getElementById('chartProfit'), cE=document.getElementById('chartExpense'); if(!cP||!cE)return;
+        if(chartP) chartP.destroy(); if(chartE) chartE.destroy();
+        chartP = new Chart(cP.getContext('2d'), {type:'bar', data:{labels:['2026'], datasets:[{label:"Income",data:[1000],backgroundColor:'#10b981'}]}, options:{responsive:true,maintainAspectRatio:false}});
+        chartE = new Chart(cE.getContext('2d'), {type:'doughnut', data:{labels:['Fuel'], datasets:[{data:[500],backgroundColor:['#ef4444']}]}, options:{responsive:true,maintainAspectRatio:false}});
+    }
+
+    init();
+</script>
+</body>
+</html>        .container { max-width: 1200px; margin: 0 auto; display: none; }
+
+        /* --- PREMIUM LOGIN PAGE STYLES --- */
+        #login-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: linear-gradient(rgba(30, 64, 175, 0.85), rgba(15, 23, 42, 0.95)), url('https://images.unsplash.com/photo-1519003722824-194d4455a60c?q=80&w=2075&auto=format&fit=crop');
+            background-size: cover; background-position: center;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 9999; color: white; text-align: center; padding: 20px; box-sizing: border-box;
+        }
+        .login-box {
+            background: rgba(255, 255, 255, 0.08); 
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 40px 30px; border-radius: 24px; 
+            width: 100%; max-width: 380px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-top: 1px solid rgba(255,255,255,0.4); 
+            border-left: 1px solid rgba(255,255,255,0.4);
+        }
+        .login-box h1 { margin: 15px 0 5px; font-size: 2rem; letter-spacing: 2px; font-weight: 900; text-shadow: 0 2px 4px rgba(0,0,0,0.4); }
+        .login-box p { margin: 0 0 25px; font-size: 0.95rem; color: #cbd5e1; font-weight: 400; }
+        
+        .pin-input {
+            width: 100%; padding: 15px; border-radius: 12px; border: none;
+            text-align: center; font-size: 1.1rem; 
+            margin-bottom: 10px; outline: none; background: rgba(255,255,255,0.95); color: #1e293b;
+            font-family: 'Roboto', sans-serif; font-weight: bold;
+            box-sizing: border-box; transition: 0.3s;
+        }
+        .pin-input:focus { background: #fff; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5); }
+        
+        .login-btn {
+            width: 100%; padding: 16px; border-radius: 12px; border: none;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white; font-weight: 900; font-size: 1.1rem; letter-spacing: 1px;
+            cursor: pointer; transition: 0.3s; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        }
+        .login-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6); }
+        .login-btn:disabled { background: #64748b; cursor: not-allowed; box-shadow: none; }
+        
+        .contact-info { margin-top: 25px; font-size: 0.8rem; color: #94a3b8; line-height: 1.6; }
+        .error-msg { color: #fca5a5; font-size: 0.9rem; margin-bottom: 15px; min-height: 20px; font-weight: bold; }
+
+        /* --- APP HEADER & NAV --- */
+        .header {
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--white); padding: 15px 20px; border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 20px;
+        }
+        .header h1 { margin: 0; font-size: 1.2rem; font-weight: 900; color: var(--primary-dark); }
+        
+        .lang-btn { background: #f1f5f9; border: 1px solid #cbd5e1; padding: 5px 10px; border-radius: 8px; font-weight: bold; font-size: 0.8rem; cursor: pointer; margin-right: 10px; }
+
+        .nav-scroller { overflow-x: auto; white-space: nowrap; margin-bottom: 25px; padding-bottom: 5px; -webkit-overflow-scrolling: touch; }
+        .nav-menu { display: inline-flex; gap: 10px; }
+        .nav-btn { border: none; background: var(--white); padding: 10px 20px; border-radius: 50px; font-weight: 500; color: var(--text-light); box-shadow: 0 2px 4px rgba(0,0,0,0.03); transition: 0.2s; font-family: 'Roboto', sans-serif; cursor: pointer; }
+        .nav-btn.active { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); }
+
+        /* --- DASHBOARD CARDS --- */
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        .card { background: var(--white); padding: 20px; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); position: relative; overflow: hidden; }
+        .card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
+        .card.income::before { background: var(--success); }
+        .card.expense::before { background: var(--danger); }
+        .card.pending::before { background: var(--warning); }
+        .card.profit::before { background: var(--primary); }
+        
+        .card h3 { margin: 0; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-light); font-weight: 500; }
+        .card p { margin: 5px 0 0; font-size: 1.5rem; font-weight: 800; }
+
+        /* --- FORMS & PANELS --- */
+        .section { display: none; animation: fadeIn 0.3s ease-out; }
+        .section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .panel { background: var(--white); padding: 20px; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); margin-bottom: 20px; overflow-x: auto; }
+        .split-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+        input, select, textarea { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 1rem; background: #f8fafc; box-sizing: border-box; margin-bottom: 15px; outline: none; font-family: 'Roboto', sans-serif; }
+        input:focus, select:focus { border-color: var(--primary); background: #fff; }
+        label { display: block; margin-bottom: 6px; font-weight: 500; font-size: 0.85rem; color: var(--text-dark); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 0px; }
+
+        /* --- BUTTONS --- */
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 1rem; transition: 0.2s; font-family: 'Roboto', sans-serif; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-light); }
+        .btn-sm { padding: 5px 10px; font-size: 0.8rem; width: auto; display: inline-block; }
+        
+        .mode-switcher { display: flex; background: #f1f5f9; padding: 4px; border-radius: 12px; margin-bottom: 20px; }
+        .mode-btn { flex: 1; padding: 10px; border: none; background: transparent; font-weight: 600; color: var(--text-light); border-radius: 10px; cursor: pointer; font-family: 'Roboto', sans-serif; }
+        .mode-btn.active.inc { background: var(--white); color: var(--success); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .mode-btn.active.exp { background: var(--white); color: var(--danger); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .mode-btn.active.debt { background: var(--white); color: var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+
+        /* --- TABLES & HISTORY --- */
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; min-width: 500px; }
+        th { text-align: left; color: var(--text-light); font-size: 0.75rem; padding: 10px 5px; }
+        td { padding: 12px 5px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; background: #e2e8f0; color: var(--text-light); }
+        .tag.active { background: #dcfce7; color: #166534; }
+        .tag.expired { background: #fee2e2; color: #991b1b; }
+        .hidden { display: none; }
+        .text-success { color: var(--success); }
+        .text-danger { color: var(--danger); }
+        
+        .history-card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); border-left: 4px solid transparent; display: flex; justify-content: space-between; align-items: center; }
+        .history-card.income { border-left-color: var(--success); }
+        .history-card.expense { border-left-color: var(--danger); }
+        .history-card.debt { border-left-color: var(--primary); }
+        .h-date { font-size: 0.75rem; color: #94a3b8; font-weight: 500; }
+        .h-title { font-weight: 700; font-size: 1rem; margin: 2px 0; color: #334155; }
+        .h-sub { font-size: 0.85rem; color: #64748b; }
+        .h-amt { font-weight: 800; font-size: 1rem; }
+
+        /* MAP STYLES */
+        #map { height: 500px; width: 100%; border-radius: 16px; z-index: 1; margin-bottom: 10px; border: 2px solid #e2e8f0; }
+        .map-item-card { background: #fff; padding: 10px; margin-bottom: 5px; border-radius: 8px; border-left: 4px solid #ccc; cursor: pointer; font-size: 0.85rem; }
+
+        @media (max-width: 768px) {
+            .split-layout { grid-template-columns: 1fr; } 
+            .form-row { grid-template-columns: 1fr !important; gap: 5px; }
+            .header { flex-direction: column; text-align: center; gap: 10px; }
+            #map { height: 350px; } 
+        }
+    </style>
+</head>
+<body>
+
+<div id="login-screen">
+    <div class="login-box">
+        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto; display: block; color: #fff; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.3));">
+            <rect x="2" y="7" width="14" height="10" rx="1"></rect>
+            <path d="M16 7h2.5a2.5 2.5 0 0 1 2.5 2.5V17h-5"></path>
+            <circle cx="6" cy="17" r="2"></circle>
+            <circle cx="16" cy="17" r="2"></circle>
+            <path d="M16 11h5"></path>
+        </svg>
+
+        <h1>MALIBORA</h1>
+        <p id="authSubtitle">Enterprise Cloud Platform</p>
+        
+        <div style="display:flex; margin-bottom:20px; border-radius:12px; overflow:hidden; border:1px solid rgba(255,255,255,0.3);">
+            <button id="btnTabLogin" onclick="setAuthMode('login')" style="flex:1; padding:12px; background:rgba(255,255,255,0.2); border:none; color:white; font-weight:bold; cursor:pointer; transition:0.3s;">Login</button>
+            <button id="btnTabReg" onclick="setAuthMode('register')" style="flex:1; padding:12px; background:transparent; border:none; color:#cbd5e1; font-weight:normal; cursor:pointer; transition:0.3s;">Register</button>
+        </div>
+
+        <input type="text" id="b2bCompany" class="pin-input" placeholder="Company Name (e.g. Simba)">
+        <input type="password" id="b2bPin" class="pin-input" placeholder="4-Digit Admin PIN" maxlength="4">
+        
+        <div class="error-msg" id="loginError"></div>
+        <div id="loginSuccess" style="color: #10b981; font-weight: bold; margin-bottom: 15px;"></div>
+        
+        <button class="login-btn" id="b2bAuthBtn" onclick="executeB2BAuth()">SECURE LOGIN</button>
+
+        <div class="contact-info">
+            <p><strong>Need Help? Contact Support:</strong><br>
+            📞 +255 753 453 518<br>
+            📧 malibora.tanzania@gmail.com<br>
+            📍 Dar es Salaam, Tanzania</p>
+        </div>
+    </div>
+</div>
+
+<div class="container" id="app-container">
+    <div class="header">
+        <div>
+            <h1 style="margin:0;" id="appHeaderName">International Logistics Truck Management System (ILTM)</h1>
+            <small style="color:#64748b;">TruckTracker Pro v8.4 | Cloud Admin</small>
+        </div>
+        <div style="display:flex; align-items:center;">
+            <button class="lang-btn" onclick="toggleLanguage()" id="btnLang">🇹🇿 SW</button>
+            <button onclick="exportData()" style="background:none; border:none; font-size: 1.5rem; cursor:pointer;">📥</button>
+            <button onclick="logout()" style="background:none; border:none; font-size: 1.2rem; cursor:pointer; margin-left:10px;">🔒</button>
+        </div>
+    </div>
+
+    <div class="nav-scroller">
+        <div class="nav-menu">
+            <button class="nav-btn active" onclick="nav('dashboard')" data-key="nav_dash">Dashboard</button>
+            <button class="nav-btn" onclick="nav('map-section')" data-key="nav_map">🗺️ Live Map</button>
+            <button class="nav-btn" onclick="nav('history')" data-key="nav_hist">📜 History</button>
+            <button class="nav-btn" onclick="nav('operations')" data-key="nav_ops">OPERATIONS</button>
+            <button class="nav-btn" onclick="nav('analytics')" data-key="nav_analytics">📊 Analytics</button>
+            <button class="nav-btn" onclick="nav('debt')" data-key="nav_debt">💰 Collect Debt</button>
+            <button class="nav-btn" onclick="nav('inventory')" data-key="nav_inv">🛠️ Inventory</button>
+            <button class="nav-btn" onclick="nav('compliance')" data-key="nav_comp">🛡️ Compliance</button>
+            <button class="nav-btn" onclick="nav('settings')" data-key="nav_set">Settings</button>
+        </div>
+    </div>
+
+    <div id="dashboard" class="section active">
+        <div class="kpi-grid">
+            <div class="card income"><h3 data-key="kpi_cash">Cash In Hand</h3><p id="kpi-cash" class="text-success">0</p></div>
+            <div class="card pending"><h3 data-key="kpi_debt">Pending Debt</h3><p id="kpi-pending" style="color: var(--warning)">0</p></div>
+            <div class="card expense"><h3 data-key="kpi_exp">Expenses</h3><p id="kpi-expense" class="text-danger">0</p></div>
+            <div class="card profit"><h3 data-key="kpi_profit">Net Profit</h3><p id="kpi-profit">0</p></div>
+        </div>
+
+        <div class="panel">
+            <h3 data-key="fleet_perf">🚛 Fleet Performance & Maintenance</h3>
+            <div style="overflow-x:auto;">
+                <table id="fuelTable">
+                    <thead><tr><th data-key="th_truck">Truck</th><th style="color:var(--primary)" data-key="th_profit_short">Profit</th><th data-key="th_eco">Eco (Km/L)</th><th>Service Status</th></tr></thead>
+                    <tbody id="fuelList"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="inventory" class="section">
+        <div class="split-layout">
+            <div class="panel">
+                <h3 data-key="inv_add">Register New Inventory Item</h3>
+                <label data-key="inv_type">Item Type</label><select id="invType"></select>
+                <label data-key="inv_serial">Serial Number</label><input type="text" id="invSerial">
+                <label data-key="inv_cost">Cost (TZS)</label><input type="number" id="invCost">
+                <label data-key="inv_assign">Assign To Truck</label><select id="invTruck"><option value="Warehouse">Warehouse</option></select>
+                <button class="btn btn-primary" onclick="addInventory()">Add To Inventory</button>
+            </div>
+            <div class="panel">
+                <h3 data-key="inv_list">Current Inventory</h3>
+                <table id="invTable">
+                    <thead><tr><th>Item</th><th>Serial</th><th>Assigned</th><th>Action</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="map-section" class="section">
+        <div class="split-layout">
+            <div class="panel" style="flex:2;">
+                <h3 style="margin-top:0;">🗺️ Active Fleet Routes</h3>
+                <div id="map"></div>
+            </div>
+            <div class="panel" style="flex:1;">
+                <h3>Active Trucks</h3>
+                <div id="activeTrucksList"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="history" class="section">
+        <div class="panel">
+            <h3 style="margin-top:0;">📜 Operations History</h3>
+            <input type="text" id="histSearch" class="history-search" placeholder="Search records..." onkeyup="renderHistory()">
+            <div id="historyList"></div>
+        </div>
+    </div>
+
+    <div id="analytics" class="section">
+        <div class="panel"><h3 data-key="chart_income">Income vs Expense</h3><canvas id="chartProfit" style="max-height: 250px;"></canvas></div>
+        <div class="panel"><h3 data-key="chart_breakdown">Expense Breakdown</h3><canvas id="chartExpense" style="max-height: 250px;"></canvas></div>
+    </div>
+
+    <div id="debt" class="section">
+        <div class="panel" style="background: #fffbeb; border: 1px solid #fcd34d;">
+            <h3 data-key="nav_debt">Collect Debt Payment</h3>
+            <label>Date</label><input type="date" id="debtDate">
+            <label>Customer</label><select id="debtCustomer" onchange="checkCustomerDebt()"></select>
+            <div id="debtDisplay" class="debt-alert"><span>Outstanding Debt:</span><strong id="currentDebtVal">0</strong></div>
+            <label>Amount Received</label><input type="number" id="debtAmount" placeholder="Amount Paid">
+            <label>Description</label><textarea id="debtDesc" rows="2"></textarea>
+            <button class="btn btn-primary" onclick="saveDebtTx()">SAVE PAYMENT</button>
+        </div>
+    </div>
+
+    <div id="operations" class="section">
+        <div class="split-layout">
+            <div class="panel">
+                <div class="mode-switcher">
+                    <button class="mode-btn active inc" onclick="setMode('income')">Trip</button>
+                    <button class="mode-btn exp" onclick="setMode('expense')">Expense</button>
+                </div>
+                <input type="hidden" id="opMode" value="income">
+
+                <div class="form-row">
+                    <div><label>Date</label><input type="date" id="opDate"></div>
+                    <div><label>Truck</label><select id="opTruck"></select></div>
+                </div>
+                <label>Driver</label><select id="opDriver"></select>
+
+                <div id="grp-income">
+                    <div style="border: 1px solid #cbd5e1; padding:15px; border-radius:10px; margin-bottom:15px; background:#f8fafc;">
+                        <h4 style="margin-top:0; color:var(--primary);">🗺️ Trip Details</h4>
+                        <div class="form-row">
+                            <div><label>From</label><select id="opFrom"></select></div>
+                            <div><label>To</label><select id="opTo"></select></div>
+                        </div>
+                        <label>Distance (Km)</label><input type="number" id="opDist">
+                        <label>Cargo</label><input type="text" id="opCargoType">
+                    </div>
+                    <label>Customer</label><input type="text" id="opCustomer">
+                    <div class="form-row">
+                        <div><label>Total Price</label><input type="number" id="opTotal" oninput="calcBal()"></div>
+                        <div><label>Paid Now</label><input type="number" id="opPaid" oninput="calcBal()"></div>
+                    </div>
+                </div>
+
+                <div id="grp-expense" class="hidden">
+                    <label>Category</label><select id="opCat"></select>
+                    <label>Amount</label><input type="number" id="opExpAmount">
+                </div>
+
+                <label>Description</label><textarea id="opDesc" rows="2"></textarea>
+                <button class="btn btn-primary" onclick="saveOp()">SAVE TRANSACTION</button>
+            </div>
+            <div class="panel">
+                <h3>Recent Activity</h3>
+                <div id="txList" style="max-height: 400px; overflow-y: auto;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="compliance" class="section">
+        <div class="panel">
+            <h3>Add New Record</h3>
+            <div class="form-row"><div><label>Category</label><select id="cpType"></select></div><div><label>Truck</label><select id="cpTruck"></select></div></div>
+            <div class="form-row"><div><label>Expiry Date</label><input type="date" id="cpDate"></div><div><label>Amount</label><input type="number" id="cpAmount"></div></div>
+            <button class="btn btn-primary" onclick="addCompliance()">Add Record</button>
+        </div>
+        <div class="panel">
+            <h3>📜 Compliance Status</h3>
+            <table id="cpTable"><thead><tr><th>Permit</th><th>Truck</th><th>Expiry</th><th>Action</th></tr></thead><tbody></tbody></table>
+        </div>
+    </div>
+
+    <div id="settings" class="section">
+        <div class="panel" style="background: #fdf2f8; border: 1px solid #fbcfe8;">
+            <h3 style="color:#be185d; margin-top:0;">🔒 Change Cloud PIN</h3>
+            <div class="form-row three-col">
+                <div><label>Current PIN</label><input type="password" id="currentPin" maxlength="4"></div>
+                <div><label>New PIN</label><input type="password" id="newPin" maxlength="4"></div>
+                <div><label>Confirm PIN</label><input type="password" id="confirmNewPin" maxlength="4"></div>
+            </div>
+            <button class="btn btn-primary" onclick="changePin()" style="margin-top: 10px; background:#be185d;">Update PIN</button>
+        </div>
+
+        <div class="split-layout">
+            <div class="panel">
+                <h3>Manage Trucks</h3>
+                <div style="display:flex; gap:5px;"><input id="newTruckPlate" placeholder="Plate"><select id="newTruckModel"><option>Scania</option><option>Fuso</option></select><button class="btn btn-primary" onclick="addTruck()">Add</button></div>
+                <div id="lst-trucks"></div>
+            </div>
+            <div class="panel">
+                <h3>Manage Drivers</h3>
+                <div style="display:flex; gap:5px;"><input id="newDriver" placeholder="Name"><button class="btn btn-primary" onclick="addDriver()">Add</button></div>
+                <div id="lst-drivers"></div>
+            </div>
+        </div>
+
+        <div class="panel" style="background:#fef2f2; border:1px solid #fca5a5; margin-top:20px;">
+            <h3 class="text-danger">Danger Zone</h3>
+            <button class="btn btn-outline" style="color:var(--danger); border-color:var(--danger);" onclick="wipeData()">Factory Reset (Wipe Cloud Database)</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- B2B CLOUD API SETTINGS ---
+    const API_KEY = 'MALIBORA_SECRET_KEY_2026';
+    const API_URL = window.location.origin; // Uses your Render URL automatically
+    let currentCompanyId = null; 
+    let authMode = 'login';
+
+    // Toggle between Login and Register screens
+    function setAuthMode(mode) {
+        authMode = mode;
+        const btnLogin = document.getElementById('btnTabLogin');
+        const btnReg = document.getElementById('btnTabReg');
+        const authBtn = document.getElementById('b2bAuthBtn');
+        const subtitle = document.getElementById('authSubtitle');
+        
+        if (mode === 'login') {
+            btnLogin.style.background = 'rgba(255,255,255,0.2)'; btnLogin.style.fontWeight = 'bold'; btnLogin.style.color = 'white';
+            btnReg.style.background = 'transparent'; btnReg.style.fontWeight = 'normal'; btnReg.style.color = '#cbd5e1';
+            authBtn.innerText = 'SECURE LOGIN';
+            subtitle.innerText = 'Enterprise Cloud Platform';
+        } else {
+            btnReg.style.background = 'rgba(255,255,255,0.2)'; btnReg.style.fontWeight = 'bold'; btnReg.style.color = 'white';
+            btnLogin.style.background = 'transparent'; btnLogin.style.fontWeight = 'normal'; btnLogin.style.color = '#cbd5e1';
+            authBtn.innerText = 'CREATE NEW ACCOUNT';
+            subtitle.innerText = 'Register Your Fleet Company';
+        }
+    }
+
+    // Support hitting Enter
+    document.getElementById('b2bPin').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') executeB2BAuth();
+    });
+
+    // --- THE BULLETPROOF CLOUD LOGIN ---
+    async function executeB2BAuth() {
+        const cName = document.getElementById('b2bCompany').value.trim();
+        const cPin = document.getElementById('b2bPin').value.trim();
+        const errEl = document.getElementById('loginError');
+        const sucEl = document.getElementById('loginSuccess');
+        const authBtn = document.getElementById('b2bAuthBtn');
+        
+        errEl.innerText = ""; sucEl.innerText = "";
+
         // TRAP 1 FIX: Loudly warn them if they forgot the company name
         if (!cName || !cPin) {
             alert("⚠️ Multi-Company Security: You MUST enter BOTH your Company Name AND your PIN!");
