@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import create_engine, text
 import os
 import shutil
+from typing import Optional
 
 app = FastAPI()
 
@@ -51,7 +52,7 @@ def get_api_key(api_key: str = Security(api_key_header)):
     raise HTTPException(status_code=403, detail="Access Denied")
 
 # ---------------------------------------------------------
-# DATA MODELS (Now with company_id and Auth!)
+# DATA MODELS (100% Cloud Coverage)
 # ---------------------------------------------------------
 class CompanyAuth(BaseModel):
     company_name: str
@@ -68,7 +69,7 @@ class Driver(BaseModel):
 
 class Expense(BaseModel):
     description: str
-    amount: int
+    amount: float
     is_fine: bool = False
     company_id: int
 
@@ -76,8 +77,44 @@ class InventoryItem(BaseModel):
     item_type: str
     serial_number: str
     assigned_truck: str
-    cost: int
+    cost: float
     company_id: int
+
+class Trip(BaseModel):
+    company_id: int
+    date: str
+    truck: str
+    driver: str
+    customer: str
+    trip_type: Optional[str] = "Single"
+    load_status: Optional[str] = "Loaded"
+    route_from: Optional[str] = None
+    route_to: Optional[str] = None
+    route_full: Optional[str] = None
+    distance: Optional[float] = 0.0
+    cargo: Optional[str] = "-"
+    total_price: Optional[float] = 0.0
+    paid_amount: Optional[float] = 0.0
+    balance: Optional[float] = 0.0
+    trip_status: Optional[str] = "In Transit"
+
+class Debt(BaseModel):
+    company_id: int
+    date: str
+    customer: str
+    amount: float
+    description: Optional[str] = ""
+    payment_method: Optional[str] = "Cash"
+    bank_name: Optional[str] = ""
+
+class Compliance(BaseModel):
+    company_id: int
+    record_type: str
+    truck: str
+    expiry_date: str
+    amount: Optional[float] = 0.0
+    reference_no: Optional[str] = ""
+    status: Optional[str] = "Pending"
 
 # ---------------------------------------------------------
 # AUTH ENDPOINTS: Register & Login (SaaS Ready)
@@ -86,7 +123,6 @@ class InventoryItem(BaseModel):
 def register_company(auth: CompanyAuth, api_key: str = Depends(get_api_key)):
     try:
         with engine.connect() as connection:
-            # 1. Check if name is already taken by someone else
             check = connection.execute(
                 text("SELECT id FROM companies WHERE company_name = :name"),
                 {"name": auth.company_name}
@@ -95,7 +131,6 @@ def register_company(auth: CompanyAuth, api_key: str = Depends(get_api_key)):
             if check:
                 raise HTTPException(status_code=400, detail="Company name is already taken!")
             
-            # 2. Create the new company with their secure PIN
             res = connection.execute(
                 text("INSERT INTO companies (company_name, admin_pin) VALUES (:name, :pin) RETURNING id"),
                 {"name": auth.company_name, "pin": auth.admin_pin}
@@ -112,7 +147,6 @@ def register_company(auth: CompanyAuth, api_key: str = Depends(get_api_key)):
 def login_company(auth: CompanyAuth, api_key: str = Depends(get_api_key)):
     try:
         with engine.connect() as connection:
-            # Strictly verify Name AND Pin match the database
             result = connection.execute(
                 text("SELECT id FROM companies WHERE company_name = :name AND admin_pin = :pin"),
                 {"name": auth.company_name, "pin": auth.admin_pin}
@@ -134,7 +168,9 @@ async def upload_receipt(file: UploadFile = File(...), api_key: str = Depends(ge
         shutil.copyfileobj(file.file, buffer)
     return {"filename": file.filename, "url": f"/uploads/{file.filename}"}
 
-# --- POST ENDPOINTS (Saving data with a Company Stamp) ---
+# ---------------------------------------------------------
+# POST ENDPOINTS (Saving Data)
+# ---------------------------------------------------------
 @app.post("/api/trucks")
 def add_truck(truck: Truck, api_key: str = Depends(get_api_key)):
     try:
@@ -187,15 +223,62 @@ def add_inventory(item: InventoryItem, api_key: str = Depends(get_api_key)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# --- GET ENDPOINTS (Reading only your company's data) ---
+@app.post("/api/trips")
+def add_trip(trip: Trip, api_key: str = Depends(get_api_key)):
+    try:
+        with engine.connect() as connection:
+            connection.execute(
+                text("""INSERT INTO trips 
+                     (company_id, date, truck, driver, customer, trip_type, load_status, route_from, route_to, route_full, distance, cargo, total_price, paid_amount, balance, trip_status) 
+                     VALUES 
+                     (:company_id, :date, :truck, :driver, :customer, :trip_type, :load_status, :route_from, :route_to, :route_full, :distance, :cargo, :total_price, :paid_amount, :balance, :trip_status)"""),
+                trip.dict()
+            )
+            connection.commit()
+        return {"message": "Trip saved!"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/debts")
+def add_debt(debt: Debt, api_key: str = Depends(get_api_key)):
+    try:
+        with engine.connect() as connection:
+            connection.execute(
+                text("""INSERT INTO debts 
+                     (company_id, date, customer, amount, description, payment_method, bank_name) 
+                     VALUES 
+                     (:company_id, :date, :customer, :amount, :description, :payment_method, :bank_name)"""),
+                debt.dict()
+            )
+            connection.commit()
+        return {"message": "Debt saved!"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/compliance")
+def add_compliance(comp: Compliance, api_key: str = Depends(get_api_key)):
+    try:
+        with engine.connect() as connection:
+            connection.execute(
+                text("""INSERT INTO compliance 
+                     (company_id, record_type, truck, expiry_date, amount, reference_no, status) 
+                     VALUES 
+                     (:company_id, :record_type, :truck, :expiry_date, :amount, :reference_no, :status)"""),
+                comp.dict()
+            )
+            connection.commit()
+        return {"message": "Compliance saved!"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ---------------------------------------------------------
+# GET ENDPOINTS (Reading Data)
+# ---------------------------------------------------------
 @app.get("/api/trucks")
 def get_trucks(company_id: int, api_key: str = Depends(get_api_key)):
     try:
         with engine.connect() as connection:
-            result = connection.execute(
-                text("SELECT id, plate, model FROM trucks WHERE company_id = :company_id ORDER BY id DESC"),
-                {"company_id": company_id}
-            )
+            result = connection.execute(text("SELECT * FROM trucks WHERE company_id = :company_id ORDER BY id DESC"), {"company_id": company_id})
             return [dict(row._mapping) for row in result]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -204,10 +287,7 @@ def get_trucks(company_id: int, api_key: str = Depends(get_api_key)):
 def get_drivers(company_id: int, api_key: str = Depends(get_api_key)):
     try:
         with engine.connect() as connection:
-            result = connection.execute(
-                text("SELECT id, name FROM drivers WHERE company_id = :company_id ORDER BY id DESC"),
-                {"company_id": company_id}
-            )
+            result = connection.execute(text("SELECT * FROM drivers WHERE company_id = :company_id ORDER BY id DESC"), {"company_id": company_id})
             return [dict(row._mapping) for row in result]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -216,10 +296,7 @@ def get_drivers(company_id: int, api_key: str = Depends(get_api_key)):
 def get_expenses(company_id: int, api_key: str = Depends(get_api_key)):
     try:
         with engine.connect() as connection:
-            result = connection.execute(
-                text("SELECT id, description, amount, is_fine FROM expenses WHERE company_id = :company_id ORDER BY id DESC"),
-                {"company_id": company_id}
-            )
+            result = connection.execute(text("SELECT * FROM expenses WHERE company_id = :company_id ORDER BY id DESC"), {"company_id": company_id})
             return [dict(row._mapping) for row in result]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -228,10 +305,34 @@ def get_expenses(company_id: int, api_key: str = Depends(get_api_key)):
 def get_inventory(company_id: int, api_key: str = Depends(get_api_key)):
     try:
         with engine.connect() as connection:
-            result = connection.execute(
-                text("SELECT id, item_type, serial_number, assigned_truck, cost FROM inventory WHERE company_id = :company_id ORDER BY id DESC"),
-                {"company_id": company_id}
-            )
+            result = connection.execute(text("SELECT * FROM inventory WHERE company_id = :company_id ORDER BY id DESC"), {"company_id": company_id})
+            return [dict(row._mapping) for row in result]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/trips")
+def get_trips(company_id: int, api_key: str = Depends(get_api_key)):
+    try:
+        with engine.connect() as connection:
+            result = connection.execute(text("SELECT * FROM trips WHERE company_id = :company_id ORDER BY id DESC"), {"company_id": company_id})
+            return [dict(row._mapping) for row in result]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/debts")
+def get_debts(company_id: int, api_key: str = Depends(get_api_key)):
+    try:
+        with engine.connect() as connection:
+            result = connection.execute(text("SELECT * FROM debts WHERE company_id = :company_id ORDER BY id DESC"), {"company_id": company_id})
+            return [dict(row._mapping) for row in result]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/compliance")
+def get_compliance(company_id: int, api_key: str = Depends(get_api_key)):
+    try:
+        with engine.connect() as connection:
+            result = connection.execute(text("SELECT * FROM compliance WHERE company_id = :company_id ORDER BY id DESC"), {"company_id": company_id})
             return [dict(row._mapping) for row in result]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
