@@ -32,8 +32,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-PUBLIC_DIR = os.path.join(SCRIPT_DIR, "public")
+# --- FIX: THIS TELLS PYTHON EXACTLY WHERE INDEX.HTML LIVES ---
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+PUBLIC_DIR = os.path.join(BASE_DIR, "public")
 UPLOAD_DIR = os.path.join(PUBLIC_DIR, "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
