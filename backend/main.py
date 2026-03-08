@@ -32,10 +32,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- FIX: THIS TELLS PYTHON EXACTLY WHERE INDEX.HTML LIVES ---
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PUBLIC_DIR = os.path.join(BASE_DIR, "public")
-UPLOAD_DIR = os.path.join(PUBLIC_DIR, "uploads")
+# --- FIX: THIS CURES THE BLACK SCREEN ---
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 # ---------------------------------------------------------
@@ -374,6 +373,6 @@ def wipe_company(company_id: int, api_key: str = Depends(get_api_key)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# Serve static files
+# Serve static files directly from the root folder!
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
-app.mount("/", StaticFiles(directory=PUBLIC_DIR, html=True), name="public")
+app.mount("/", StaticFiles(directory=BASE_DIR, html=True), name="public")
