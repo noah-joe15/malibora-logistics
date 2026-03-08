@@ -1,40 +1,787 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#1e40af">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Malibora Systems">
-    
-    <title>Malibora Intertrade - Logistics System</title>
-    
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MALIBORA | TruckTracker Pro v8.4</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+  <style>
+    :root {
+      --primary: #10b981;
+      --primary-dark: #059669;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --border: #e2e8f0;
+      --text-light: #64748b;
+      --white: #ffffff;
+      --black: #0f172a;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Roboto', sans-serif; }
+    body { background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+    .container { max-width: 1200px; margin: 0 auto; display: none; }
+    /* PREMIUM LOGIN PAGE STYLES */
+    #login-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: linear-gradient(rgba(30, 64, 175, 0.85), rgba(15, 23, 42, 0.95)), url('https://images.unsplash.com/photo-1519003722824-194d4455a60c?q=80&w=2075&auto=format&fit=crop');
+      background-size: cover;
+      background-position: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      color: white;
+      text-align: center;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    .login-box {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      padding: 40px 30px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-top: 1px solid rgba(255,255,255,0.4);
+      border-left: 1px solid rgba(255,255,255,0.4);
+    }
+    .login-box h1 {
+      margin: 15px 0 5px;
+      font-size: 2rem;
+      letter-spacing: 2px;
+      font-weight: 900;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+    }
+    .login-box p {
+      margin: 0 0 25px;
+      font-size: 0.95rem;
+      color: #cbd5e1;
+      font-weight: 400;
+    }
+    .pin-input {
+      width: 100%;
+      padding: 15px;
+      border-radius: 12px;
+      border: none;
+      margin-bottom: 10px;
+      font-size: 1.05rem;
+      font-family: 'Roboto', sans-serif;
+      background: rgba(255,255,255,0.95);
+      color: #1e293b;
+      font-weight: bold;
+      box-sizing: border-box;
+      transition: 0.3s;
+    }
+    .pin-input:focus {
+      background: #fff;
+-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+    }
+    .login-btn {
+      width: 100%;
+      padding: 16px;
+      border-radius: 12px;
+      border: none;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      font-weight: 900;
+      font-size: 1.1rem;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .login-btn:active {
+      transform: scale(0.98);
+    }
+    .contact-info {
+      margin-top: 25px;
+      font-size: 0.8rem;
+      color: #94a3b8;
+      line-height: 1.6;
+    }
+    .error-msg {
+      color: #fca5a5;
+      font-size: 0.9rem;
+      margin-bottom: 15px;
+      min-height: 20px;
+      font-weight: bold;
+    }
+    /* APP HEADER & NAV */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--white);
+      padding: 15px 20px;
+      border-radius: 16px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+      margin-bottom: 20px;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 1.2rem;
+      font-weight: 900;
+      color: var(--primary-dark);
+    }
+    .lang-btn {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      padding: 5px 10px;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 0.8rem;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+    .nav-scroller {
+      overflow-x: auto;
+      white-space: nowrap;
+      margin-bottom: 25px;
+      padding-bottom: 5px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .nav-menu {
+      display: inline-flex;
+      gap: 10px;
+    }
+    .nav-btn {
+      border: none;
+      background: var(--white);
+      padding: 10px 20px;
+      border-radius: 50px;
+      font-weight: 500;
+      color: var(--text-light);
+    }
+    .nav-btn.active {
+      background: var(--primary);
+      color: white;
+    }
+    /* DASHBOARD CARDS */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+    .card {
+      background: var(--white);
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+    }
+    .card.in::before { background: var(--success); }
+    .card.expense::before { background: var(--danger); }
+    .card.pending::before { background: var(--warning); }
+    /* STATUS BADGES */
+    .status-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+    .status-transit { background: #fef3c7; color: #b45309; }
+    .status-complete { background: #dcfce7; color: #15803d; }
+    /* ROUTE BUILDER */
+    .route-row {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+    .route-row select {
+      margin-bottom: 0;
+      flex: 2;
+    }
+    .route-row input {
+      margin-bottom: 0;
+      flex: 1;
+    }
+    .btn-add-stop {
+      background: #e2e8f0;
+      color: #334155;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: bold;
+    }
+    /* MAP STYLES */
+    #map {
+      height: 500px;
+      width: 100%;
+      border-radius: 16px;
+      z-index: 1;
+      margin-bottom: 10px;
+      border: 2px solid #e2e8f0;
+    }
+    .map-item-card {
+      background: #fff;
+      padding: 10px;
+      margin-bottom: 5px;
+      border-radius: 8px;
+      border-left: 4px solid #ccc;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+    .map-item-card:hover {
+      background: #f8fafc;
+    }
+    @media (max-width: 768px) {
+      .login-box { padding: 25px 20px; }
+      .form-row { flex-direction: column; gap: 10px; }
+      .split-layout > div { width: 100% !important; }
+    }
+  </style>
+</head>
+<body>
+  <div id="login-screen">
+    <div class="login-box">
+      <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto; display: block; color: #fff; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.3));">
+        <rect x="2" y="7" width="14" height="10" rx="1"></rect>
+        <path d="M16 7h2.5a2.5 2.5 0 0 1 2.5 2.5V17h-5"></path>
+        <circle cx="6" cy="17" r="2"></circle>
+        <circle cx="16" cy="17" r="2"></circle>
+        <path d="M16 11h5"></path>
+      </svg>
+      <h1>MALIBORA</h1>
+      <p id="authSubtitle">Enterprise Cloud Platform</p>
+      <div style="display:flex; margin-bottom:20px; border-radius:12px; overflow:hidden; border:1px solid rgba(255,255,255,0.3);">
+        <button id="btnTabLogin" onclick="setAuthMode('login')" style="flex:1; padding:12px; background:rgba(255,255,255,0.2); border:none; color:white; font-weight:bold; cursor:pointer; transition:0.3s;">Login</button>
+        <button id="btnTabReg" onclick="setAuthMode('register')" style="flex:1; padding:12px; background:transparent; border:none; color:#cbd5e1; font-weight:normal; cursor:pointer; transition:0.3s;">Register</button>
+      </div>
+      <input typetext" id="b2bCompany" class="pin-input" placeholder="Company Name (e.g. Simba)">
+      <select id="loginRole" style="width:100%; padding:15px; border-radius:12px; border:none; margin-bottom:10px; font-size:1.05rem; font-family:'Roboto',sans-serif; background:rgba(255,255,255,0.95); color:#1e293b; font-weight:bold; cursor:pointer;" onchange="document.getElementById('b2bPin').placeholder = this.value === 'admin' ? '4-Digit Admin PIN' : 'Truck Plate (e.g. T123ABC)'; document.getElementById('b2bPin').type = this.value === 'admin' ? 'password' : 'text'; document.getElementById('b2bPin').value = '';">
+        <option value="admin">System Admin</option>
+        <option value="dispatcher">Dispatcher (Login with Plate)</option>
+      </select>
+      <input type="password" id="b2bPin" class="pin-input" placeholder="4-Digit Admin PIN">
+      <div class="error-msg" id="loginError"></div>
+      <div id="loginSuccess" style="color:#10b981; font-weight:bold; margin-bottom:15px;"></div>
+      <button class="login-btn" id="b2bAuthBtn" onclick="executeB2BAuth()">SECURE LOGIN</button>
+      <div class="contact-info">
+        <p><strong>Need Help? Contact Support:</strong><br>📞 +255 753 453 518<br>📧 malibora.tanzania@gmail.com<br>📍 Dar es Salaam, Tanzania</p>
+      </div>
+    </div>
+  </div>
 
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <div class="container" id="app-container" style="display:none;">
+    <div class="header">
+      <div>
+        <h1 style="margin:0;" id="appHeaderName">International Logistics Truck Management System (ILTM)</h1>
+        <small style="color:#64748b;">TruckTracker Pro v8.4 | Cloud Admin</small>
+      </div>
+      <div style="display:flex; align-items:center;">
+        <button class="lang-btn" id="btnLang" onclick="toggleLanguage()">🇹🇿 SW</button>
+        <button class="btn btn-outline" style="color:var(--danger); border-color:var(--danger);" onclick="wipeData()" data-key="factory_reset">Factory Reset (Wipe Cloud)</button>
+      </div>
+    </div>
 
-    <style>
-        :root {
-            --primary: #2563eb; --primary-dark: #1e40af;
-            --bg: #f1f5f9; --white: #ffffff;
-            --success: #10b981; --danger: #ef4444; --warning: #f59e0b;
-            --text-dark: #0f172a; --text-light: #64748b;
-            --border: #e2e8f0;
+    <div class="nav-scroller">
+      <div class="nav-menu">
+        <button class="nav-btn" onclick="nav('dashboard')" data-key="nav_dash">🏠 Dashboard</button>
+        <button class="nav-btn" onclick="nav('map-section')" data-key="nav_map">🗺️ Live Map</button>
+        <button class="nav-btn" onclick="nav('history')" data-key="nav_hist">📜 History</button>
+        <button class="nav-btn" onclick="nav('operations')" data-key="nav_ops">OPERATIONS</button>
+        <button class="nav-btn admin-only" onclick="nav('analytics')" data-key="nav_analytics">📊 Analytics</button>
+        <button class="nav-btn admin-only" onclick="nav('debt')" data-key="nav_debt">💰 Collect Debt</button>
+        <button class="nav-btn admin-only" onclick="nav('inventory')" data-key="nav_inv">🛠️ Inventory</button>
+      </div>
+    </div>
+
+    <div id="dashboard" class="section">
+      <div class="kpi-grid">
+        <div class="card income">
+          <h3>Total Income</h3>
+          <p id="kpi-income">0 TZS</p>
+        </div>
+        <div class="card expense">
+          <h3>Total Expense</h3>
+          <p id="kpi-expense">0 TZS</p>
+        </div>
+        <div class="card pending">
+          <h3>Pending Balance</h3>
+          <p id="kpi-pending">0 TZS</p>
+        </div>
+        <div class="card">
+          <h3>Active Trips</h3>
+          <p id="kpi-trips">0</p>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Recent Transactions</h3>
+        <div id="txList" style="max-height: 400px; overflow-y: auto;"></div>
+      </div>
+    </div>
+
+    <div id="map-section" class="section" style="display:none;">
+      <div id="map"></div>
+      <div class="panel">
+        <h3>Active Routes</h3>
+        <div id="activeRoutesList"></div>
+      </div>
+    </div>
+
+    <div id="history" class="section" style="display:none;">
+      <input type="text" id="histSearch" class="history-search" placeholder="Search records..." onkeyup="renderHistory()">
+      <div id="historyList"></div>
+    </div>
+
+    <div id="operations" class="section" style="display:none;">
+      <div class="split-layout">
+        <div class="panel">
+          <h3>New Transaction</h3>
+          <div class="form-row">
+            <div><label>Type</label><select id="opMode"><option>income</option><option>expense</option></select></div>
+            <div><label>Date</label><input type="date" id="opDate"></div>
+          </div>
+          <div id="grp-income" class="hidden">
+            <div style="border:1px solid #cbd5e1; padding:15px; border-radius:10px; margin-bottom:15px; background:#f8fafc;">
+              <h4 style="margin-top:0; color:var(--primary);">🗺️ Trip Details</h4>
+              <div class="form-row" style="margin-top:10px;">
+                <div><label>Truck</label><select id="opTruck"></select></div>
+                <div><label>Driver</label><select id="opDriver"></select></div>
+              </div>
+              <div class="form-row">
+                <div><label>Load Status</label><select id="opLoadStatus" onchange="checkCargo(); calcEstFuel()"><option value="Loaded">Loaded</option><option value="Empty">Empty</option></select></div>
+              </div>
+              <div id="singleTripUI" class="form-row" style="margin-top:10px;">
+                <div><label>From</label><select id="opFrom"></select></div>
+                <div><label>To</label><select id="opTo"></select></div>
+              </div>
+              <div id="multiStopUI" class="hidden" style="margin-top:10px;">
+                <label>Route Stops & Distances</label>
+                <div id="routeRows"></div>
+                <button onclick="addRouteLeg()" class="btn-add-stop">+ Add Stop</button>
+              </div>
+              <div style="margin-top:15px;">
+                <label>Distance (km)</label>
+                <input type="number" id="opDist" oninput="calcEstFuel()">
+                <div style="text-align:right; font-size:0.8rem; color:#ea580c;">Current Price: ~3,430 TZS/L</div>
+              </div>
+              <div class="admin-only" style="background:#f0f9ff; padding:15px; border-radius:10px; border:1px solid #bae6fd; margin-bottom:15px;">
+                <div class="form-row">
+                  <div><label>Total Price</label><input type="number" id="opTotal" oninput="calcBal()"></div>
+                  <div><label>Paid Now</label><input type="number" id="opPaid" oninput="calcBal()"></div>
+                </div>
+                <div style="text-align:right; font-weight:bold; color:var(--primary);"><span>Balance</span>: <span id="lblBal">0</span></div>
+              </div>
+            </div>
+            <button class="btn btn-primary" onclick="saveOp()">Save Trip</button>
+          </div>
+          <div id="grp-expense" class="hidden">
+            <label>Description</label>
+            <textarea id="opDesc" rows="2"></textarea>
+            <div style="background:#e0f2fe; border:1px solid #bae6fd; padding:15px; border-radius:10px; margin-bottom:15px;">
+              <label style="color:#0284c7; margin-bottom:5px;">📸 Upload Proof (Receipt or Waybill)</label>
+              <input type="file" id="opFile" accept="image/*" style="margin-bottom:0; background:white;">
+            </div>
+            <div class="form-row">
+              <div><label>Category</label><select id="opCat"></select></div>
+              <div><label>Amount</label><input type="number" id="opExpAmount"></div>
+            </div>
+            <div class="form-row">
+              <div><label>Liters (if Fuel)</label><input type="number" id="opLiters" oninput="calcFuelCost()"></div>
+            </div>
+            <button class="btn btn-primary" onclick="saveOp()">Save Expense</button>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>Quick Actions</h3>
+          <div class="form-row">
+            <div><label>Truck</label><select id="quickServiceTruck"></select></div>
+            <div><button class="btn btn-sm" onclick="manualServiceReset()">Reset Service</button></div>
+          </div>
+          <div class="form-row">
+            <div><label>New Driver</label><input id="newDriver" placeholder="Name"></div>
+            <div><button class="btn btn-primary" onclick="addDriver()">Add</button></div>
+          </div>
+          <div id="lst-drivers"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="compliance" class="section" style="display:none;">
+      <div class="panel">
+        <h3>Add New Record</h3>
+        <div class="form-row">
+          <div><label>Category</label><select id="cpType"></select></div>
+          <div><label>Truck</label><select id="cpTruck"></select></div>
+        </div>
+        <div class="form-row">
+          <div><label>Expiry Date</label><input type="date" id="cpDate"></div>
+          <div><label>Amount</label><input type="number" id="cpAmount"></div>
+        </div>
+        <button class="btn btn-primary" onclick="addCompliance()">Add Record</button>
+      </div>
+      <div class="panel">
+        <h3>Compliance List</h3>
+        <table id="cpTable" style="width:100%; border-collapse:collapse;">
+          <thead><tr><th>Type</th><th>Truck</th><th>Expiry</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="inventory" class="section" style="display:none;">
+      <div class="panel">
+        <h3>Add To Inventory</h3>
+        <div class="form-row">
+          <div><label>Type</label><select id="invType"></select></div>
+          <div><label>Serial</label><input id="invSerial" placeholder="e.g. ABC123"></div>
+        </div>
+        <div class="form-row">
+          <div><label>Assigned To</label><select id="invTruck"><option value="Warehouse">Warehouse (Unassigned)</option></select></div>
+          <div><label>Cost (TZS)</label><input id="invCost" type="number"></div>
+        </div>
+        <button class="btn btn-primary" onclick="addInventory()">Add To Inventory & Expense</button>
+      </div>
+      <div class="panel">
+        <h3>Current Inventory</h3>
+        <div style="overflow-x:auto; max-height:400px;">
+          <table id="invTable">
+            <thead><tr><th>Item</th><th>Serial</th><th>Assigned</th><th>Action</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="analytics" class="section" style="display:none;">
+      <div class="panel">
+        <h3>Income vs Expense</h3>
+        <canvas id="chartProfit" style="max-height:250px;"></canvas>
+      </div>
+      <div class="panel">
+        <h3>Expense Breakdown</h3>
+        <canvas id="chartExpense" style="max-height:250px;"></canvas>
+      </div>
+    </div>
+
+    <div id="debt" class="section" style="display:none;">
+      <div class="panel" style="background:#fffbeb; border:1px solid #fcd34d;">
+        <h3>Add Payment</h3>
+        <div class="form-row">
+          <div><label>Date</label><input type="date" id="debtDate"></div>
+          <div><label>Customer</label><select id="debtCustomer"></select></div>
+        </div>
+        <div class="form-row">
+          <div><label>Amount</label><input type="number" id="debtAmount"></div>
+          <div><label>Description</label><input id="debtDesc" placeholder="e.g. Cash Payment"></div>
+        </div>
+        <div class="form-row">
+          <div><label>Payment Method</label>
+            <select id="debtMethod">
+              <option value="">Select...</option>
+              <option>Cash</option>
+              <option>Bank Transfer</option>
+              <option>M-Pesa</option>
+            </select>
+          </div>
+          <div><label>Bank</label>
+            <select id="debtBank">
+              <option value="">Select Bank...</option>
+              <option>CRDB Bank</option>
+              <option>NMB Bank</option>
+              <option>NBC Bank</option>
+              <option>Stanbic Bank</option>
+              <option>Absa Bank</option>
+              <option>Exim Bank</option>
+              <option>DTB</option>
+              <option>Azania Bank</option>
+              <option>KCB Bank</option>
+              <option>Equity Bank</option>
+              <option>TCB (Postal)</option>
+              <option>PBZ</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="saveDebtTx()">SAVE PAYMENT</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- B2B CLOUD API SETTINGS ---
+    const API_KEY = 'MALIBORA_SECRET_KEY_2026';
+    const API_URL = window.location.origin; // Uses current origin (http://localhost:8000 or https://yourdomain.com)
+    let currentCompanyId = null;
+    let curLang = 'en';
+
+    // --- SMART LOGIN LOGIC (Cloud B2B) ---
+    let authMode = 'login';
+
+    function setAuthMode(mode) {
+      authMode = mode;
+      const btnLogin = document.getElementById('btnTabLogin');
+      const btnReg = document.getElementById('btnTabReg');
+      const authBtn = document.getElementById('b2bAuthBtn');
+      const subtitle = document.getElementById('authSubtitle');
+
+      if (mode === 'login') {
+        btnLogin.style.background = 'rgba(255,255,255,0.2)';
+        btnLogin.style.color = 'white';
+        btnLogin.style.fontWeight = 'bold';
+        btnReg.style.background = 'transparent';
+        btnReg.style.color = '#cbd5e1';
+        btnReg.style.fontWeight = 'normal';
+        authBtn.innerText = 'SECURE LOGIN';
+        subtitle.innerText = 'Enterprise Cloud Platform';
+      } else {
+        btnReg.style.background = 'rgba(255,255,255,0.2)';
+        btnReg.style.color = 'white';
+        btnReg.style.fontWeight = 'bold';
+        btnLogin.style.background = 'transparent';
+        btnLogin.style.color = '#cbd5e1';
+        btnLogin.style.fontWeight = 'normal';
+        authBtn.innerText = 'CREATE NEW ACCOUNT';
+        subtitle.innerText = 'Register Your Fleet Company';
+      }
+    }
+
+    document.getElementById('b2bPin').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') { executeB2BAuth(); }
+    });
+
+    async function executeB2BAuth() {
+      const cName = document.getElementById('b2bCompany').value.trim();
+      const cPin = document.getElementById('b2bPin').value.trim();
+      const errEl = document.getElementById('loginError');
+      const sucEl = document.getElementById('loginSuccess');
+      const roleEl = document.getElementById('loginRole');
+      const role = roleEl ? roleEl.value : 'admin';
+      errEl.innerText = '';
+      sucEl.innerText = '';
+
+      if (role === 'admin') {
+        if (!cName || !cPin) {
+          errEl.innerText = 'Please enter both Company Name and PIN.';
+          return;
         }
 
-        body {
-            font-family: 'Roboto', sans-serif;
-            background-color: var(--bg);
-            margin: 0; padding: 15px; padding-bottom: 90px;
-            color: var(--text-dark);
-            -webkit-tap-highlight-color: transparent;
-        }
+        const authBtn = document.getElementById('b2bAuthBtn');
+        const originalText = authBtn.innerText;
+        authBtn.innerText = 'CONNECTING...';
+        authBtn.disabled = true;
 
-        .container { max-width: 1200px; margin: 0 auto; display: none; }
+        try {
+          const res = await fetch(`${API_URL}/api/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-API-Key': API_KEY },
+            body: JSON.stringify({ company_name: cName, admin_pin: cPin })
+          });
+          const data = await res.json();
+
+          if (res.ok) {
+            currentCompanyId = parseInt(data.company_id, 10);
+            if (isNaN(currentCompanyId)) throw new Error('Invalid company_id');
+            sucEl.innerText = data.message;
+            db.companyName = cName;
+            authBtn.innerText = 'SUCCESS! ENTERING...';
+            setTimeout(() => {
+              document.getElementById('login-screen').style.display = 'none';
+              document.getElementById('app-container').style.display = 'block';
+              document.getElementById('appHeaderName').innerText = cName;
+              syncDashboardWithCloud().then(() => {
+                renderCharts();
+                initMap();
+              });
+            }, 1000);
+          } else {
+            errEl.innerText = data.detail || 'Authentication failed.';
+            authBtn.innerText = originalText;
+            authBtn.disabled = false;
+          }
+        } catch (e) {
+          console.error('Login Error:', e);
+          errEl.innerText = 'Cloud server connection failed. Please check network or backend URL.';
+          authBtn.innerText = originalText;
+          authBtn.disabled = false;
+        }
+      } else if (role === 'dispatcher') {
+        const matchedTruck = db.trucks.find(t => {
+          let plate = typeof t === 'object' ? t.plate : t;
+          return plate.toUpperCase() === cPin.toUpperCase();
+        });
+        if (matchedTruck) {
+          let actualPlate = typeof matchedTruck === 'object' ? matchedTruck.plate : matchedTruck;
+          document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden-role'));
+          document.querySelectorAll('.dispatcher-only').forEach(el => el.classList.remove('hidden-role'));
+          document.getElementById('myTruckTitle').innerText = actualPlate;
+          document.getElementById('opTruck').value = actualPlate;
+          document.getElementById('opTruck').disabled = true;
+          document.getElementById('login-screen').style.display = 'none';
+          document.getElementById('app-container').style.display = 'block';
+          nav('truck-dashboard');
+          document.getElementById('btn-truck-dash').classList.add('active');
+          syncDashboardWithCloud().then(() => {
+            renderCharts();
+            initMap();
+          });
+        } else {
+          errEl.innerText = 'Truck Plate Not Found.';
+        }
+      }
+    }
+
+    // --- DASHBOARD SYNC ---
+    async function syncDashboardWithCloud() {
+      if (!currentCompanyId || isNaN(currentCompanyId)) return;
+      try {
+        console.log(`Starting True Cloud Sync for Company ID: ${currentCompanyId}...`);
+        db.trucks = []; db.drivers = []; db.txs = []; db.compliance = []; db.inventory = []; db.customers = [];
+
+        const [trucksRes, driversRes, expensesRes, inventoryRes, tripsRes, debtsRes, compRes] = await Promise.all([
+          fetch(`${API_URL}/api/trucks?company_id=${currentCompanyId}`, { headers: { 'X-API-Key': API_KEY } }),
+          fetch(`${API_URL}/api/drivers?company_id=${currentCompanyId}`, { headers: { 'X-API-Key': API_KEY } }),
+          fetch(`${API_URL}/api/expenses?company_id=${currentCompanyId}`, { headers: { 'X-API-Key': API_KEY } }),
+          fetch(`${API_URL}/api/inventory?company_id=${currentCompanyId}`, { headers: { 'X-API-Key': API_KEY } }),
+          fetch(`${API_URL}/api/trips?company_id=${currentCompanyId}`, { headers: { 'X-API-Key': API_KEY } }),
+          fetch(`${API_URL}/api/debts?company_id=${currentCompanyId}`, { headers: { 'X-API-Key': API_KEY } }),
+          fetch(`${API_URL}/api/compliance?company_id=${currentCompanyId}`, { headers: { 'X-API-Key': API_KEY } })
+        ]);
+
+        const cloudTrucks = await trucksRes.json();
+        const cloudDrivers = await driversRes.json();
+        const cloudExpenses = await expensesRes.json();
+        const cloudInventory = await inventoryRes.json();
+        const cloudTrips = await tripsRes.json();
+        const cloudDebts = await debtsRes.json();
+        const cloudComp = await compRes.json();
+
+        db.trucks = cloudTrucks.map(t => ({ id: t.id, plate: t.plate, model: t.model, trailers: 0, interval: 5000, odo: 0, lastServiceOdo: 0 }));
+        db.drivers = cloudDrivers.map(d => ({ id: d.id, name: d.name, truck: "" }));
+        db.inventory = cloudInventory.map(i => ({ id: i.id, type: i.item_type, serial: i.serial_number, truck: i.assigned_truck, cost: i.cost }));
+        db.compliance = cloudComp.map(c => ({ id: c.id, type: c.record_type, truck: c.truck, date: c.expiry_date, amount: c.amount, ref: c.reference_no, status: c.status }));
+
+        const expenseTxs = cloudExpenses.map(e => {
+          let cat = 'Other';
+          let desc = e.description;
+          if (e.description && e.description.includes(' - ')) {
+            const p = e.description.split(' - ');
+            cat = p[0];
+            desc = p.slice(1).join(' - ');
+          }
+          return {
+            id: e.id,
+            date: new Date().toISOString().slice(0, 10),
+            truck: 'N/A',
+            driver: 'System',
+            desc: desc,
+            cat: cat,
+            amount: e.amount,
+            type: 'expense'
+          };
+        });
+
+        const tripTxs = cloudTrips.map(t => ({
+          id: t.id,
+          type: 'income',
+          date: t.date,
+          truck: t.truck,
+          driver: t.driver,
+          customer: t.customer,
+          tripType: t.trip_type,
+          status: t.load_status,
+          from: t.route_from,
+          to: t.route_to,
+          routeFull: t.route_full,
+          dist: t.distance,
+          cargo: t.cargo,
+          total: t.total_price,
+          paid: t.paid_amount,
+          bal: t.balance,
+          tripStatus: t.trip_status
+        }));
+
+        const debtTxs = cloudDebts.map(d => ({
+          id: d.id,
+          type: 'debt',
+          date: d.date,
+          customer: d.customer,
+          amount: d.amount,
+          desc: d.description,
+          method: d.payment_method,
+          bank: d.bank_name,
+          truck: 'N/A',
+          driver: ''
+        }));
+
+        db.txs = [...tripTxs, ...expenseTxs, ...debtTxs].sort((a, b) => new Date(a.date) - new Date(b.date));
+        let allCust = [...tripTxs.map(t => t.customer), ...debtTxs.map(d => d.customer)];
+        db.customers = [...new Set(allCust)].filter(Boolean);
+
+        renderAll();
+        console.log('Cloud Sync Complete!');
+      } catch (error) {
+        console.error('Cloud Sync Failure:', error);
+      }
+    }
+
+    // --- UTILITY FUNCTIONS ---
+    function nav(sectionId) {
+      document.querySelectorAll('.section').forEach(el => el.style.display = 'none');
+      document.getElementById(sectionId).style.display = 'block';
+      document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+      const activeBtn = Array.from(document.querySelectorAll('.nav-btn')).find(btn => 
+        btn.onclick.toString().includes(`nav('${sectionId}')`) || 
+        btn.getAttribute('onclick')?.includes(`nav('${sectionId}')`)
+      );
+      if (activeBtn) activeBtn.classList.add('active');
+    }
+
+    function toggleLanguage() {
+      curLang = curLang === 'en' ? 'sw' : 'en';
+      document.getElementById('btnLang').innerText = curLang === 'en' ? '🇹🇿 SW' : '🇺🇸 EN';
+    }
+
+    // --- MOCK DB ---
+    let db = {
+      trucks: [],
+      drivers: [],
+      customers: [],
+      categories: ['Fuel', 'Maintenance'],
+      txs: [],
+      compliance: [],
+      inventory: [],
+      invTypes: ['Tyre', 'Filter'],
+      companyName: 'Logistics System'
+    };
+
+    // --- INIT ---
+    function init() {
+      document.getElementById('opDate').valueAsDate = new Date();
+      document.getElementById('debtDate').valueAsDate = new Date();
+      document.getElementById('cpDate').valueAsDate = new Date();
+      nav('dashboard');
+    }
+
+    // Call init after DOM loads
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>        .container { max-width: 1200px; margin: 0 auto; display: none; }
 
         /* --- PREMIUM LOGIN PAGE STYLES --- */
         #login-screen {
