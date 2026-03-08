@@ -36,7 +36,6 @@
 
         .container { max-width: 1200px; margin: 0 auto; display: none; }
 
-        /* --- PREMIUM LOGIN PAGE STYLES --- */
         #login-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-image: linear-gradient(rgba(30, 64, 175, 0.85), rgba(15, 23, 42, 0.95)), url('https://images.unsplash.com/photo-1519003722824-194d4455a60c?q=80&w=2075&auto=format&fit=crop');
@@ -79,7 +78,6 @@
         .contact-info { margin-top: 25px; font-size: 0.8rem; color: #94a3b8; line-height: 1.6; }
         .error-msg { color: #fca5a5; font-size: 0.9rem; margin-bottom: 15px; min-height: 20px; font-weight: bold; }
 
-        /* --- APP HEADER & NAV --- */
         .header {
             display: flex; justify-content: space-between; align-items: center;
             background: var(--white); padding: 15px 20px; border-radius: 16px;
@@ -141,14 +139,7 @@
         .hidden { display: none; }
         .text-success { color: var(--success); }
         .text-danger { color: var(--danger); }
-        .fuel-badge { background: #fff7ed; color: #c2410c; border: 1px solid #ffedd5; padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 4px; margin-top: 5px; }
         
-        .info-box { background: #e0f2fe; padding: 15px; border-radius: 12px; border: 1px solid #7dd3fc; margin-bottom: 15px; }
-        .info-box p { margin: 0; font-size: 0.9rem; color: #0369a1; }
-        .info-box strong { font-size: 1.1rem; display:block; margin-top:4px; }
-        .debt-alert { background: #fee2e2; border: 1px solid #fecaca; color: #b91c1c; padding: 15px; border-radius: 12px; margin-bottom: 15px; display: none; animation: fadeIn 0.3s; }
-
-        .history-search { margin-bottom: 20px; }
         .history-card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); border-left: 4px solid transparent; display: flex; justify-content: space-between; align-items: center; }
         .history-card.income { border-left-color: var(--success); }
         .history-card.expense { border-left-color: var(--danger); }
@@ -157,44 +148,16 @@
         .h-title { font-weight: 700; font-size: 1rem; margin: 2px 0; color: #334155; }
         .h-sub { font-size: 0.85rem; color: #64748b; }
         .h-amt { font-weight: 800; font-size: 1rem; }
-        .h-status { font-size: 0.7rem; padding: 3px 8px; border-radius: 20px; text-transform: uppercase; font-weight: 700; margin-top: 5px; display: inline-block; }
-        .st-done { background: #dcfce7; color: #15803d; }
-        .st-transit { background: #fef3c7; color: #b45309; }
 
-        .comp-header { background: linear-gradient(135deg, #0f172a 0%, #334155 100%); color: white; padding: 25px; border-radius: 16px; margin-bottom: 20px; display: flex; align-items: center; gap: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); }
-        .comp-icon { font-size: 2.5rem; display: flex; align-items: center; justify-content: center; }
-
-        .maint-alert-box { background: #fefce8; border: 1px solid #fde047; padding: 15px; border-radius: 12px; margin-bottom: 20px; display: none; }
-        .maint-row { display: flex; align-items: center; justify-content: space-between; color: #854d0e; font-size: 0.9rem; margin-bottom: 8px; padding-bottom: 5px; border-bottom: 1px dashed #fde047; }
-        .maint-row:last-child { border-bottom: none; margin-bottom: 0; }
-        .progress-bar-bg { background: #e2e8f0; height: 6px; border-radius: 10px; width: 100%; margin-top: 5px; overflow: hidden;}
-        .progress-bar-fill { height: 100%; background: #10b981; transition: width 0.3s; }
-        
-        .btn-end-trip { background-color: #2563eb; color: white; border: none; padding: 5px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; cursor: pointer; margin-top: 5px; }
-        .status-badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; }
-        .status-transit { background: #fef3c7; color: #b45309; }
-        .status-complete { background: #dcfce7; color: #15803d; }
-
-        .route-row { display: flex; gap: 5px; align-items: center; margin-bottom: 5px; }
-        .route-row select { margin-bottom: 0; flex: 2; }
-        .route-row input { margin-bottom: 0; flex: 1; }
-        .btn-add-stop { background: #e2e8f0; color: #334155; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; font-weight: bold; }
-
+        /* MAP STYLES */
         #map { height: 500px; width: 100%; border-radius: 16px; z-index: 1; margin-bottom: 10px; border: 2px solid #e2e8f0; }
         .map-item-card { background: #fff; padding: 10px; margin-bottom: 5px; border-radius: 8px; border-left: 4px solid #ccc; cursor: pointer; font-size: 0.85rem; }
-        .map-item-card:hover { background: #f8fafc; }
 
         @media (max-width: 768px) {
             .split-layout { grid-template-columns: 1fr; } 
-            .form-row, .form-row.three-col { grid-template-columns: 1fr !important; gap: 5px; }
+            .form-row { grid-template-columns: 1fr !important; gap: 5px; }
             .header { flex-direction: column; text-align: center; gap: 10px; }
-            .header > div { width: 100%; justify-content: center; }
             #map { height: 350px; } 
-            .container { padding: 10px; padding-bottom: 80px; }
-            .nav-btn { padding: 8px 12px; font-size: 0.9rem; }
-            .login-box { padding: 20px; }
-            .manage-inputs { flex-direction: column !important; }
-            .manage-inputs input, .manage-inputs select { width: 100%; flex: none !important; margin-bottom: 5px !important; }
         }
     </style>
 </head>
@@ -273,11 +236,6 @@
     </div>
 
     <div id="dashboard" class="section active admin-only">
-        <div id="maint-alert-box" class="maint-alert-box">
-            <h3 style="margin:0 0 10px; color:#a16207;">⚠️ Maintenance Required</h3>
-            <div id="maint-list"></div>
-        </div>
-
         <div class="kpi-grid">
             <div class="card income"><h3 data-key="kpi_cash">Cash In Hand</h3><p id="kpi-cash" class="text-success">0</p></div>
             <div class="card pending"><h3 data-key="kpi_debt">Pending Debt</h3><p id="kpi-pending" style="color: var(--warning)">0</p></div>
@@ -287,31 +245,10 @@
 
         <div class="panel">
             <h3 data-key="fleet_perf">🚛 Fleet Performance & Maintenance</h3>
-            <div style="background:#f0fdf4; border:1px solid #bbf7d0; padding:10px; border-radius:8px; margin-bottom:15px; display:flex; align-items:center; gap:10px; flex-wrap: wrap;">
-                <span style="font-size:0.8rem; font-weight:bold; color:#166534;">Quick Service Action:</span>
-                <select id="quickServiceTruck" style="margin:0; font-size:0.8rem; padding:5px; flex: 1;">
-                    <option value="">Select Truck...</option>
-                </select>
-                <button onclick="manualServiceReset()" class="btn-sm" style="background:#166534; color:white; border:none; border-radius:4px; cursor:pointer;">Mark Service Done</button>
-            </div>
             <div style="overflow-x:auto;">
                 <table id="fuelTable">
-                    <thead><tr><th data-key="th_truck">Truck</th><th style="color:var(--primary)" data-key="th_profit_short">Profit</th><th data-key="th_eco">Eco (Km/L)</th><th>Service Status</th><th>Action</th></tr></thead>
+                    <thead><tr><th data-key="th_truck">Truck</th><th style="color:var(--primary)" data-key="th_profit_short">Profit</th><th data-key="th_eco">Eco (Km/L)</th><th>Service Status</th></tr></thead>
                     <tbody id="fuelList"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="panel">
-            <h3>⛽ Fuel Analysis & Analytics</h3>
-            <div class="kpi-grid" style="margin-bottom:15px;">
-                <div class="card" style="background:#fff7ed; border:1px solid #ffedd5;"><h3 style="color:#c2410c">Total Fuel Used</h3><p style="color:#9a3412" id="total-fuel-liters">0 L</p></div>
-                <div class="card" style="background:#fff7ed; border:1px solid #ffedd5;"><h3 style="color:#c2410c">Total Fuel Cost</h3><p style="color:#9a3412" id="total-fuel-cost">0 TZS</p></div>
-            </div>
-            <div style="overflow-x:auto;">
-                <table id="fuelAnalyticsTable">
-                    <thead><tr><th>Truck</th><th>Fuel Used (L)</th><th>Fuel Cost (TZS)</th><th>% of Total</th></tr></thead>
-                    <tbody id="fuelAnalyticsList"></tbody>
                 </table>
             </div>
         </div>
@@ -333,12 +270,11 @@
         <div class="split-layout">
             <div class="panel">
                 <h3 data-key="inv_add">Register New Inventory Item</h3>
-                <p style="font-size:0.8rem; color:var(--text-light)">Assigning an item to a truck with a cost will automatically log it as a fleet expense.</p>
                 <label data-key="inv_type">Item Type</label><select id="invType"></select>
-                <label data-key="inv_serial">Serial Number / Brand</label><input type="text" id="invSerial" placeholder="e.g. Michelin #12345">
-                <label data-key="inv_cost">Cost (TZS)</label><input type="number" id="invCost" placeholder="Price paid">
+                <label data-key="inv_serial">Serial Number / Brand</label><input type="text" id="invSerial">
+                <label data-key="inv_cost">Cost (TZS)</label><input type="number" id="invCost">
                 <label data-key="inv_assign">Assign To Truck</label><select id="invTruck"><option value="Warehouse">Warehouse (Unassigned)</option></select>
-                <button class="btn btn-primary" onclick="addInventory()" data-key="inv_btn">Add To Inventory & Expense</button>
+                <button class="btn btn-primary" onclick="addInventory()" data-key="inv_btn">Add To Inventory</button>
             </div>
             <div class="panel">
                 <h3 data-key="inv_list">Current Inventory</h3>
@@ -356,13 +292,7 @@
         <div class="split-layout">
             <div class="panel" style="flex:2;">
                 <h3 style="margin-top:0;">🗺️ Active Fleet Routes</h3>
-                <p style="font-size:0.9rem; color:#64748b; margin-bottom:15px;">Visualizing assigned routes for trucks currently 'In Transit'.</p>
                 <div id="map"></div>
-                <div id="active-routes-legend" style="font-size:0.8rem; color:#64748b; margin-top:5px;">
-                    <span style="display:inline-block; margin-right:10px;">🟢 Origin</span>
-                    <span style="display:inline-block; margin-right:10px;">🏁 Destination</span>
-                    <span style="display:inline-block;">🚚 Truck En Route</span>
-                </div>
             </div>
             <div class="panel" style="flex:1; max-height:600px; overflow-y:auto;">
                 <h3>Active Trucks</h3>
@@ -387,34 +317,12 @@
     <div id="debt" class="section admin-only">
         <div class="panel" style="background: #fffbeb; border: 1px solid #fcd34d;">
             <h3 data-key="nav_debt">Collect Debt Payment</h3>
-            <p style="margin:0 0 15px; font-size: 0.9rem; color: #b45309;" data-key="debt_desc">Receive payment for past debt.</p>
             <label data-key="lbl_date">Date</label><input type="date" id="debtDate">
             <label data-key="lbl_cust">Customer</label><select id="debtCustomer" onchange="checkCustomerDebt()"></select>
-            <div id="debtDisplay" class="debt-alert">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <span>Outstanding Debt:</span><strong style="font-size:1.2rem;" id="currentDebtVal">0</strong>
-                </div>
-            </div>
-            <div id="paymentModeDiv" class="hidden" style="margin-bottom:15px;">
-                <label>Payment Options</label>
-                <div class="form-row">
-                    <button class="btn btn-outline" id="btnFull" onclick="setDebtType('full')" style="border-color:var(--success); color:var(--success);">🔴 Full Payment</button>
-                    <button class="btn btn-outline" id="btnPartial" onclick="setDebtType('partial')" style="border-color:var(--warning); color:#b45309;">🟡 Partial / Half</button>
-                </div>
-            </div>
+            <div id="debtDisplay" class="debt-alert"><span>Outstanding Debt:</span><strong id="currentDebtVal">0</strong></div>
             <label data-key="lbl_amt_rec">Amount Received</label><input type="number" id="debtAmount" placeholder="Amount Paid">
             <label data-key="lbl_desc">Description</label><textarea id="debtDesc" rows="2"></textarea>
-            <label data-key="lbl_method">Payment Method</label>
-            <select id="debtMethod" onchange="toggleDebtBank()">
-                <option value="Cash">Cash</option><option value="Bank">Bank</option><option value="Mobile">Mobile</option>
-            </select>
-            <div id="debt-bank-select" class="hidden">
-                <label data-key="lbl_bank">Select Bank</label>
-                <select id="debtBank">
-                    <option value="">Select Bank...</option><option>CRDB Bank</option><option>NMB Bank</option><option>NBC Bank</option><option>Stanbic Bank</option><option>Absa Bank</option><option>Exim Bank</option><option>DTB</option><option>Azania Bank</option><option>KCB Bank</option><option>Equity Bank</option><option>TCB (Postal)</option><option>PBZ</option>
-                </select>
-            </div>
-            <button class="btn btn-primary" onclick="saveDebtTx()" data-key="btn_save_debt">SAVE PAYMENT</button>
+            <button class="btn btn-primary" onclick="saveDebtTx()">SAVE PAYMENT</button>
         </div>
     </div>
 
@@ -422,219 +330,97 @@
         <div class="split-layout">
             <div class="panel">
                 <div class="mode-switcher">
-                    <button class="mode-btn active inc" onclick="setMode('income')" data-key="mode_trip">Trip</button>
-                    <button class="mode-btn exp" onclick="setMode('expense')" data-key="mode_exp">Expense</button>
+                    <button class="mode-btn active inc" onclick="setMode('income')">Trip</button>
+                    <button class="mode-btn exp" onclick="setMode('expense')">Expense</button>
                 </div>
                 <input type="hidden" id="opMode" value="income">
 
                 <div class="form-row">
-                    <div><label data-key="lbl_date">Date</label><input type="date" id="opDate" onchange="checkDriverAvailability()"></div>
-                    <div id="field-truck"><label data-key="lbl_truck">Truck</label><select id="opTruck" onchange="calcEstFuel()"></select></div>
+                    <div><label>Date</label><input type="date" id="opDate"></div>
+                    <div><label>Truck</label><select id="opTruck"></select></div>
                 </div>
-                
-                <div id="field-driver" class="form-group">
-                    <label data-key="lbl_driver">Driver (Auto-selects Truck)</label>
-                    <select id="opDriver" onchange="autoFillDriverDetails()"></select>
-                </div>
+                <label>Driver</label><select id="opDriver" onchange="autoFillDriverDetails()"></select>
 
                 <div id="grp-income">
                     <div style="border: 1px solid #cbd5e1; padding:15px; border-radius:10px; margin-bottom:15px; background:#f8fafc;">
                         <h4 style="margin-top:0; color:var(--primary);">🗺️ Trip Details</h4>
-                        <div class="form-row" style="margin-top:10px;">
-                            <div>
-                                <label>Type</label>
-                                <select id="opTripType" onchange="updateTripUI(); calcEstFuel()">
-                                    <option value="Single">Single Trip</option>
-                                    <option value="Round">Round Trip (Multi-Stop)</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label>Load Status</label>
-                                <select id="opLoadStatus" onchange="checkCargo(); calcEstFuel()">
-                                    <option value="Loaded">Loaded</option>
-                                    <option value="Empty">Empty</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div id="singleTripUI" class="form-row" style="margin-top:10px;">
+                        <div class="form-row">
                             <div><label>From</label><select id="opFrom"></select></div>
                             <div><label>To</label><select id="opTo"></select></div>
                         </div>
-
-                        <div id="multiStopUI" class="hidden" style="margin-top:10px;">
-                            <label>Route Stops & Distances</label>
-                            <div id="routeRows"></div>
-                            <button onclick="addRouteLeg()" class="btn-add-stop">+ Add Stop</button>
-                        </div>
-
-                        <div id="divCargo" style="margin-top:10px;">
-                            <label>📦 Cargo Type</label>
-                            <input type="text" id="opCargoType" placeholder="e.g. Maize, Cement, Copper">
-                        </div>
-
-                        <label style="margin-top:10px;" data-key="lbl_dist">Total Distance (Km)</label>
-                        <input type="number" id="opDist" placeholder="Calculated automatically..." oninput="calcEstFuel()">
-
-                        <div class="info-box">
-                            <p>⛽ Smart Fuel Estimate (Tanzania)</p>
-                            <div style="display:flex; justify-content:space-between; align-items:flex-end;">
-                                <strong id="estLiters">0 Liters</strong>
-                                <strong id="estCost">0 TZS</strong>
-                            </div>
-                            <small id="estInfo" style="display:block; margin-top:5px; color:#64748b; font-size:0.75rem;"></small>
-                        </div>
+                        <label>Distance (Km)</label><input type="number" id="opDist">
+                        <label>Cargo</label><input type="text" id="opCargoType">
                     </div>
-
-                    <label data-key="lbl_cust">Customer / Client</label><input type="text" id="opCustomer" placeholder="Enter Customer Name">
-                    
+                    <label>Customer</label><input type="text" id="opCustomer">
                     <div class="admin-only" style="background: #f0f9ff; padding: 15px; border-radius: 10px; border: 1px solid #bae6fd; margin-bottom: 15px;">
                         <div class="form-row">
-                            <div><label data-key="lbl_total">Total Price</label><input type="number" id="opTotal" oninput="calcBal()"></div>
-                            <div><label data-key="lbl_paid">Paid Now</label><input type="number" id="opPaid" oninput="calcBal()"></div>
-                        </div>
-                        <div style="text-align: right; font-weight: bold; color: var(--primary);">
-                            <span data-key="lbl_bal">Balance</span>: <span id="lblBal">0</span>
+                            <div><label>Total Price</label><input type="number" id="opTotal" oninput="calcBal()"></div>
+                            <div><label>Paid Now</label><input type="number" id="opPaid" oninput="calcBal()"></div>
                         </div>
                     </div>
                 </div>
 
                 <div id="grp-expense" class="hidden">
-                    <label data-key="lbl_cat">Category</label><select id="opCat" onchange="checkFuel()"></select>
-                    
-                    <div id="grp-fuel" class="hidden" style="background: #fff7ed; padding: 10px; border-radius: 8px; margin-bottom: 10px;">
-                        <label data-key="lbl_liters">Fuel Liters</label>
-                        <input type="number" id="opLiters" placeholder="Liters filled" oninput="calcFuelCost()">
-                        <div style="text-align:right; font-size:0.8rem; color:#ea580c;">Current Price: ~3,430 TZS/L</div>
-                    </div>
-
-                    <label data-key="lbl_amt">Amount</label><input type="number" id="opExpAmount">
+                    <label>Category</label><select id="opCat"></select>
+                    <label>Amount</label><input type="number" id="opExpAmount">
                 </div>
 
-                <label data-key="lbl_desc">Description</label><textarea id="opDesc" rows="2"></textarea>
-
-                <div style="background:#e0f2fe; border: 1px solid #bae6fd; padding:15px; border-radius:10px; margin-bottom:15px;">
-                    <label style="color:#0284c7; margin-bottom:5px;">📸 Upload Proof (Receipt or Waybill)</label>
-                    <input type="file" id="opFile" accept="image/*" style="margin-bottom:0; background:white;">
-                </div>
-
-                <label data-key="lbl_method">Payment Method</label>
-                <select id="opMethod" onchange="toggleBank()">
-                    <option value="Cash">Cash</option><option value="Bank">Bank</option><option value="Mobile">Mobile</option>
-                </select>
-
-                <div id="bank-select" class="hidden">
-                    <label data-key="lbl_bank">Select Bank</label>
-                    <select id="opBank">
-                        <option value="">Select Bank...</option><option>CRDB Bank</option><option>NMB Bank</option><option>NBC Bank</option><option>Stanbic Bank</option><option>Absa Bank</option><option>Exim Bank</option><option>DTB</option><option>Azania Bank</option><option>KCB Bank</option><option>Equity Bank</option><option>TCB (Postal)</option><option>PBZ</option>
-                    </select>
-                </div>
-
-                <button class="btn btn-primary" onclick="saveOp()" data-key="btn_save">SAVE TRANSACTION</button>
+                <label>Description</label><textarea id="opDesc" rows="2"></textarea>
+                <button class="btn btn-primary" onclick="saveOp()">SAVE TRANSACTION</button>
             </div>
-
             <div class="panel">
-                <h3 data-key="recent_act">Recent Activity</h3>
+                <h3>Recent Activity</h3>
                 <div id="txList" style="max-height: 400px; overflow-y: auto;"></div>
             </div>
         </div>
     </div>
 
     <div id="compliance" class="section">
-        <div class="comp-header">
-            <div class="comp-icon">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/>
-                </svg>
-            </div>
-            <div>
-                <h2 style="margin:0; font-size:1.4rem;">Regulatory & Compliance</h2>
-                <small style="opacity:0.8;">Manage LATRA, Insurance, Parking & Penalties</small>
-            </div>
-        </div>
-
         <div class="panel">
-            <h3 data-key="nav_comp">Add New Record</h3>
-            <div class="form-row" style="margin-bottom:10px;"><div style="grid-column: span 2;"><label>Regulatory Category (Tanzania)</label><select id="cpType"></select></div></div>
-            <div class="form-row"><div><label>Truck / Vehicle</label><select id="cpTruck"></select></div><div><label>Expiry / Due Date</label><input type="date" id="cpDate"></div></div>
-            <div class="form-row"><div><label>Amount (TZS)</label><input type="number" id="cpAmount" placeholder="Cost"></div><div><label>Ref / Receipt No</label><input type="text" id="cpRef" placeholder="Control #"></div></div>
-            <button class="btn btn-primary" onclick="addCompliance()" data-key="btn_add">Add Compliance Record</button>
+            <h3>Add New Record</h3>
+            <div class="form-row"><div><label>Category</label><select id="cpType"></select></div><div><label>Truck</label><select id="cpTruck"></select></div></div>
+            <div class="form-row"><div><label>Expiry Date</label><input type="date" id="cpDate"></div><div><label>Amount</label><input type="number" id="cpAmount"></div></div>
+            <button class="btn btn-primary" onclick="addCompliance()">Add Record</button>
         </div>
-        
         <div class="panel">
             <h3>📜 Compliance Status</h3>
-            <div style="overflow-x:auto;">
-                <table id="cpTable">
-                    <thead><tr><th data-key="th_item">Item / Permit</th><th>Truck</th><th data-key="th_due">Expiry Date</th><th data-key="th_status">Status</th><th data-key="th_action">Action</th></tr></thead>
-                    <tbody></tbody>
-                </table>
-            </div>
+            <table id="cpTable"><thead><tr><th>Permit</th><th>Truck</th><th>Expiry</th><th>Action</th></tr></thead><tbody></tbody></table>
         </div>
     </div>
 
     <div id="settings" class="section admin-only">
-        
         <div class="panel" style="background: #fdf2f8; border: 1px solid #fbcfe8;">
-            <h3 style="color:#be185d; margin-top:0;">🔒 Security Options</h3>
-            <p style="font-size: 0.9rem; color: #be185d;">Change your 4-digit Admin PIN.</p>
+            <h3 style="color:#be185d; margin-top:0;">🔒 Change Cloud PIN</h3>
             <div class="form-row three-col">
-                <div><label>Current PIN</label><input type="password" id="currentPin" placeholder="****" maxlength="4"></div>
-                <div><label>New PIN</label><input type="password" id="newPin" placeholder="****" maxlength="4"></div>
-                <div><label>Confirm New PIN</label><input type="password" id="confirmNewPin" placeholder="****" maxlength="4"></div>
+                <div><label>Current PIN</label><input type="password" id="currentPin" maxlength="4"></div>
+                <div><label>New PIN</label><input type="password" id="newPin" maxlength="4"></div>
+                <div><label>Confirm PIN</label><input type="password" id="confirmNewPin" maxlength="4"></div>
             </div>
-            <button class="btn btn-primary" onclick="changePin()" style="margin-top: 10px; background:#be185d;">Change Cloud PIN</button>
+            <button class="btn btn-primary" onclick="changePin()" style="margin-top: 10px; background:#be185d;">Update PIN</button>
         </div>
 
         <div class="split-layout">
             <div class="panel">
-                <h3 data-key="mng_trucks">Manage Trucks</h3>
-                <div class="manage-inputs" style="display:flex; flex-wrap:wrap; gap:5px; margin-bottom:10px;">
-                    <input id="newTruckPlate" placeholder="Plate No." style="margin:0; flex:1;">
-                    <select id="newTruckModel" style="margin:0; flex:1;">
-                        <option value="Scania">Scania</option><option value="Howo">Howo</option><option value="Fuso">Fuso</option><option value="Renault">Renault</option><option value="Mercedes">Mercedes</option><option value="Canter">Canter</option>
-                    </select>
-                    <select id="newTruckTrailers" style="margin:0; flex:0 0 100px;">
-                        <option value="0">0 Trailers</option><option value="1">1 Trailer</option><option value="2">2 Trailers</option>
-                    </select>
-                    <input id="newTruckInterval" type="number" placeholder="Service Interval (km)" style="margin:0; flex:1; min-width:150px;">
-                </div>
-                <button class="btn btn-primary" style="margin-bottom:10px;" onclick="addTruck()" data-key="btn_add_truck">Add Truck</button>
+                <h3>Manage Trucks</h3>
+                <div style="display:flex; gap:5px;"><input id="newTruckPlate" placeholder="Plate"><select id="newTruckModel"><option>Scania</option><option>Fuso</option></select><button class="btn btn-primary" onclick="addTruck()">Add</button></div>
                 <div id="lst-trucks"></div>
             </div>
-
             <div class="panel">
-                <h3 data-key="mng_drivers">Manage Drivers & Assignments</h3>
-                <div class="manage-inputs" style="display:flex; flex-wrap:wrap; gap:5px; margin-bottom:5px;">
-                    <input id="newDriver" placeholder="Driver Name" style="margin:0; flex:1;">
-                    <div style="flex:1;">
-                        <select id="newDriverTruck" style="margin:0; width:100%;" onchange="checkTruckAssignment(this)"><option value="">Assign Truck...</option></select>
-                        <small id="truck-assign-error" style="color:var(--danger); display:none; font-weight:bold;">⚠️ Truck already assigned!</small>
-                    </div>
+                <h3>Manage Drivers & Assignments</h3>
+                <div style="display:flex; gap:5px; margin-bottom:5px;">
+                    <input id="newDriver" placeholder="Name" style="flex:1;">
+                    <select id="newDriverTruck" style="flex:1;" onchange="checkTruckAssignment(this)"><option value="">Assign Truck...</option></select>
                 </div>
-                <button class="btn btn-primary" style="margin-bottom:10px;" onclick="addDriver()" data-key="btn_add">Add Driver</button>
+                <small id="truck-assign-error" style="color:var(--danger); display:none; font-weight:bold;">⚠️ Truck already assigned!</small>
+                <button class="btn btn-primary" style="margin-top:5px;" onclick="addDriver()">Add Driver</button>
                 <div id="lst-drivers"></div>
             </div>
         </div>
 
-        <div class="split-layout" style="margin-top:20px;">
-            <div class="panel">
-                <h3 data-key="mng_cat">Expense Categories</h3>
-                <div style="display:flex; gap:5px;"><input id="newCat" placeholder="New Category"><button class="btn btn-primary" style="width:auto;" onclick="addReg('categories','newCat')">+</button></div>
-                <div id="lst-categories" style="max-height: 200px; overflow-y:auto;"></div>
-            </div>
-            
-            <div class="panel">
-                <h3 data-key="mng_inv_cat">🛠️ Inventory Categories</h3>
-                <div style="display:flex; gap:5px;"><input id="newInvType" placeholder="New Inventory Type (e.g. Filter, Battery)"><button class="btn btn-primary" style="width:auto;" onclick="addReg('invTypes','newInvType')">+</button></div>
-                <div id="lst-invTypes" style="max-height: 200px; overflow-y:auto;"></div>
-            </div>
-        </div>
-
         <div class="panel" style="background:#fef2f2; border:1px solid #fca5a5; margin-top:20px;">
-            <h3 class="text-danger" data-key="danger_zone">Danger Zone</h3>
-            <button class="btn btn-outline" style="color:var(--danger); border-color:var(--danger);" onclick="wipeData()" data-key="factory_reset">Factory Reset (Wipe Cloud)</button>
+            <h3 class="text-danger">Danger Zone</h3>
+            <button class="btn btn-outline" style="color:var(--danger); border-color:var(--danger);" onclick="wipeData()">Factory Reset (Wipe Cloud Database)</button>
         </div>
-        
     </div>
 </div>
 
@@ -642,13 +428,11 @@
     // --- B2B CLOUD API SETTINGS ---
     const API_KEY = 'MALIBORA_SECRET_KEY_2026';
     
-    // --- FIX: AUTOMATIC API URL DETECTION ---
-    let API_URL = window.location.origin;
+    // --- FIX: HARCODED RENDER URL ---
+    const API_URL = "https://malibora-logistics.onrender.com"; 
 
     let currentCompanyId = null; 
     let currentUserRole = 'admin';
-
-    // --- SMART LOGIN LOGIC (Cloud B2B) ---
     let authMode = 'login';
 
     function setAuthMode(mode) {
@@ -709,10 +493,16 @@
                 const data = await res.json();
                 
                 if (res.ok) {
+                    
+                    // ==========================================
+                    // MEMORY WIPE FIX: Destroys old data so no new user sees it
+                    // ==========================================
+                    localStorage.removeItem('truck_v55_db');
+                    db = { trucks: [], drivers: [], customers: [], categories: ["Fuel", "Maintenance", "Driver Allowance", "Toll Fee", "Insurance", "Tyres"], txs: [], compliance: [], inventory: [], invTypes: ["Tyre", "Filter", "Battery", "Spare Part"], companyName: cName };
+
                     currentCompanyId = data.company_id;
                     currentUserRole = 'admin';
                     sucEl.innerText = data.message;
-                    db.companyName = cName; 
                     
                     setTimeout(() => {
                         document.getElementById('login-screen').style.display = 'none';
@@ -723,11 +513,7 @@
                         document.querySelectorAll('.dispatcher-only').forEach(el => el.classList.add('hidden-role'));
                         document.getElementById('opTruck').disabled = false;
 
-                        syncDashboardWithCloud().then(() => {
-                            renderCharts(); 
-                            initMap(); 
-                        });
-
+                        syncDashboardWithCloud().then(() => { renderCharts(); initMap(); });
                     }, 1000);
                 } else {
                     errEl.innerText = data.detail || "Authentication failed.";
@@ -740,36 +526,6 @@
                 authBtn.innerText = originalText;
                 authBtn.disabled = false;
             }
-        } else if (role === 'dispatcher') {
-            // Dispatcher Login
-            const matchedTruck = db.trucks.find(t => {
-                let plate = typeof t === 'object' ? t.plate : t;
-                return plate.toUpperCase() === cPin.toUpperCase();
-            });
-
-            if (matchedTruck) {
-                let actualPlate = typeof matchedTruck === 'object' ? matchedTruck.plate : matchedTruck;
-                currentUserRole = actualPlate;
-                
-                document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden-role'));
-                document.querySelectorAll('.dispatcher-only').forEach(el => el.classList.remove('hidden-role'));
-                document.getElementById('myTruckTitle').innerText = actualPlate;
-                document.getElementById('opTruck').value = actualPlate;
-                document.getElementById('opTruck').disabled = true;
-
-                document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('app-container').style.display = 'block';
-                
-                nav('truck-dashboard');
-                document.getElementById('btn-truck-dash').classList.add('active');
-                
-                syncDashboardWithCloud().then(() => {
-                    renderCharts(); 
-                    initMap(); 
-                });
-            } else {
-                errEl.innerText = "Truck Plate Not Found in Cloud Data.";
-            }
         }
     }
 
@@ -778,8 +534,6 @@
 
         try {
             console.log(`Starting True Cloud Sync for Company ID: ${currentCompanyId}...`);
-
-            db.trucks = []; db.drivers = []; db.txs = []; db.compliance = []; db.inventory = []; db.customers = [];
 
             const [trucksRes, driversRes, expensesRes, inventoryRes, tripsRes, debtsRes, compRes] = await Promise.all([
                 fetch(`${API_URL}/api/trucks?company_id=${currentCompanyId}`, { headers: { "X-API-Key": API_KEY } }),
@@ -800,7 +554,21 @@
             const cloudComp = await compRes.json();
 
             db.trucks = cloudTrucks.map(t => ({ id: t.id, plate: t.plate, model: t.model, trailers: 0, interval: 5000, odo: 0, lastServiceOdo: 0 }));
-            db.drivers = cloudDrivers.map(d => ({ id: d.id, name: d.name, truck: "" }));
+            
+            // ==========================================
+            // DRIVER ASSIGNMENT FIX: Unpacks truck name seamlessly
+            // ==========================================
+            db.drivers = cloudDrivers.map(d => {
+                let n = d.name;
+                let t = "";
+                if (n.includes("(") && n.includes(")")) {
+                    let parts = n.split("(");
+                    n = parts[0].trim();
+                    t = parts[1].replace(")", "").trim();
+                }
+                return { id: d.id, name: n, truck: t, cloudName: d.name }; 
+            });
+
             db.inventory = cloudInventory.map(i => ({ id: i.id, type: i.item_type, serial: i.serial_number, truck: i.assigned_truck, cost: i.cost }));
             db.compliance = cloudComp.map(c => ({ id: c.id, type: c.record_type, truck: c.truck, date: c.expiry_date, amount: c.amount, ref: c.reference_no, status: c.status }));
 
@@ -826,13 +594,12 @@
 
             saveLocal(); 
             renderAll(); 
-            console.log("Cloud Sync Complete!");
+            console.log("Cloud Sync Complete! Memory is fresh.");
 
         } catch (error) {
             console.error("Cloud Sync Failure:", error);
         }
     }
-
 
     function logout() { location.reload(); }
 
@@ -874,7 +641,7 @@
     async function saveOp() {
         const mode = document.getElementById('opMode').value;
         const truck = document.getElementById('opTruck').value; 
-        const driver = document.getElementById('opDriver').value;
+        const driver = document.getElementById('opDriver').value; 
         const date = document.getElementById('opDate').value;
         if(!truck || !driver || !date) return alert("Fill Truck, Driver, Date"); 
 
@@ -928,9 +695,40 @@
         if(p){ try{ await fetch(`${API_URL}/api/trucks`,{method:'POST',headers:{'Content-Type':'application/json','X-API-Key':API_KEY},body:JSON.stringify({plate:p,model:m,company_id:currentCompanyId})}); }catch(e){} document.getElementById('newTruckPlate').value=''; syncDashboardWithCloud(); } 
     }
     
+    // ==========================================
+    // DRIVER ASSIGNMENT FIX: Safely packages truck logic
+    // ==========================================
+    function checkTruckAssignment(el) { 
+        let p = el.value, err = document.getElementById('truck-assign-error'); 
+        if(!p){ err.style.display='none'; el.style.borderColor=''; return true; } 
+        if(db.drivers.some(d => d.truck === p)){ err.style.display='block'; el.style.borderColor='red'; return false; } 
+        err.style.display='none'; el.style.borderColor=''; return true; 
+    }
+
     async function addDriver() { 
-        let n=document.getElementById('newDriver').value;
-        if(n){ try{ await fetch(`${API_URL}/api/drivers`,{method:'POST',headers:{'Content-Type':'application/json','X-API-Key':API_KEY},body:JSON.stringify({name:n,company_id:currentCompanyId})}); }catch(e){} document.getElementById('newDriver').value=''; syncDashboardWithCloud(); } 
+        let n = document.getElementById('newDriver').value;
+        let ts = document.getElementById('newDriverTruck'); 
+        
+        if(!n || (ts && ts.value && !checkTruckAssignment(ts))) return; 
+        
+        let finalName = (ts && ts.value) ? `${n} (${ts.value})` : n;
+
+        try { 
+            await fetch(`${API_URL}/api/drivers`,{method:'POST',headers:{'Content-Type':'application/json','X-API-Key':API_KEY},body:JSON.stringify({name: finalName, company_id: currentCompanyId})}); 
+        } catch(e){} 
+        
+        document.getElementById('newDriver').value = ''; 
+        if(ts) { ts.value = ''; ts.style.borderColor = ''; document.getElementById('truck-assign-error').style.display = 'none'; }
+        syncDashboardWithCloud(); 
+    }
+
+    function autoFillDriverDetails() {
+        const name = document.getElementById('opDriver').value;
+        const driver = db.drivers.find(d => d.cloudName === name);
+        if(driver && driver.truck) {
+            const sel = document.getElementById('opTruck');
+            for(let i=0; i<sel.options.length; i++) if(sel.options[i].text.includes(driver.truck)) { sel.selectedIndex=i; break; }
+        }
     }
 
     async function deleteTx(id) { 
@@ -962,6 +760,7 @@
             let pass = prompt("Type 'YES' to confirm cloud wipe:");
             if(pass === "YES") {
                 try { await fetch(`${API_URL}/api/wipe-company?company_id=${currentCompanyId}`, { method: 'DELETE', headers: {'X-API-Key': API_KEY} }); } catch(e){}
+                localStorage.removeItem('truck_v55_db');
                 location.reload();
             }
         } 
@@ -986,9 +785,18 @@
 
     function renderAll() {
         const fill = (id, list) => { let el = document.getElementById(id); if(el){ el.innerHTML='<option value="">Select...</option>'; list.forEach(i=>el.innerHTML+=`<option>${i.plate||i.name||i}</option>`);} };
-        fill('opTruck', db.trucks); fill('cpTruck', db.trucks); fill('opCustomer', db.customers); fill('debtCustomer', db.customers); fill('opCat', db.categories); fill('opDriver', db.drivers); fill('cpType', COMPLIANCE_TYPES_TZ); fill('invType', db.invTypes);
+        fill('opTruck', db.trucks); fill('cpTruck', db.trucks); fill('opCustomer', db.customers); fill('debtCustomer', db.customers); fill('opCat', db.categories); fill('cpType', COMPLIANCE_TYPES_TZ); fill('invType', db.invTypes);
         
-        const mList = (id, l, t) => { let el=document.getElementById(id); if(el) el.innerHTML=l.map((i,x)=>`<div style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid #eee;"><span>${i.plate||i.name||i}</span><span onclick="remReg('${t}',${x})" style="color:red;cursor:pointer;">×</span></div>`).join(''); };
+        const trkVal = db.trucks.map(t => typeof t==='object'?t.plate:t);
+        fill('newDriverTruck', trkVal);
+
+        let drv = document.getElementById('opDriver'); 
+        if(drv){ 
+            drv.innerHTML='<option value="">Select...</option>'; 
+            db.drivers.forEach(d => drv.innerHTML+=`<option value="${d.cloudName}">${d.name} ${d.truck?`(${d.truck})`:''}</option>`); 
+        }
+
+        const mList = (id, l, t) => { let el=document.getElementById(id); if(el) el.innerHTML=l.map((i,x)=>`<div style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid #eee;"><span>${i.plate||i.name||i} ${i.truck?`<small>(${i.truck})</small>`:''}</span><span onclick="remReg('${t}',${x})" style="color:red;cursor:pointer;">×</span></div>`).join(''); };
         mList('lst-trucks', db.trucks, 'trucks'); mList('lst-drivers', db.drivers, 'drivers');
 
         let adminCash=0, adminExp=0;
@@ -1016,7 +824,7 @@
         chartE = new Chart(cE.getContext('2d'), {type:'doughnut', data:{labels:['Fuel'], datasets:[{data:[500],backgroundColor:['#ef4444']}]}, options:{responsive:true,maintainAspectRatio:false}});
     }
 
-    function toggleLanguage() {} // Stubbed to prevent undefined error if clicked
+    function toggleLanguage() {} 
     init();
 </script>
 </body>
