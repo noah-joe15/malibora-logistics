@@ -11,10 +11,8 @@
     <title>Malibora Intertrade - Logistics System</title>
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 
     <style>
@@ -34,7 +32,614 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        .container { max-width: 1200px; margin: 0 auto; display: none; /* Hidden until login */ }
+        .container { max-width: 1200px; margin: 0 auto; display: none; }
+
+        #login-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: linear-gradient(rgba(30, 64, 175, 0.85), rgba(15, 23, 42, 0.95)), url('https://images.unsplash.com/photo-1519003722824-194d4455a60c?q=80&w=2075&auto=format&fit=crop');
+            background-size: cover; background-position: center;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 9999; color: white; text-align: center; padding: 20px; box-sizing: border-box;
+        }
+        .login-box {
+            background: rgba(255, 255, 255, 0.08); 
+            backdrop-filter: blur(16px);
+            padding: 40px 30px; border-radius: 24px; 
+            width: 100%; max-width: 380px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .login-box h1 { margin: 15px 0 5px; font-size: 2rem; letter-spacing: 2px; font-weight: 900; }
+        
+        .pin-input {
+            width: 100%; padding: 15px; border-radius: 12px; border: none;
+            text-align: center; font-size: 1.1rem; 
+            margin-bottom: 10px; outline: none; background: rgba(255,255,255,0.95); color: #1e293b;
+            font-family: 'Roboto', sans-serif; font-weight: bold;
+            box-sizing: border-box;
+        }
+        
+        .login-btn {
+            width: 100%; padding: 16px; border-radius: 12px; border: none;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white; font-weight: 900; font-size: 1.1rem; letter-spacing: 1px;
+            cursor: pointer; transition: 0.3s;
+        }
+
+        .header {
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--white); padding: 15px 20px; border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 20px;
+        }
+        .header h1 { margin: 0; font-size: 1.2rem; font-weight: 900; color: var(--primary-dark); }
+        
+        .nav-scroller { overflow-x: auto; white-space: nowrap; margin-bottom: 25px; padding-bottom: 5px; -webkit-overflow-scrolling: touch; }
+        .nav-menu { display: inline-flex; gap: 10px; }
+        .nav-btn { border: none; background: var(--white); padding: 10px 20px; border-radius: 50px; font-weight: 500; color: var(--text-light); box-shadow: 0 2px 4px rgba(0,0,0,0.03); cursor: pointer; }
+        .nav-btn.active { background: var(--primary); color: white; }
+
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        .card { background: var(--white); padding: 20px; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); position: relative; overflow: hidden; }
+        .card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
+        .card.income::before { background: var(--success); }
+        .card.expense::before { background: var(--danger); }
+        .card.pending::before { background: var(--warning); }
+        .card.profit::before { background: var(--primary); }
+        .card p { margin: 5px 0 0; font-size: 1.5rem; font-weight: 800; }
+
+        .section { display: none; }
+        .section.active { display: block; }
+        .panel { background: var(--white); padding: 20px; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); margin-bottom: 20px; overflow-x: auto; }
+        .split-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+        input, select, textarea { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 1rem; background: #f8fafc; box-sizing: border-box; margin-bottom: 15px; outline: none; }
+        label { display: block; margin-bottom: 6px; font-weight: 500; font-size: 0.85rem; }
+
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-light); }
+        
+        .mode-switcher { display: flex; background: #f1f5f9; padding: 4px; border-radius: 12px; margin-bottom: 20px; }
+        .mode-btn { flex: 1; padding: 10px; border: none; background: transparent; font-weight: 600; cursor: pointer; border-radius: 10px; }
+        .mode-btn.active.inc { background: var(--white); color: var(--success); }
+        .mode-btn.active.exp { background: var(--white); color: var(--danger); }
+
+        .progress-bar-bg { background: #e2e8f0; height: 8px; border-radius: 10px; width: 100%; margin-top: 5px; overflow: hidden; }
+        .progress-bar-fill { height: 100%; transition: width 0.3s; }
+        
+        .maint-alert-box { background: #fefce8; border: 1px solid #fde047; padding: 15px; border-radius: 12px; margin-bottom: 20px; display: none; }
+        .maint-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+
+        .route-row { display: flex; gap: 5px; align-items: center; margin-bottom: 5px; }
+        #map { height: 450px; width: 100%; border-radius: 16px; border: 2px solid #e2e8f0; margin-bottom: 10px; }
+        .hidden { display: none; }
+        .status-badge { padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; }
+        .status-transit { background: #fef3c7; color: #b45309; }
+        .status-complete { background: #dcfce7; color: #15803d; }
+        .btn-end-trip { background: #2563eb; color: white; border: none; padding: 5px 12px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; }
+        .debt-alert { background: #fffbeb; border: 1px solid #fcd34d; padding: 15px; border-radius: 12px; margin-bottom: 15px; display: none; }
+
+        .comp-header { background: linear-gradient(135deg, #0f172a 0%, #334155 100%); color: white; padding: 25px; border-radius: 16px; margin-bottom: 20px; display: flex; align-items: center; gap: 15px; }
+        .comp-icon { fill: white; display: flex; align-items: center; justify-content: center; }
+
+        @media (max-width: 768px) { .split-layout { grid-template-columns: 1fr; } .form-row { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+<div id="login-screen">
+    <div class="login-box">
+        <h1>MALIBORA</h1>
+        <p id="authSubtitle">Enterprise Cloud Platform</p>
+        
+        <div style="display:flex; margin-bottom:20px; border-radius:12px; overflow:hidden; border:1px solid rgba(255,255,255,0.3);">
+            <button id="btnTabLogin" onclick="setAuthMode('login')" style="flex:1; padding:12px; background:rgba(255,255,255,0.2); color:white; font-weight:bold; border:none; cursor:pointer;">Login</button>
+            <button id="btnTabReg" onclick="setAuthMode('register')" style="flex:1; padding:12px; background:transparent; color:#cbd5e1; border:none; cursor:pointer;">Register</button>
+        </div>
+
+        <input type="text" id="b2bCompany" class="pin-input" placeholder="Company Name">
+        <input type="password" id="b2bPin" class="pin-input" placeholder="4-Digit PIN" maxlength="4">
+        
+        <div class="error-msg" id="loginError"></div>
+        <div id="loginSuccess"></div>
+        
+        <button class="login-btn" id="b2bAuthBtn" onclick="executeB2BAuth()">SECURE LOGIN</button>
+    </div>
+</div>
+
+<div class="container" id="app-container">
+    <div class="header">
+        <div>
+            <h1 id="appHeaderName">MALIBORA LOGISTICS</h1>
+            <small id="uiRoleDisplay" style="color:var(--primary); font-weight:bold;">ADMIN PANEL</small>
+        </div>
+        <div style="display:flex; align-items:center;">
+            <button class="lang-btn" onclick="toggleLanguage()" id="btnLang">🇹🇿 SW</button>
+            <button onclick="logout()" style="background:none; border:none; font-size: 1.5rem; cursor:pointer;">🔒</button>
+        </div>
+    </div>
+
+    <div class="nav-scroller">
+        <div class="nav-menu">
+            <button class="nav-btn active" onclick="nav('dashboard')" data-key="nav_dash">Dashboard</button>
+            <button class="nav-btn" onclick="nav('map-section')" data-key="nav_map">🗺️ Live Map</button>
+            <button class="nav-btn" onclick="nav('operations')" data-key="nav_ops">Operations</button>
+            <button class="nav-btn" onclick="nav('history')" data-key="nav_hist">History</button>
+            <button class="nav-btn" onclick="nav('analytics')" data-key="nav_analytics">Analytics</button>
+            <button class="nav-btn" onclick="nav('debt')" data-key="nav_debt">Collect Debt</button>
+            <button class="nav-btn" onclick="nav('compliance')" data-key="nav_comp">Compliance</button>
+            <button class="nav-btn" onclick="nav('settings')" data-key="nav_set">Settings</button>
+        </div>
+    </div>
+
+    <div id="dashboard" class="section active">
+        <div id="maint-alert-box" class="maint-alert-box">
+            <h3 style="margin:0 0 10px; color:#a16207;">⚠️ Maintenance Required</h3>
+            <div id="maint-list"></div>
+        </div>
+
+        <div class="kpi-grid">
+            <div class="card income"><h3 data-key="kpi_cash">Cash In Hand</h3><p id="kpi-cash" class="text-success">0</p></div>
+            <div class="card pending"><h3 data-key="kpi_debt">Pending Debt</h3><p id="kpi-pending" style="color: var(--warning)">0</p></div>
+            <div class="card expense"><h3 data-key="kpi_exp">Expenses</h3><p id="kpi-expense" class="text-danger">0</p></div>
+            <div class="card profit"><h3 data-key="kpi_profit">Net Profit</h3><p id="kpi-profit">0</p></div>
+        </div>
+
+        <div class="panel">
+            <h3 data-key="fleet_perf">🚛 Fleet Performance & Maintenance</h3>
+            <table id="fuelTable" style="width: 100%; text-align: left;">
+                <thead><tr><th>Truck</th><th data-key="th_profit_short">Profit</th><th>Eco (Km/L)</th><th>Service Status</th><th>Action</th></tr></thead>
+                <tbody id="fuelList"></tbody>
+            </table>
+        </div>
+
+        <div class="panel">
+            <h3>⛽ Fuel Analysis</h3>
+            <div class="kpi-grid">
+                <div class="card" style="background:#fff7ed;"><h3 style="color:#c2410c">Total Liters</h3><p id="total-fuel-liters">0 L</p></div>
+                <div class="card" style="background:#fff7ed;"><h3 style="color:#c2410c">Total Cost</h3><p id="total-fuel-cost">0</p></div>
+            </div>
+            <table id="fuelAnalyticsTable" style="width: 100%; text-align: left;">
+                <thead><tr><th>Truck</th><th>Fuel (L)</th><th>Cost (TZS)</th><th>% Usage</th></tr></thead>
+                <tbody id="fuelAnalyticsList"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="operations" class="section">
+        <div class="split-layout">
+            <div class="panel">
+                <div class="mode-switcher">
+                    <button class="mode-btn active inc" onclick="setMode('income')">Trip</button>
+                    <button class="mode-btn exp" onclick="setMode('expense')">Expense</button>
+                </div>
+                <input type="hidden" id="opMode" value="income">
+                <div class="form-row">
+                    <div><label>Date</label><input type="date" id="opDate"></div>
+                    <div><label>Truck</label><select id="opTruck" onchange="calcEstFuel()"></select></div>
+                </div>
+                <label>Driver</label><select id="opDriver" onchange="autoFillDriverDetails()"></select>
+
+                <div id="grp-income">
+                    <div style="border: 1px solid #cbd5e1; padding:15px; border-radius:10px; margin-bottom:15px; background:#f8fafc;">
+                        <h4 style="margin-top:0; color:var(--primary);">🗺️ Route Builder</h4>
+                        <div class="form-row">
+                            <div><label>Trip Type</label><select id="opTripType" onchange="updateTripUI()"><option value="Single">Single</option><option value="Round">Round Trip</option></select></div>
+                            <div><label>Load Status</label><select id="opLoadStatus" onchange="calcEstFuel()"><option value="Loaded">Loaded</option><option value="Empty">Empty</option></select></div>
+                        </div>
+                        <div id="singleTripUI" class="form-row">
+                            <div><label>From</label><select id="opFrom"></select></div>
+                            <div><label>To</label><select id="opTo"></select></div>
+                        </div>
+                        <div id="multiStopUI" class="hidden">
+                            <div id="routeRows"></div>
+                            <button class="btn btn-outline" style="padding: 5px 10px; font-size: 0.8rem; margin-top: 5px;" onclick="addRouteLeg()">+ Add Stop</button>
+                        </div>
+                        <label style="margin-top:10px;">Total Distance (Km)</label><input type="number" id="opDist" oninput="calcEstFuel()">
+                        <div style="background: #e0f2fe; padding: 15px; border-radius: 12px; border: 1px solid #7dd3fc; margin-top: 15px;">
+                            <p style="margin: 0; font-size: 0.9rem; color: #0369a1;">⛽ Smart Fuel Estimate</p>
+                            <div style="display:flex; justify-content:space-between; margin-top:5px;">
+                                <strong id="estLiters" style="font-size: 1.1rem;">0 L</strong>
+                                <strong id="estCost" style="font-size: 1.1rem;">0 TZS</strong>
+                            </div>
+                        </div>
+                    </div>
+                    <label>Cargo Type</label><input type="text" id="opCargo" placeholder="e.g. Copper">
+                    <label>Customer</label><input type="text" id="opCustomer">
+                    <div class="form-row">
+                        <div><label>Total Price</label><input type="number" id="opTotal" oninput="calcBal()"></div>
+                        <div><label>Paid Now</label><input type="number" id="opPaid" oninput="calcBal()"></div>
+                    </div>
+                    <div style="text-align:right; font-weight:bold; color:var(--primary); margin-top: 10px;">Balance: <span id="lblBal">0</span></div>
+                </div>
+
+                <div id="grp-expense" class="hidden">
+                    <label>Category</label><select id="opCat" onchange="checkFuel()"></select>
+                    <div id="grp-fuel" class="hidden"><label>Liters</label><input type="number" id="opLiters"></div>
+                    <label>Amount</label><input type="number" id="opExpAmount">
+                </div>
+                <label>Description</label><textarea id="opDesc"></textarea>
+                <button class="btn btn-primary" onclick="saveOp()">SAVE TRANSACTION</button>
+            </div>
+            <div class="panel"><h3>Recent Activity</h3><div id="txList"></div></div>
+        </div>
+    </div>
+
+    <div id="map-section" class="section">
+        <div class="split-layout">
+            <div class="panel" style="flex:2;"><h3>🗺️ Fleet Map</h3><div id="map"></div></div>
+            <div class="panel" style="flex:1;"><h3>Active Trucks</h3><div id="activeTrucksList"></div></div>
+        </div>
+    </div>
+
+    <div id="history" class="section">
+        <div class="panel">
+            <h3>📜 Operations History</h3>
+            <input type="text" id="histSearch" placeholder="Search records..." onkeyup="renderHistory()" style="margin-bottom: 20px;">
+            <div id="historyList"></div>
+        </div>
+    </div>
+
+    <div id="analytics" class="section">
+        <div class="panel" style="height:400px; padding-bottom: 40px;">
+            <h3 data-key="chart_income">Income vs Expense (This Year)</h3>
+            <canvas id="chartProfit"></canvas>
+        </div>
+        <div class="panel" style="height:400px; padding-bottom: 40px;">
+            <h3 data-key="chart_breakdown">Expense Breakdown (%)</h3>
+            <canvas id="chartExpense"></canvas>
+        </div>
+    </div>
+
+    <div id="debt" class="section">
+        <div class="panel" style="background:#fffbeb; border:1px solid #fcd34d;">
+            <h3>💰 Collect Debt Payment</h3>
+            <label>Select Customer</label>
+            <select id="debtCustomer" onchange="checkCustomerDebt()"></select>
+            
+            <div id="debtDisplay" class="debt-alert">
+                Outstanding Debt: <strong id="currentDebtVal" style="font-size: 1.2rem;">0 TZS</strong>
+            </div>
+
+            <label>Payment Mode</label>
+            <div class="form-row" style="margin-bottom:15px;">
+                <button class="btn btn-outline" id="btnFull" onclick="setDebtType('full')" style="border-color:#10b981; color:#10b981; font-weight: bold;">Full Payment</button>
+                <button class="btn btn-outline" id="btnPartial" onclick="setDebtType('partial')" style="border-color:#f59e0b; color:#f59e0b; font-weight: bold;">Partial Payment</button>
+            </div>
+
+            <label>Amount Offered</label>
+            <input type="number" id="debtAmount" placeholder="Enter amount">
+            <button class="btn btn-primary" onclick="saveDebtTx()">SAVE PAYMENT</button>
+        </div>
+    </div>
+
+    <div id="compliance" class="section">
+        <div class="comp-header">
+            <div class="comp-icon">
+                <svg width="50" height="50" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L12 22M12 5L4 5M12 5L20 5M4 5L2 12C2 13.1046 2.89543 14 4 14C5.10457 14 6 13.1046 6 12L4 5ZM20 5L18 12C18 13.1046 18.8954 14 20 14C21.1046 14 22 13.1046 22 12L20 5ZM8 22L16 22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <div>
+                <h2 style="margin:0;">Regulatory Compliance</h2>
+                <small>Legal status of Fleet & Permits</small>
+            </div>
+        </div>
+        <div class="panel">
+            <div class="form-row">
+                <div><label>Type</label><select id="cpType"></select></div>
+                <div><label>Truck</label><select id="cpTruck"></select></div>
+            </div>
+            <div class="form-row">
+                <div><label>Expiry</label><input type="date" id="cpDate"></div>
+                <div><label>Amount</label><input type="number" id="cpAmount"></div>
+            </div>
+            <button class="btn btn-primary" onclick="addCompliance()">Add Record</button>
+            <table id="cpTable" style="margin-top:20px; width: 100%; text-align: left;">
+                <thead><tr><th>Permit</th><th>Truck</th><th>Expiry</th><th>Status</th><th>×</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="settings" class="section">
+        <div class="split-layout">
+            <div class="panel">
+                <h3>Manage Trucks</h3>
+                <div style="display:flex; gap:5px;"><input id="newTruckPlate" placeholder="Plate"><select id="newTruckModel"><option>Scania</option><option>Howo</option><option>Fuso</option></select><button class="btn btn-primary" style="width:auto" onclick="addTruck()">+</button></div>
+                <div id="lst-trucks"></div>
+            </div>
+            <div class="panel">
+                <h3>Manage Drivers</h3>
+                <div style="display:flex; gap:5px;"><input id="newDriver" placeholder="Name"><select id="newDriverTruck"><option value="">Assign Truck...</option></select><button class="btn btn-primary" style="width:auto" onclick="addDriver()">+</button></div>
+                <div id="lst-drivers"></div>
+            </div>
+        </div>
+        <div class="panel" style="background:#fef2f2; margin-top:20px;"><button class="btn btn-outline" style="color:red; border-color:red" onclick="wipeData()">Factory Reset (Wipe Cloud)</button></div>
+    </div>
+</div>
+
+<script>
+    const API_KEY = 'MALIBORA_SECRET_KEY_2026';
+    const API_URL = "https://malibora-logistics.onrender.com"; 
+    let currentCompanyId = null; 
+    let authMode = 'login';
+
+    const FUEL_PRICE = 3430;
+    // ALL 31 Regions of Tanzania
+    const REGIONS = [
+        "Arusha", "Dar es Salaam", "Dodoma", "Geita", "Iringa", "Kagera", "Katavi", "Kigoma", "Kilimanjaro", "Lindi", 
+        "Manyara", "Mara", "Mbeya", "Morogoro", "Mtwara", "Mwanza", "Njombe", "Pemba North", "Pemba South", "Pwani", 
+        "Rukwa", "Ruvuma", "Shinyanga", "Simiyu", "Singida", "Songwe", "Tabora", "Tanga", "Zanzibar North", "Zanzibar South", "Zanzibar West"
+    ];
+    const COMPLIANCE_TYPES = ["LATRA License", "TRA Road License", "Comprehensive Insurance", "Vehicle Inspection", "Parking Penalty", "Speed Fine"];
+
+    let db = { trucks: [], drivers: [], customers: [], categories: ["Fuel", "Driver Allowance", "Turnboy", "Mechanic", "Tolls", "Office Rent"], txs: [], compliance: [] };
+
+    function setAuthMode(mode) {
+        authMode = mode;
+        const btnLogin = document.getElementById('btnTabLogin');
+        const btnReg = document.getElementById('btnTabReg');
+        const authBtn = document.getElementById('b2bAuthBtn');
+        if (mode === 'login') {
+            btnLogin.style.background = 'rgba(255,255,255,0.2)'; btnReg.style.background = 'transparent'; authBtn.innerText = 'SECURE LOGIN';
+        } else {
+            btnReg.style.background = 'rgba(255,255,255,0.2)'; btnLogin.style.background = 'transparent'; authBtn.innerText = 'CREATE ACCOUNT';
+        }
+    }
+
+    async function executeB2BAuth() {
+        const cName = document.getElementById('b2bCompany').value.trim();
+        const cPin = document.getElementById('b2bPin').value.trim();
+        if (!cName || !cPin) return;
+        
+        document.getElementById('b2bAuthBtn').innerText = "CONNECTING... ⏳";
+        const endpoint = authMode === 'login' ? '/api/login' : '/api/register';
+        
+        try {
+            const res = await fetch(`${API_URL}${endpoint}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "X-API-Key": API_KEY },
+                body: JSON.stringify({ company_name: cName, admin_pin: cPin })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                localStorage.removeItem('truck_v55_db');
+                currentCompanyId = data.company_id;
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('app-container').style.display = 'block';
+                document.getElementById('appHeaderName').innerText = cName.toUpperCase();
+                await syncDashboardWithCloud();
+                initMap();
+            } else { alert(data.detail); document.getElementById('b2bAuthBtn').innerText = "RETRY"; }
+        } catch(e) { alert("Server starting up..."); document.getElementById('b2bAuthBtn').innerText = "RETRY"; }
+    }
+
+    async function syncDashboardWithCloud() {
+        if (!currentCompanyId) return;
+        const h = { "X-API-Key": API_KEY };
+        try {
+            const [tRes, dRes, eRes, trRes, cRes] = await Promise.all([
+                fetch(`${API_URL}/api/trucks?company_id=${currentCompanyId}`, { headers:h }),
+                fetch(`${API_URL}/api/drivers?company_id=${currentCompanyId}`, { headers:h }),
+                fetch(`${API_URL}/api/expenses?company_id=${currentCompanyId}`, { headers:h }),
+                fetch(`${API_URL}/api/trips?company_id=${currentCompanyId}`, { headers:h }),
+                fetch(`${API_URL}/api/compliance?company_id=${currentCompanyId}`, { headers:h })
+            ]);
+            const tData = await tRes.json();
+            const dData = await dRes.json();
+            const eData = await eRes.json();
+            const trData = await trRes.json();
+            const cData = await cRes.json();
+
+            db.trucks = tData.map(t => ({ plate: t.plate, model: t.model, odo: 0, lastServiceOdo: 0, interval: 5000 }));
+            db.drivers = dData.map(d => {
+                let n = d.name, t = "";
+                if (n.includes("(") && n.includes(")")) { let p = n.split("("); n = p[0].trim(); t = p[1].replace(")", "").trim(); }
+                return { name: n, truck: t, cloudName: d.name };
+            });
+            const expTxs = eData.map(e => ({ id: e.id, type: 'expense', date: 'Cloud', truck: 'N/A', driver: 'N/A', cat: e.description.split(" - ")[0], desc: e.description.split(" - ")[1] || "", amount: e.amount }));
+            const tripTxs = trData.map(t => ({ id: t.id, type: 'income', date: t.date, truck: t.truck, driver: t.driver, customer: t.customer, total: t.total_price, paid: t.paid_amount, bal: t.balance, tripStatus: t.trip_status, dist: t.distance, routeFull: t.route_full }));
+            db.txs = [...expTxs, ...tripTxs];
+            db.compliance = cData.map(c => ({ id: c.id, type: c.record_type, truck: c.truck, date: c.expiry_date, amount: c.amount, status: c.status }));
+            db.customers = [...new Set(tripTxs.map(t => t.customer))];
+            renderAll();
+        } catch(e) { console.error(e); }
+    }
+
+    function updateTripUI() {
+        const type = document.getElementById('opTripType').value;
+        document.getElementById('singleTripUI').classList.toggle('hidden', type === 'Round');
+        document.getElementById('multiStopUI').classList.toggle('hidden', type !== 'Round');
+        document.getElementById('opDist').readOnly = type === 'Round';
+    }
+
+    function addRouteLeg() {
+        const div = document.createElement('div'); div.className = 'route-row';
+        div.innerHTML = `<select class="route-region" onchange="calcRouteDist()">${window.regionOpts}</select><input type="number" class="route-km" placeholder="Km" oninput="calcRouteDist()"><span style="cursor:pointer; color:red; font-size: 1.2rem; font-weight: bold;" onclick="this.parentElement.remove();calcRouteDist()">×</span>`;
+        document.getElementById('routeRows').appendChild(div);
+    }
+
+    function calcRouteDist() {
+        let total = 0; document.querySelectorAll('.route-km').forEach(i => total += (parseFloat(i.value) || 0));
+        document.getElementById('opDist').value = total || ''; calcEstFuel();
+    }
+
+    function calcEstFuel() {
+        const trkName = document.getElementById('opTruck').value;
+        const dist = parseFloat(document.getElementById('opDist').value) || 0;
+        const load = document.getElementById('opLoadStatus').value;
+        if(!trkName || dist <= 0) return;
+        
+        let cons = 0.35; // default avg
+        if(trkName.includes("Scania")) cons = load === 'Loaded' ? 0.5 : 0.3;
+        else if(trkName.includes("Fuso")) cons = load === 'Loaded' ? 0.4 : 0.2;
+        else cons = load === 'Loaded' ? 0.45 : 0.25;
+
+        const liters = dist * cons;
+        const cost = liters * FUEL_PRICE;
+
+        document.getElementById('estLiters').innerText = liters.toFixed(1) + " L";
+        document.getElementById('estCost').innerText = Math.round(cost).toLocaleString() + " TZS";
+    }
+
+    function checkCustomerDebt() {
+        const c = document.getElementById('debtCustomer').value;
+        let d = 0;
+        db.txs.forEach(t => { if(t.customer === c) { if(t.type==='income') d += t.bal; else if(t.type==='debt') d -= t.amount; }});
+        document.getElementById('currentDebtVal').innerText = d.toLocaleString() + " TZS";
+        document.getElementById('debtDisplay').style.display = 'block';
+        window.activeDebt = d;
+    }
+
+    function setDebtType(t) {
+        if(t==='full') {
+            document.getElementById('debtAmount').value = window.activeDebt > 0 ? window.activeDebt : 0;
+            document.getElementById('debtAmount').readOnly = true;
+        } else {
+            document.getElementById('debtAmount').value = '';
+            document.getElementById('debtAmount').readOnly = false;
+        }
+    }
+
+    async function saveDebtTx() {
+        const amt = parseFloat(document.getElementById('debtAmount').value);
+        const cust = document.getElementById('debtCustomer').value;
+        if(!amt || !cust) return;
+        await fetch(`${API_URL}/api/debts`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-API-Key': API_KEY }, body: JSON.stringify({ company_id: currentCompanyId, date: new Date().toISOString().slice(0,10), customer: cust, amount: amt, description: "Direct Collection" }) });
+        alert("Payment Recorded!");
+        document.getElementById('debtAmount').value = '';
+        syncDashboardWithCloud();
+    }
+
+    let chartP = null, chartE = null;
+    function renderCharts() {
+        const cP = document.getElementById('chartProfit');
+        const cE = document.getElementById('chartExpense');
+        if(!cP || !cE) return;
+
+        if(chartP) chartP.destroy();
+        if(chartE) chartE.destroy();
+
+        let mData = {}, cData = {};
+        db.txs.forEach(t => {
+            let m = t.date.substring(0,7);
+            if(!mData[m]) mData[m] = {i:0, e:0};
+            if(t.type==='income') mData[m].i += t.total;
+            else if (t.type==='expense') { mData[m].e += t.amount; cData[t.cat] = (cData[t.cat]||0) + t.amount; }
+        });
+
+        const labels = Object.keys(mData).sort();
+        chartP = new Chart(cP, { 
+            type:'bar', 
+            data: { 
+                labels, 
+                datasets: [
+                    {label:'Income', data:labels.map(l=>mData[l].i), backgroundColor:'#10b981'}, 
+                    {label:'Expense', data:labels.map(l=>mData[l].e), backgroundColor:'#ef4444'}
+                ]
+            }, 
+            options:{responsive:true, maintainAspectRatio:false}
+        });
+        
+        const totalExp = Object.values(cData).reduce((a,b)=>a+b, 0);
+        chartE = new Chart(cE, { 
+            type:'pie', 
+            data: { 
+                labels: Object.keys(cData), 
+                datasets: [{ data: Object.values(cData), backgroundColor:['#3b82f6','#f59e0b','#ef4444','#10b981','#8b5cf6', '#64748b']}]
+            }, 
+            options:{
+                responsive:true, 
+                maintainAspectRatio:false, 
+                plugins:{
+                    tooltip:{
+                        callbacks:{
+                            label: function(context) {
+                                let label = context.label || '';
+                                if (label) { label += ': '; }
+                                if (context.parsed !== null) {
+                                    let percentage = totalExp > 0 ? ((context.parsed / totalExp) * 100).toFixed(1) : 0;
+                                    label += new Intl.NumberFormat().format(context.parsed) + ' TZS (' + percentage + '%)';
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderAll() {
+        const fill = (id, list) => { const el = document.getElementById(id); if(!el) return; el.innerHTML = '<option value="">Select...</option>'; list.forEach(i => el.innerHTML += `<option value="${i.plate || i.cloudName || i}">${i.plate || i.name || i}</option>`); };
+        fill('opTruck', db.trucks.map(t=>`${t.plate} (${t.model})`)); fill('cpTruck', db.trucks.map(t=>t.plate));
+        fill('opCat', db.categories); fill('opDriver', db.drivers.map(d=>d.cloudName)); fill('cpType', COMPLIANCE_TYPES);
+        fill('debtCustomer', db.customers); fill('newDriverTruck', db.trucks.map(t=>t.plate));
+
+        let cash=0, exp=0, pend=0, tLiters=0, tCost=0, tStats={};
+        db.txs.forEach(t => {
+            if(t.type==='income') { cash+=t.paid; pend+=t.bal; }
+            else if(t.type==='expense') { exp+=t.amount; if(t.cat==='Fuel') tCost+=t.amount; }
+            if(t.truck !== 'N/A') {
+                if(!tStats[t.truck]) tStats[t.truck] = {p:0, l:0, c:0, k:0};
+                if(t.type==='income'){ tStats[t.truck].p += t.total; tStats[t.truck].k += t.dist||0; }
+                else if (t.type==='expense') { tStats[t.truck].p -= t.amount; if(t.cat==='Fuel') { tStats[t.truck].l += (t.liters||0); tStats[t.truck].c += t.amount; } }
+            }
+        });
+
+        document.getElementById('kpi-cash').innerText = cash.toLocaleString();
+        document.getElementById('kpi-pending').innerText = pend.toLocaleString();
+        document.getElementById('kpi-expense').innerText = exp.toLocaleString();
+        document.getElementById('kpi-profit').innerText = (cash-exp).toLocaleString();
+
+        const fList = document.getElementById('fuelList'); fList.innerHTML = '';
+        db.trucks.forEach(t => {
+            const s = tStats[`${t.plate} (${t.model})`] || {p:0, k:0, l:0};
+            let eco = s.l > 0 ? (s.k / s.l).toFixed(2) : '-';
+            fList.innerHTML += `<tr><td><b>${t.plate}</b></td><td style="color:${s.p>=0?'#10b981':'#ef4444'}">${s.p.toLocaleString()}</td><td>${eco}</td><td><div class="progress-bar-bg"><div class="progress-bar-fill" style="width:20%; background:green;"></div></div></td><td><button style="border:none; background:none; font-size:1.2rem; cursor:pointer;" onclick="resetService('${t.plate}')">🔧</button></td></tr>`;
+        });
+
+        const fuelAnalyticsList = document.getElementById('fuelAnalyticsList');
+        if(fuelAnalyticsList) {
+            fuelAnalyticsList.innerHTML = '';
+            document.getElementById('total-fuel-liters').innerText = tLiters.toLocaleString() + " L";
+            document.getElementById('total-fuel-cost').innerText = tCost.toLocaleString() + " TZS";
+
+            Object.keys(tStats).forEach(truck => {
+                const st = tStats[truck];
+                if(st.c > 0) {
+                    let pct = tCost > 0 ? ((st.c / tCost) * 100).toFixed(1) : 0;
+                    fuelAnalyticsList.innerHTML += `<tr><td><b>${truck}</b></td><td>${st.l.toLocaleString()} L</td><td>${st.c.toLocaleString()}</td><td>${pct}%</td></tr>`;
+                }
+            });
+        }
+        
+        // Use a slight delay to ensure the canvas is visible before drawing
+        if (document.getElementById('analytics').classList.contains('active')) {
+            setTimeout(renderCharts, 100);
+        }
+    }
+
+    function nav(id) { 
+        document.querySelectorAll('.section').forEach(el => el.classList.remove('active')); 
+        document.getElementById(id).classList.add('active'); 
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); 
+        event.target.classList.add('active'); 
+        if(id==='analytics') setTimeout(renderCharts, 100); 
+    }
+
+    function init() {
+        window.regionOpts = REGIONS.map(r => `<option value="${r}">${r}</option>`).join('');
+        document.getElementById('opFrom').innerHTML = `<option value="">Select Origin...</option>` + window.regionOpts;
+        document.getElementById('opTo').innerHTML = `<option value="">Select Destination...</option>` + window.regionOpts;
+        document.getElementById('opDate').valueAsDate = new Date();
+    }
+    init();
+</script>
+</body>
+</html>        .container { max-width: 1200px; margin: 0 auto; display: none; /* Hidden until login */ }
 
         /* --- PREMIUM LOGIN PAGE STYLES --- */
         #login-screen {
