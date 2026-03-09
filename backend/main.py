@@ -27,8 +27,8 @@ def test_database():
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],, specify your frontend origin
-    allow_credentials=True,
+    allow_origins=["https://malibora-logrender.com"],
+    allow_credentials=False, 
     allow_methods=["*"],
     allow_headers=["*"],
 )
