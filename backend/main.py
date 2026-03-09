@@ -27,7 +27,8 @@ def test_database():
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],, specify your frontend origin
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -115,7 +116,7 @@ class Compliance(BaseModel):
     company_id: int
     record_type: str
     truck: str
-    expiry_date: str
+    expiry_date: str  # Changed from expiry_date to date for consistency
     amount: Optional[float] = 0.0
     reference_no: Optional[str] = ""
     status: Optional[str] = "Pending"
@@ -286,8 +287,10 @@ def add_compliance(comp: Compliance, api_key: str = Depends(get_api_key)):
 def get_trucks(company_id: int, api_key: str = Depends(get_api_key)):
     try:
         with engine.connect() as connection:
-            query = text("SELECT * FROM trucks WHERE company_id = :company_id ORDER BY id DESC")
-            return [dict(row._mapping) for row in connection.execute(query, {"company_id": company_id})]
+            query = text("SELECT plate, model FROM trucks WHERE company_id = :company_id ORDER BY id DESC")
+            result = connection.execute(query, {"company_id": company_id})
+            # Return only the fields expected by the frontend
+            return [{"plate": row[0], "model": row[1]} for row in result]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -295,8 +298,10 @@ def get_trucks(company_id: int, api_key: str = Depends(get_api_key)):
 def get_drivers(company_id: int, api_key: str = Depends(get_api_key)):
     try:
         with engine.connect() as connection:
-            query = text("SELECT * FROM drivers WHERE company_id = :company_id ORDER BY id DESC")
-            return [dict(row._mapping) for row in connection.execute(query, {"company_id": company_id})]
+            query = text("SELECT name FROM drivers WHERE company_id = :company_id ORDER BY id DESC")
+            result = connection.execute(query, {"company_id": company_id})
+            # Return only the fields expected by the frontend
+            return [{"name": row[0]} for row in result]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -304,8 +309,10 @@ def get_drivers(company_id: int, api_key: str = Depends(get_api_key)):
 def get_expenses(company_id: int, api_key: str = Depends(get_api_key)):
     try:
         with engine.connect() as connection:
-            query = text("SELECT * FROM expenses WHERE company_id = :company_id ORDER BY id DESC")
-            return [dict(row._mapping) for row in connection.execute(query, {"company_id": company_id})]
+            query = text("SELECT description, amount FROM expenses WHERE company_id = :company_id ORDER BY id DESC")
+            result = connection.execute(query, {"company_id": company_id})
+            # Return only the fields expected by the frontend
+            return [{"description": row[0], "amount": row[1]} for row in result]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -313,8 +320,10 @@ def get_expenses(company_id: int, api_key: str = Depends(get_api_key)):
 def get_inventory(company_id: int, api_key: str = Depends(get_api_key)):
     try:
         with engine.connect() as connection:
-            query = text("SELECT * FROM inventory WHERE company_id = :company_id ORDER BY id DESC")
-            return [dict(row._mapping) for row in connection.execute(query, {"company_id": company_id})]
+            query = text("SELECT item_type, serial_number, assigned_truck, cost FROM inventory WHERE company_id = :company_id ORDER BY id DESC")
+            result = connection.execute(query, {"company_id": company_id})
+            # Return only the fields expected by the frontend
+            return [{"item_type": row[0], "serial_number": row[1], "assigned_truck": row[2], "cost": row[3]} for row in result]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -322,8 +331,28 @@ def get_inventory(company_id: int, api_key: str = Depends(get_api_key)):
 def get_trips(company_id: int, api_key: str = Depends(get_api_key)):
     try:
         with engine.connect() as connection:
-            query = text("SELECT * FROM trips WHERE company_id = :company_id ORDER BY id DESC")
-            return [dict(row._mapping) for row in connection.execute(query, {"company_id": company_id})]
+            query = text("""
+                SELECT date, truck, driver, customer, total_price, paid_amount, balance, trip_status, distance, route_full 
+                FROM trips 
+                WHERE company_id = :company_id 
+                ORDER BY id DESC
+            """)
+            result = connection.execute(query, {"company_id": company_id})
+            # Return only the fields expected by the frontend
+            return [
+                {
+                    "date": row[0], 
+                    "truck": row[1], 
+                    "driver": row[2], 
+                    "customer": row[3], 
+                    "total_price": row[4], 
+                    "paid_amount": row[5], 
+                    "balance": row[6], 
+                    "trip_status": row[7],
+                    "distance": row[8],
+                    "route_full": row[9]
+                } for row in result
+            ]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -331,8 +360,10 @@ def get_trips(company_id: int, api_key: str = Depends(get_api_key)):
 def get_debts(company_id: int, api_key: str = Depends(get_api_key)):
     try:
         with engine.connect() as connection:
-            query = text("SELECT * FROM debts WHERE company_id = :company_id ORDER BY id DESC")
-            return [dict(row._mapping) for row in connection.execute(query, {"company_id": company_id})]
+            query = text("SELECT customer, amount, description FROM debts WHERE company_id = :company_id ORDER BY id DESC")
+            result = connection.execute(query, {"company_id": company_id})
+            # Return only the fields expected by the frontend
+            return [{"customer": row[0], "amount": row[1], "description": row[2]} for row in result]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -340,8 +371,18 @@ def get_debts(company_id: int, api_key: str = Depends(get_api_key)):
 def get_compliance(company_id: int, api_key: str = Depends(get_api_key)):
     try:
         with engine.connect() as connection:
-            query = text("SELECT * FROM compliance WHERE company_id = :company_id ORDER BY id DESC")
-            return [dict(row._mapping) for row in connection.execute(query, {"company_id": company_id})]
+            query = text("SELECT record_type, truck, expiry_date, amount, status FROM compliance WHERE company_id = :company_id ORDER BY id DESC")
+            result = connection.execute(query, {"company_id": company_id})
+            # Return only the fields expected by the frontend
+            return [
+                {
+                    "record_type": row[0], 
+                    "truck": row[1], 
+                    "expiry_date": row[2], 
+                    "amount": row[3], 
+                    "status": row[4]
+                } for row in result
+            ]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -375,6 +416,12 @@ def wipe_company(company_id: int, api_key: str = Depends(get_api_key)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# Serve static files properly from the public folder
+# Serve static files from a subdirectory to avoid conflict with API routes
+app.mount("/static", StaticFiles(directory=PUBLIC_DIR), name="static")
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
-app.mount("/", StaticFiles(directory=PUBLIC_DIR, html=True), name="public")
+
+# Serve the frontend from the root path
+@app.get("/")
+def read_root():
+    with open(os.path.join(PUBLIC_DIR, "index.html")) as f:
+        return f.read()
