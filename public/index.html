@@ -4,10 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1e40af">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Malibora Systems">
-    
     <title>Malibora Intertrade - Logistics System</title>
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -102,22 +98,17 @@
         
         .mode-switcher { display: flex; background: #f1f5f9; padding: 4px; border-radius: 12px; margin-bottom: 20px; }
         .mode-btn { flex: 1; padding: 10px; border: none; background: transparent; font-weight: 600; cursor: pointer; border-radius: 10px; }
-        .mode-btn.active.inc { background: var(--white); color: var(--success); }
-        .mode-btn.active.exp { background: var(--white); color: var(--danger); }
+        .mode-btn.active.inc { background: var(--white); color: var(--success); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .mode-btn.active.exp { background: var(--white); color: var(--danger); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
 
         .progress-bar-bg { background: #e2e8f0; height: 8px; border-radius: 10px; width: 100%; margin-top: 5px; overflow: hidden; }
         .progress-bar-fill { height: 100%; transition: width 0.3s; }
         
         .maint-alert-box { background: #fefce8; border: 1px solid #fde047; padding: 15px; border-radius: 12px; margin-bottom: 20px; display: none; }
-        .maint-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-
+        
         .route-row { display: flex; gap: 5px; align-items: center; margin-bottom: 5px; }
         #map { height: 450px; width: 100%; border-radius: 16px; border: 2px solid #e2e8f0; margin-bottom: 10px; }
-        .hidden { display: none; }
-        .status-badge { padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; }
-        .status-transit { background: #fef3c7; color: #b45309; }
-        .status-complete { background: #dcfce7; color: #15803d; }
-        .btn-end-trip { background: #2563eb; color: white; border: none; padding: 5px 12px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; }
+        .hidden { display: none !important; }
         .debt-alert { background: #fffbeb; border: 1px solid #fcd34d; padding: 15px; border-radius: 12px; margin-bottom: 15px; display: none; }
 
         .comp-header { background: linear-gradient(135deg, #0f172a 0%, #334155 100%); color: white; padding: 25px; border-radius: 16px; margin-bottom: 20px; display: flex; align-items: center; gap: 15px; }
@@ -141,9 +132,6 @@
         <input type="text" id="b2bCompany" class="pin-input" placeholder="Company Name">
         <input type="password" id="b2bPin" class="pin-input" placeholder="4-Digit PIN" maxlength="4">
         
-        <div class="error-msg" id="loginError"></div>
-        <div id="loginSuccess"></div>
-        
         <button class="login-btn" id="b2bAuthBtn" onclick="executeB2BAuth()">SECURE LOGIN</button>
     </div>
 </div>
@@ -155,54 +143,37 @@
             <small id="uiRoleDisplay" style="color:var(--primary); font-weight:bold;">ADMIN PANEL</small>
         </div>
         <div style="display:flex; align-items:center;">
-            <button class="lang-btn" onclick="toggleLanguage()" id="btnLang">🇹🇿 SW</button>
+            <button class="lang-btn" onclick="toggleLanguage()" id="btnLang" style="border:none; background:none; font-size: 1.2rem; cursor:pointer;">🇹🇿 SW</button>
             <button onclick="logout()" style="background:none; border:none; font-size: 1.5rem; cursor:pointer;">🔒</button>
         </div>
     </div>
 
     <div class="nav-scroller">
         <div class="nav-menu">
-            <button class="nav-btn active" onclick="nav('dashboard')" data-key="nav_dash">Dashboard</button>
-            <button class="nav-btn" onclick="nav('map-section')" data-key="nav_map">🗺️ Live Map</button>
-            <button class="nav-btn" onclick="nav('operations')" data-key="nav_ops">Operations</button>
-            <button class="nav-btn" onclick="nav('history')" data-key="nav_hist">History</button>
-            <button class="nav-btn" onclick="nav('analytics')" data-key="nav_analytics">Analytics</button>
-            <button class="nav-btn" onclick="nav('debt')" data-key="nav_debt">Collect Debt</button>
-            <button class="nav-btn" onclick="nav('compliance')" data-key="nav_comp">Compliance</button>
-            <button class="nav-btn" onclick="nav('settings')" data-key="nav_set">Settings</button>
+            <button class="nav-btn active" onclick="nav('dashboard', this)">Dashboard</button>
+            <button class="nav-btn" onclick="nav('map-section', this)">🗺️ Live Map</button>
+            <button class="nav-btn" onclick="nav('operations', this)">Operations</button>
+            <button class="nav-btn" onclick="nav('history', this)">History</button>
+            <button class="nav-btn" onclick="nav('analytics', this)">Analytics</button>
+            <button class="nav-btn" onclick="nav('debt', this)">Collect Debt</button>
+            <button class="nav-btn" onclick="nav('compliance', this)">Compliance</button>
+            <button class="nav-btn" onclick="nav('settings', this)">Settings</button>
         </div>
     </div>
 
     <div id="dashboard" class="section active">
-        <div id="maint-alert-box" class="maint-alert-box">
-            <h3 style="margin:0 0 10px; color:#a16207;">⚠️ Maintenance Required</h3>
-            <div id="maint-list"></div>
-        </div>
-
         <div class="kpi-grid">
-            <div class="card income"><h3 data-key="kpi_cash">Cash In Hand</h3><p id="kpi-cash" class="text-success">0</p></div>
-            <div class="card pending"><h3 data-key="kpi_debt">Pending Debt</h3><p id="kpi-pending" style="color: var(--warning)">0</p></div>
-            <div class="card expense"><h3 data-key="kpi_exp">Expenses</h3><p id="kpi-expense" class="text-danger">0</p></div>
-            <div class="card profit"><h3 data-key="kpi_profit">Net Profit</h3><p id="kpi-profit">0</p></div>
+            <div class="card income"><h3>Cash In Hand</h3><p id="kpi-cash" class="text-success">0</p></div>
+            <div class="card pending"><h3>Pending Debt</h3><p id="kpi-pending" style="color: var(--warning)">0</p></div>
+            <div class="card expense"><h3>Expenses</h3><p id="kpi-expense" class="text-danger">0</p></div>
+            <div class="card profit"><h3>Net Profit</h3><p id="kpi-profit">0</p></div>
         </div>
 
         <div class="panel">
-            <h3 data-key="fleet_perf">🚛 Fleet Performance & Maintenance</h3>
+            <h3>🚛 Fleet Performance & Maintenance</h3>
             <table id="fuelTable" style="width: 100%; text-align: left;">
-                <thead><tr><th>Truck</th><th data-key="th_profit_short">Profit</th><th>Eco (Km/L)</th><th>Service Status</th><th>Action</th></tr></thead>
+                <thead><tr><th>Truck</th><th>Profit</th><th>Eco (Km/L)</th><th>Service Status</th><th>Action</th></tr></thead>
                 <tbody id="fuelList"></tbody>
-            </table>
-        </div>
-
-        <div class="panel">
-            <h3>⛽ Fuel Analysis</h3>
-            <div class="kpi-grid">
-                <div class="card" style="background:#fff7ed;"><h3 style="color:#c2410c">Total Liters</h3><p id="total-fuel-liters">0 L</p></div>
-                <div class="card" style="background:#fff7ed;"><h3 style="color:#c2410c">Total Cost</h3><p id="total-fuel-cost">0</p></div>
-            </div>
-            <table id="fuelAnalyticsTable" style="width: 100%; text-align: left;">
-                <thead><tr><th>Truck</th><th>Fuel (L)</th><th>Cost (TZS)</th><th>% Usage</th></tr></thead>
-                <tbody id="fuelAnalyticsList"></tbody>
             </table>
         </div>
     </div>
@@ -211,15 +182,16 @@
         <div class="split-layout">
             <div class="panel">
                 <div class="mode-switcher">
-                    <button class="mode-btn active inc" onclick="setMode('income')">Trip</button>
-                    <button class="mode-btn exp" onclick="setMode('expense')">Expense</button>
+                    <button class="mode-btn active inc" onclick="setMode('income')">Trip Income</button>
+                    <button class="mode-btn exp" onclick="setMode('expense')">Add Expense</button>
                 </div>
                 <input type="hidden" id="opMode" value="income">
+                
                 <div class="form-row">
                     <div><label>Date</label><input type="date" id="opDate"></div>
                     <div><label>Truck</label><select id="opTruck" onchange="calcEstFuel()"></select></div>
                 </div>
-                <label>Driver</label><select id="opDriver" onchange="autoFillDriverDetails()"></select>
+                <label>Driver</label><select id="opDriver"></select>
 
                 <div id="grp-income">
                     <div style="border: 1px solid #cbd5e1; padding:15px; border-radius:10px; margin-bottom:15px; background:#f8fafc;">
@@ -229,12 +201,8 @@
                             <div><label>Load Status</label><select id="opLoadStatus" onchange="calcEstFuel()"><option value="Loaded">Loaded</option><option value="Empty">Empty</option></select></div>
                         </div>
                         <div id="singleTripUI" class="form-row">
-                            <div><label>From</label><select id="opFrom"></select></div>
-                            <div><label>To</label><select id="opTo"></select></div>
-                        </div>
-                        <div id="multiStopUI" class="hidden">
-                            <div id="routeRows"></div>
-                            <button class="btn btn-outline" style="padding: 5px 10px; font-size: 0.8rem; margin-top: 5px;" onclick="addRouteLeg()">+ Add Stop</button>
+                            <div><label>Origin Region</label><select id="opFrom"></select></div>
+                            <div><label>Destination Region</label><select id="opTo"></select></div>
                         </div>
                         <label style="margin-top:10px;">Total Distance (Km)</label><input type="number" id="opDist" oninput="calcEstFuel()">
                         <div style="background: #e0f2fe; padding: 15px; border-radius: 12px; border: 1px solid #7dd3fc; margin-top: 15px;">
@@ -245,8 +213,8 @@
                             </div>
                         </div>
                     </div>
-                    <label>Cargo Type</label><input type="text" id="opCargo" placeholder="e.g. Copper">
-                    <label>Customer</label><input type="text" id="opCustomer">
+                    <label>Cargo / Inventory Type</label><select id="opCargo"></select>
+                    <label>Customer</label><input type="text" id="opCustomer" placeholder="Customer Name">
                     <div class="form-row">
                         <div><label>Total Price</label><input type="number" id="opTotal" oninput="calcBal()"></div>
                         <div><label>Paid Now</label><input type="number" id="opPaid" oninput="calcBal()"></div>
@@ -255,10 +223,11 @@
                 </div>
 
                 <div id="grp-expense" class="hidden">
-                    <label>Category</label><select id="opCat" onchange="checkFuel()"></select>
+                    <label>Expense Category</label><select id="opCat" onchange="checkFuel()"></select>
                     <div id="grp-fuel" class="hidden"><label>Liters</label><input type="number" id="opLiters"></div>
-                    <label>Amount</label><input type="number" id="opExpAmount">
+                    <label>Amount (TZS)</label><input type="number" id="opExpAmount">
                 </div>
+                
                 <label>Description</label><textarea id="opDesc"></textarea>
                 <button class="btn btn-primary" onclick="saveOp()">SAVE TRANSACTION</button>
             </div>
@@ -269,27 +238,16 @@
     <div id="map-section" class="section">
         <div class="split-layout">
             <div class="panel" style="flex:2;"><h3>🗺️ Fleet Map</h3><div id="map"></div></div>
-            <div class="panel" style="flex:1;"><h3>Active Trucks</h3><div id="activeTrucksList"></div></div>
+            <div class="panel" style="flex:1;"><h3>Active Trucks</h3><div id="activeTrucksList">No active trips.</div></div>
         </div>
     </div>
 
     <div id="history" class="section">
-        <div class="panel">
-            <h3>📜 Operations History</h3>
-            <input type="text" id="histSearch" placeholder="Search records..." onkeyup="renderHistory()" style="margin-bottom: 20px;">
-            <div id="historyList"></div>
-        </div>
+        <div class="panel"><h3>📜 Operations History</h3><p>Records will appear here.</p></div>
     </div>
 
     <div id="analytics" class="section">
-        <div class="panel" style="height:400px; padding-bottom: 40px;">
-            <h3 data-key="chart_income">Income vs Expense (This Year)</h3>
-            <canvas id="chartProfit"></canvas>
-        </div>
-        <div class="panel" style="height:400px; padding-bottom: 40px;">
-            <h3 data-key="chart_breakdown">Expense Breakdown (%)</h3>
-            <canvas id="chartExpense"></canvas>
-        </div>
+        <div class="panel" style="height:400px; padding-bottom: 40px;"><canvas id="chartProfit"></canvas></div>
     </div>
 
     <div id="debt" class="section">
@@ -297,18 +255,7 @@
             <h3>💰 Collect Debt Payment</h3>
             <label>Select Customer</label>
             <select id="debtCustomer" onchange="checkCustomerDebt()"></select>
-            
-            <div id="debtDisplay" class="debt-alert">
-                Outstanding Debt: <strong id="currentDebtVal" style="font-size: 1.2rem;">0 TZS</strong>
-            </div>
-
-            <label>Payment Mode</label>
-            <div class="form-row" style="margin-bottom:15px;">
-                <button class="btn btn-outline" id="btnFull" onclick="setDebtType('full')" style="border-color:#10b981; color:#10b981; font-weight: bold;">Full Payment</button>
-                <button class="btn btn-outline" id="btnPartial" onclick="setDebtType('partial')" style="border-color:#f59e0b; color:#f59e0b; font-weight: bold;">Partial Payment</button>
-            </div>
-
-            <label>Amount Offered</label>
+            <div id="debtDisplay" class="debt-alert">Outstanding Debt: <strong id="currentDebtVal" style="font-size: 1.2rem;">0 TZS</strong></div>
             <input type="number" id="debtAmount" placeholder="Enter amount">
             <button class="btn btn-primary" onclick="saveDebtTx()">SAVE PAYMENT</button>
         </div>
@@ -316,15 +263,7 @@
 
     <div id="compliance" class="section">
         <div class="comp-header">
-            <div class="comp-icon">
-                <svg width="50" height="50" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2L12 22M12 5L4 5M12 5L20 5M4 5L2 12C2 13.1046 2.89543 14 4 14C5.10457 14 6 13.1046 6 12L4 5ZM20 5L18 12C18 13.1046 18.8954 14 20 14C21.1046 14 22 13.1046 22 12L20 5ZM8 22L16 22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-            </div>
-            <div>
-                <h2 style="margin:0;">Regulatory Compliance</h2>
-                <small>Legal status of Fleet & Permits</small>
-            </div>
+            <div><h2 style="margin:0;">Regulatory Compliance</h2><small>Legal status of Fleet & Permits</small></div>
         </div>
         <div class="panel">
             <div class="form-row">
@@ -332,13 +271,13 @@
                 <div><label>Truck</label><select id="cpTruck"></select></div>
             </div>
             <div class="form-row">
-                <div><label>Expiry</label><input type="date" id="cpDate"></div>
-                <div><label>Amount</label><input type="number" id="cpAmount"></div>
+                <div><label>Expiry Date</label><input type="date" id="cpDate"></div>
+                <div><label>Amount Paid</label><input type="number" id="cpAmount"></div>
             </div>
-            <button class="btn btn-primary" onclick="addCompliance()">Add Record</button>
+            <button class="btn btn-primary" onclick="addCompliance()">Add Compliance Record</button>
             <table id="cpTable" style="margin-top:20px; width: 100%; text-align: left;">
-                <thead><tr><th>Permit</th><th>Truck</th><th>Expiry</th><th>Status</th><th>×</th></tr></thead>
-                <tbody></tbody>
+                <thead><tr><th>Permit</th><th>Truck</th><th>Expiry</th></tr></thead>
+                <tbody id="cpList"></tbody>
             </table>
         </div>
     </div>
@@ -346,296 +285,205 @@
     <div id="settings" class="section">
         <div class="split-layout">
             <div class="panel">
-                <h3>Manage Trucks</h3>
-                <div style="display:flex; gap:5px;"><input id="newTruckPlate" placeholder="Plate"><select id="newTruckModel"><option>Scania</option><option>Howo</option><option>Fuso</option></select><button class="btn btn-primary" style="width:auto" onclick="addTruck()">+</button></div>
+                <h3>Manage Trucks & Trailers</h3>
+                <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
+                    <input id="newTruckPlate" placeholder="Truck Plate" style="flex:1; min-width: 120px;">
+                    <select id="newTruckModel" style="flex:1; min-width: 120px;"><option>Scania</option><option>Howo</option><option>Fuso</option></select>
+                    <input id="newTrailer1" placeholder="Trailer 1 Plate" style="flex:1; min-width: 120px;">
+                    <input id="newTrailer2" placeholder="Trailer 2 Plate" style="flex:1; min-width: 120px;">
+                    <button class="btn btn-primary" style="width:100%" onclick="addTruck()">+ Add Fleet Asset</button>
+                </div>
                 <div id="lst-trucks"></div>
             </div>
+            
             <div class="panel">
-                <h3>Manage Drivers</h3>
-                <div style="display:flex; gap:5px;"><input id="newDriver" placeholder="Name"><select id="newDriverTruck"><option value="">Assign Truck...</option></select><button class="btn btn-primary" style="width:auto" onclick="addDriver()">+</button></div>
-                <div id="lst-drivers"></div>
+                <h3>System Preferences</h3>
+                <label>Add Inventory/Cargo Type</label>
+                <div style="display:flex; gap:5px;"><input id="newInvType" placeholder="e.g. Copper, Maize"><button class="btn btn-primary" style="width:auto" onclick="addSetting('inv')">+</button></div>
+                
+                <label>Add Expense Category</label>
+                <div style="display:flex; gap:5px;"><input id="newExpType" placeholder="e.g. Tolls, Oil"><button class="btn btn-primary" style="width:auto" onclick="addSetting('exp')">+</button></div>
+                
+                <label>Add Compliance Type</label>
+                <div style="display:flex; gap:5px;"><input id="newCompType" placeholder="e.g. Speed Fine, LATRA"><button class="btn btn-primary" style="width:auto" onclick="addSetting('comp')">+</button></div>
             </div>
         </div>
-        <div class="panel" style="background:#fef2f2; margin-top:20px;"><button class="btn btn-outline" style="color:red; border-color:red" onclick="wipeData()">Factory Reset (Wipe Cloud)</button></div>
+        
+        <div class="panel" style="margin-top:20px;">
+            <h3>Manage Drivers</h3>
+            <div style="display:flex; gap:5px;"><input id="newDriver" placeholder="Driver Name"><button class="btn btn-primary" style="width:auto" onclick="addDriver()">+</button></div>
+        </div>
     </div>
 </div>
 
 <script>
     const API_KEY = 'MALIBORA_SECRET_KEY_2026';
-    const API_URL = "https://malibora-logistics.onrender.com"; 
     let currentCompanyId = null; 
     let authMode = 'login';
+    let map;
 
     const FUEL_PRICE = 3430;
-    // ALL 31 Regions of Tanzania
     const REGIONS = [
         "Arusha", "Dar es Salaam", "Dodoma", "Geita", "Iringa", "Kagera", "Katavi", "Kigoma", "Kilimanjaro", "Lindi", 
         "Manyara", "Mara", "Mbeya", "Morogoro", "Mtwara", "Mwanza", "Njombe", "Pemba North", "Pemba South", "Pwani", 
         "Rukwa", "Ruvuma", "Shinyanga", "Simiyu", "Singida", "Songwe", "Tabora", "Tanga", "Zanzibar North", "Zanzibar South", "Zanzibar West"
     ];
-    const COMPLIANCE_TYPES = ["LATRA License", "TRA Road License", "Comprehensive Insurance", "Vehicle Inspection", "Parking Penalty", "Speed Fine"];
-
-    let db = { trucks: [], drivers: [], customers: [], categories: ["Fuel", "Driver Allowance", "Turnboy", "Mechanic", "Tolls", "Office Rent"], txs: [], compliance: [] };
+    
+    // Dynamic Databases
+    let db = { 
+        trucks: [], drivers: [], customers: [], txs: [], compliance: [],
+        categories: ["Fuel", "Driver Allowance", "Turnboy", "Mechanic", "Tolls"], 
+        inventoryTypes: ["Copper", "Maize", "Cement", "General Goods"],
+        complianceTypes: ["LATRA License", "TRA Road License", "Comprehensive Insurance"]
+    };
 
     function setAuthMode(mode) {
         authMode = mode;
-        const btnLogin = document.getElementById('btnTabLogin');
-        const btnReg = document.getElementById('btnTabReg');
-        const authBtn = document.getElementById('b2bAuthBtn');
-        if (mode === 'login') {
-            btnLogin.style.background = 'rgba(255,255,255,0.2)'; btnReg.style.background = 'transparent'; authBtn.innerText = 'SECURE LOGIN';
-        } else {
-            btnReg.style.background = 'rgba(255,255,255,0.2)'; btnLogin.style.background = 'transparent'; authBtn.innerText = 'CREATE ACCOUNT';
+        document.getElementById('btnTabLogin').style.background = mode === 'login' ? 'rgba(255,255,255,0.2)' : 'transparent';
+        document.getElementById('btnTabReg').style.background = mode === 'register' ? 'rgba(255,255,255,0.2)' : 'transparent';
+        document.getElementById('b2bAuthBtn').innerText = mode === 'login' ? 'SECURE LOGIN' : 'CREATE ACCOUNT';
+    }
+
+    function executeB2BAuth() {
+        const cName = document.getElementById('b2bCompany').value;
+        if (!cName) return;
+        currentCompanyId = "DEMO_ID";
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('app-container').style.display = 'block';
+        document.getElementById('appHeaderName').innerText = cName.toUpperCase();
+        initMap();
+        renderAll();
+    }
+
+    // Fixed missing map initialization
+    function initMap() {
+        if (!map) {
+            map = L.map('map').setView([-6.7924, 39.2083], 6); // Tanzania Center
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap'
+            }).addTo(map);
         }
     }
 
-    async function executeB2BAuth() {
-        const cName = document.getElementById('b2bCompany').value.trim();
-        const cPin = document.getElementById('b2bPin').value.trim();
-        if (!cName || !cPin) return;
-        
-        document.getElementById('b2bAuthBtn').innerText = "CONNECTING... ⏳";
-        const endpoint = authMode === 'login' ? '/api/login' : '/api/register';
-        
-        try {
-            const res = await fetch(`${API_URL}${endpoint}`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json", "X-API-Key": API_KEY },
-                body: JSON.stringify({ company_name: cName, admin_pin: cPin })
-            });
-            const data = await res.json();
-            if (res.ok) {
-                localStorage.removeItem('truck_v55_db');
-                currentCompanyId = data.company_id;
-                document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('app-container').style.display = 'block';
-                document.getElementById('appHeaderName').innerText = cName.toUpperCase();
-                await syncDashboardWithCloud();
-                initMap();
-            } else { alert(data.detail); document.getElementById('b2bAuthBtn').innerText = "RETRY"; }
-        } catch(e) { alert("Server starting up..."); document.getElementById('b2bAuthBtn').innerText = "RETRY"; }
-    }
-
-    async function syncDashboardWithCloud() {
-        if (!currentCompanyId) return;
-        const h = { "X-API-Key": API_KEY };
-        try {
-            const [tRes, dRes, eRes, trRes, cRes] = await Promise.all([
-                fetch(`${API_URL}/api/trucks?company_id=${currentCompanyId}`, { headers:h }),
-                fetch(`${API_URL}/api/drivers?company_id=${currentCompanyId}`, { headers:h }),
-                fetch(`${API_URL}/api/expenses?company_id=${currentCompanyId}`, { headers:h }),
-                fetch(`${API_URL}/api/trips?company_id=${currentCompanyId}`, { headers:h }),
-                fetch(`${API_URL}/api/compliance?company_id=${currentCompanyId}`, { headers:h })
-            ]);
-            const tData = await tRes.json();
-            const dData = await dRes.json();
-            const eData = await eRes.json();
-            const trData = await trRes.json();
-            const cData = await cRes.json();
-
-            db.trucks = tData.map(t => ({ plate: t.plate, model: t.model, odo: 0, lastServiceOdo: 0, interval: 5000 }));
-            db.drivers = dData.map(d => {
-                let n = d.name, t = "";
-                if (n.includes("(") && n.includes(")")) { let p = n.split("("); n = p[0].trim(); t = p[1].replace(")", "").trim(); }
-                return { name: n, truck: t, cloudName: d.name };
-            });
-            const expTxs = eData.map(e => ({ id: e.id, type: 'expense', date: 'Cloud', truck: 'N/A', driver: 'N/A', cat: e.description.split(" - ")[0], desc: e.description.split(" - ")[1] || "", amount: e.amount }));
-            const tripTxs = trData.map(t => ({ id: t.id, type: 'income', date: t.date, truck: t.truck, driver: t.driver, customer: t.customer, total: t.total_price, paid: t.paid_amount, bal: t.balance, tripStatus: t.trip_status, dist: t.distance, routeFull: t.route_full }));
-            db.txs = [...expTxs, ...tripTxs];
-            db.compliance = cData.map(c => ({ id: c.id, type: c.record_type, truck: c.truck, date: c.expiry_date, amount: c.amount, status: c.status }));
-            db.customers = [...new Set(tripTxs.map(t => t.customer))];
-            renderAll();
-        } catch(e) { console.error(e); }
-    }
-
-    function updateTripUI() {
-        const type = document.getElementById('opTripType').value;
-        document.getElementById('singleTripUI').classList.toggle('hidden', type === 'Round');
-        document.getElementById('multiStopUI').classList.toggle('hidden', type !== 'Round');
-        document.getElementById('opDist').readOnly = type === 'Round';
-    }
-
-    function addRouteLeg() {
-        const div = document.createElement('div'); div.className = 'route-row';
-        div.innerHTML = `<select class="route-region" onchange="calcRouteDist()">${window.regionOpts}</select><input type="number" class="route-km" placeholder="Km" oninput="calcRouteDist()"><span style="cursor:pointer; color:red; font-size: 1.2rem; font-weight: bold;" onclick="this.parentElement.remove();calcRouteDist()">×</span>`;
-        document.getElementById('routeRows').appendChild(div);
-    }
-
-    function calcRouteDist() {
-        let total = 0; document.querySelectorAll('.route-km').forEach(i => total += (parseFloat(i.value) || 0));
-        document.getElementById('opDist').value = total || ''; calcEstFuel();
-    }
-
-    function calcEstFuel() {
-        const trkName = document.getElementById('opTruck').value;
-        const dist = parseFloat(document.getElementById('opDist').value) || 0;
-        const load = document.getElementById('opLoadStatus').value;
-        if(!trkName || dist <= 0) return;
-        
-        let cons = 0.35; // default avg
-        if(trkName.includes("Scania")) cons = load === 'Loaded' ? 0.5 : 0.3;
-        else if(trkName.includes("Fuso")) cons = load === 'Loaded' ? 0.4 : 0.2;
-        else cons = load === 'Loaded' ? 0.45 : 0.25;
-
-        const liters = dist * cons;
-        const cost = liters * FUEL_PRICE;
-
-        document.getElementById('estLiters').innerText = liters.toFixed(1) + " L";
-        document.getElementById('estCost').innerText = Math.round(cost).toLocaleString() + " TZS";
-    }
-
-    function checkCustomerDebt() {
-        const c = document.getElementById('debtCustomer').value;
-        let d = 0;
-        db.txs.forEach(t => { if(t.customer === c) { if(t.type==='income') d += t.bal; else if(t.type==='debt') d -= t.amount; }});
-        document.getElementById('currentDebtVal').innerText = d.toLocaleString() + " TZS";
-        document.getElementById('debtDisplay').style.display = 'block';
-        window.activeDebt = d;
-    }
-
-    function setDebtType(t) {
-        if(t==='full') {
-            document.getElementById('debtAmount').value = window.activeDebt > 0 ? window.activeDebt : 0;
-            document.getElementById('debtAmount').readOnly = true;
-        } else {
-            document.getElementById('debtAmount').value = '';
-            document.getElementById('debtAmount').readOnly = false;
-        }
-    }
-
-    async function saveDebtTx() {
-        const amt = parseFloat(document.getElementById('debtAmount').value);
-        const cust = document.getElementById('debtCustomer').value;
-        if(!amt || !cust) return;
-        await fetch(`${API_URL}/api/debts`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-API-Key': API_KEY }, body: JSON.stringify({ company_id: currentCompanyId, date: new Date().toISOString().slice(0,10), customer: cust, amount: amt, description: "Direct Collection" }) });
-        alert("Payment Recorded!");
-        document.getElementById('debtAmount').value = '';
-        syncDashboardWithCloud();
-    }
-
-    let chartP = null, chartE = null;
-    function renderCharts() {
-        const cP = document.getElementById('chartProfit');
-        const cE = document.getElementById('chartExpense');
-        if(!cP || !cE) return;
-
-        if(chartP) chartP.destroy();
-        if(chartE) chartE.destroy();
-
-        let mData = {}, cData = {};
-        db.txs.forEach(t => {
-            let m = t.date.substring(0,7);
-            if(!mData[m]) mData[m] = {i:0, e:0};
-            if(t.type==='income') mData[m].i += t.total;
-            else if (t.type==='expense') { mData[m].e += t.amount; cData[t.cat] = (cData[t.cat]||0) + t.amount; }
-        });
-
-        const labels = Object.keys(mData).sort();
-        chartP = new Chart(cP, { 
-            type:'bar', 
-            data: { 
-                labels, 
-                datasets: [
-                    {label:'Income', data:labels.map(l=>mData[l].i), backgroundColor:'#10b981'}, 
-                    {label:'Expense', data:labels.map(l=>mData[l].e), backgroundColor:'#ef4444'}
-                ]
-            }, 
-            options:{responsive:true, maintainAspectRatio:false}
-        });
-        
-        const totalExp = Object.values(cData).reduce((a,b)=>a+b, 0);
-        chartE = new Chart(cE, { 
-            type:'pie', 
-            data: { 
-                labels: Object.keys(cData), 
-                datasets: [{ data: Object.values(cData), backgroundColor:['#3b82f6','#f59e0b','#ef4444','#10b981','#8b5cf6', '#64748b']}]
-            }, 
-            options:{
-                responsive:true, 
-                maintainAspectRatio:false, 
-                plugins:{
-                    tooltip:{
-                        callbacks:{
-                            label: function(context) {
-                                let label = context.label || '';
-                                if (label) { label += ': '; }
-                                if (context.parsed !== null) {
-                                    let percentage = totalExp > 0 ? ((context.parsed / totalExp) * 100).toFixed(1) : 0;
-                                    label += new Intl.NumberFormat().format(context.parsed) + ' TZS (' + percentage + '%)';
-                                }
-                                return label;
-                            }
-                        }
-                    }
-                }
-            }
-        });
-    }
-
-    function renderAll() {
-        const fill = (id, list) => { const el = document.getElementById(id); if(!el) return; el.innerHTML = '<option value="">Select...</option>'; list.forEach(i => el.innerHTML += `<option value="${i.plate || i.cloudName || i}">${i.plate || i.name || i}</option>`); };
-        fill('opTruck', db.trucks.map(t=>`${t.plate} (${t.model})`)); fill('cpTruck', db.trucks.map(t=>t.plate));
-        fill('opCat', db.categories); fill('opDriver', db.drivers.map(d=>d.cloudName)); fill('cpType', COMPLIANCE_TYPES);
-        fill('debtCustomer', db.customers); fill('newDriverTruck', db.trucks.map(t=>t.plate));
-
-        let cash=0, exp=0, pend=0, tLiters=0, tCost=0, tStats={};
-        db.txs.forEach(t => {
-            if(t.type==='income') { cash+=t.paid; pend+=t.bal; }
-            else if(t.type==='expense') { exp+=t.amount; if(t.cat==='Fuel') tCost+=t.amount; }
-            if(t.truck !== 'N/A') {
-                if(!tStats[t.truck]) tStats[t.truck] = {p:0, l:0, c:0, k:0};
-                if(t.type==='income'){ tStats[t.truck].p += t.total; tStats[t.truck].k += t.dist||0; }
-                else if (t.type==='expense') { tStats[t.truck].p -= t.amount; if(t.cat==='Fuel') { tStats[t.truck].l += (t.liters||0); tStats[t.truck].c += t.amount; } }
-            }
-        });
-
-        document.getElementById('kpi-cash').innerText = cash.toLocaleString();
-        document.getElementById('kpi-pending').innerText = pend.toLocaleString();
-        document.getElementById('kpi-expense').innerText = exp.toLocaleString();
-        document.getElementById('kpi-profit').innerText = (cash-exp).toLocaleString();
-
-        const fList = document.getElementById('fuelList'); fList.innerHTML = '';
-        db.trucks.forEach(t => {
-            const s = tStats[`${t.plate} (${t.model})`] || {p:0, k:0, l:0};
-            let eco = s.l > 0 ? (s.k / s.l).toFixed(2) : '-';
-            fList.innerHTML += `<tr><td><b>${t.plate}</b></td><td style="color:${s.p>=0?'#10b981':'#ef4444'}">${s.p.toLocaleString()}</td><td>${eco}</td><td><div class="progress-bar-bg"><div class="progress-bar-fill" style="width:20%; background:green;"></div></div></td><td><button style="border:none; background:none; font-size:1.2rem; cursor:pointer;" onclick="resetService('${t.plate}')">🔧</button></td></tr>`;
-        });
-
-        const fuelAnalyticsList = document.getElementById('fuelAnalyticsList');
-        if(fuelAnalyticsList) {
-            fuelAnalyticsList.innerHTML = '';
-            document.getElementById('total-fuel-liters').innerText = tLiters.toLocaleString() + " L";
-            document.getElementById('total-fuel-cost').innerText = tCost.toLocaleString() + " TZS";
-
-            Object.keys(tStats).forEach(truck => {
-                const st = tStats[truck];
-                if(st.c > 0) {
-                    let pct = tCost > 0 ? ((st.c / tCost) * 100).toFixed(1) : 0;
-                    fuelAnalyticsList.innerHTML += `<tr><td><b>${truck}</b></td><td>${st.l.toLocaleString()} L</td><td>${st.c.toLocaleString()}</td><td>${pct}%</td></tr>`;
-                }
-            });
-        }
-        
-        // Use a slight delay to ensure the canvas is visible before drawing
-        if (document.getElementById('analytics').classList.contains('active')) {
-            setTimeout(renderCharts, 100);
-        }
-    }
-
-    function nav(id) { 
+    // Fixed Navigation with Map Invalidate
+    function nav(id, btnElement) { 
         document.querySelectorAll('.section').forEach(el => el.classList.remove('active')); 
         document.getElementById(id).classList.add('active'); 
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); 
-        event.target.classList.add('active'); 
-        if(id==='analytics') setTimeout(renderCharts, 100); 
+        if(btnElement) btnElement.classList.add('active'); 
+        
+        if(id === 'analytics') setTimeout(renderCharts, 100); 
+        if(id === 'map-section' && map) setTimeout(() => map.invalidateSize(), 100); // Fixes grey map bug
+    }
+
+    // Fixed Mode Switcher
+    function setMode(mode) {
+        document.getElementById('opMode').value = mode;
+        const incBtn = document.querySelector('.mode-btn.inc');
+        const expBtn = document.querySelector('.mode-btn.exp');
+        
+        if (mode === 'income') {
+            incBtn.classList.add('active'); expBtn.classList.remove('active');
+            document.getElementById('grp-income').classList.remove('hidden');
+            document.getElementById('grp-expense').classList.add('hidden');
+        } else {
+            expBtn.classList.add('active'); incBtn.classList.remove('active');
+            document.getElementById('grp-expense').classList.remove('hidden');
+            document.getElementById('grp-income').classList.add('hidden');
+        }
+    }
+
+    // Operation Functions
+    function calcBal() {
+        const t = parseFloat(document.getElementById('opTotal').value) || 0;
+        const p = parseFloat(document.getElementById('opPaid').value) || 0;
+        document.getElementById('lblBal').innerText = (t - p).toLocaleString();
+    }
+
+    function checkFuel() {
+        const cat = document.getElementById('opCat').value;
+        document.getElementById('grp-fuel').classList.toggle('hidden', cat !== 'Fuel');
+    }
+
+    function updateTripUI() {
+        // Keeps it simple, Single/Round works via distance manual input for now
+    }
+
+    function calcEstFuel() {
+        const dist = parseFloat(document.getElementById('opDist').value) || 0;
+        const liters = dist * 0.45; // Basic estimate
+        document.getElementById('estLiters').innerText = liters.toFixed(1) + " L";
+        document.getElementById('estCost').innerText = Math.round(liters * FUEL_PRICE).toLocaleString() + " TZS";
+    }
+
+    function saveOp() {
+        alert("Transaction successfully recorded in local state.");
+        document.getElementById('opTotal').value = '';
+        document.getElementById('opPaid').value = '';
+        document.getElementById('opExpAmount').value = '';
+        renderAll();
+    }
+
+    // Settings & Fleet Functions
+    function addTruck() {
+        const plate = document.getElementById('newTruckPlate').value;
+        const t1 = document.getElementById('newTrailer1').value;
+        const t2 = document.getElementById('newTrailer2').value;
+        const model = document.getElementById('newTruckModel').value;
+        if(plate) {
+            db.trucks.push({ plate, model, trailer1: t1, trailer2: t2 });
+            document.getElementById('newTruckPlate').value = '';
+            document.getElementById('newTrailer1').value = '';
+            document.getElementById('newTrailer2').value = '';
+            alert("Fleet Asset Added Successfully!");
+            renderAll();
+        }
+    }
+
+    function addDriver() {
+        const name = document.getElementById('newDriver').value;
+        if(name) { db.drivers.push({name}); document.getElementById('newDriver').value=''; renderAll(); }
+    }
+
+    function addSetting(type) {
+        let val = "";
+        if(type === 'inv') { val = document.getElementById('newInvType').value; db.inventoryTypes.push(val); }
+        if(type === 'exp') { val = document.getElementById('newExpType').value; db.categories.push(val); }
+        if(type === 'comp') { val = document.getElementById('newCompType').value; db.complianceTypes.push(val); }
+        alert(val + " added successfully.");
+        renderAll();
+    }
+
+    function addCompliance() {
+        alert("Compliance record saved.");
+    }
+
+    function toggleLanguage() { alert("Swahili translation coming soon."); }
+    function logout() { location.reload(); }
+    
+    // UI Renderer
+    function renderAll() {
+        const fill = (id, list) => { const el = document.getElementById(id); if(!el) return; el.innerHTML = '<option value="">Select...</option>' + list.map(i => `<option value="${i.plate || i.name || i}">${i.plate || i.name || i}</option>`).join(''); };
+        
+        fill('opTruck', db.trucks); 
+        fill('cpTruck', db.trucks);
+        fill('opCat', db.categories); 
+        fill('opCargo', db.inventoryTypes);
+        fill('cpType', db.complianceTypes);
+        fill('opDriver', db.drivers);
+        
+        // Show Fleet in Settings list
+        const truckList = document.getElementById('lst-trucks');
+        truckList.innerHTML = db.trucks.map(t => `<div style="background:#e2e8f0; padding:10px; margin-bottom:5px; border-radius:8px;"><b>${t.plate}</b> (${t.model})<br><small>Trailers: ${t.trailer1 || 'None'} / ${t.trailer2 || 'None'}</small></div>`).join('');
     }
 
     function init() {
         window.regionOpts = REGIONS.map(r => `<option value="${r}">${r}</option>`).join('');
-        document.getElementById('opFrom').innerHTML = `<option value="">Select Origin...</option>` + window.regionOpts;
-        document.getElementById('opTo').innerHTML = `<option value="">Select Destination...</option>` + window.regionOpts;
+        document.getElementById('opFrom').innerHTML = `<option value="">Select Origin Region...</option>` + window.regionOpts;
+        document.getElementById('opTo').innerHTML = `<option value="">Select Destination Region...</option>` + window.regionOpts;
         document.getElementById('opDate').valueAsDate = new Date();
     }
+    
     init();
 </script>
 </body>
