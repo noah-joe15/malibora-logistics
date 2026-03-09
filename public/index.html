@@ -238,7 +238,7 @@
                         </div>
                         <label style="margin-top:10px;">Total Distance (Km)</label><input type="number" id="opDist" oninput="calcEstFuel()">
                         <div style="background: #e0f2fe; padding: 15px; border-radius: 12px; border: 1px solid #7dd3fc; margin-top: 15px;">
-                            <p style="margin: 0; font-size: 0.9rem; color: #0369a1;">⛽ Smart Fuel Estimate</p>
+                            <p style="margin: 0; font-size: 0.9rem; color: #0369a1;"> guint Fuel Estimate</p>
                             <div style="display:flex; justify-content:space-between; margin-top:5px;">
                                 <strong id="estLiters" style="font-size: 1.1rem;">0 L</strong>
                                 <strong id="estCost" style="font-size: 1.1rem;">0 TZS</strong>
@@ -251,7 +251,7 @@
                         <div><label>Total Price</label><input type="number" id="opTotal" oninput="calcBal()"></div>
                         <div><label>Paid Now</label><input type="number" id="opPaid" oninput="calcBal()"></div>
                     </div>
-                    <div style="text-align:right; font-weight:bold; color:var(--primary); margin-top: 10px;">Balance: <span id="lblBal">0</span></div>
+                    <div style="text-align:right; font-weight:bold; color:var(--primary); margin-top: 10px;">Balance: <span">0</span></div>
                 </div>
 
                 <div id="grp-expense" class="hidden">
@@ -361,7 +361,7 @@
 </div>
 
 <script>
-    const API_KEY = 'MALIBORA_SECRET_KEY_2026';
+    // Updated API URL to match your deployment
     const API_URL = "https://malibora-logistics.onrender.com";
     let currentCompanyId = null;
     let authMode = 'login';
@@ -392,7 +392,10 @@
     async function executeB2BAuth() {
         const cName = document.getElementById('b2bCompany').value.trim();
         const cPin = document.getElementById('b2bPin').value.trim();
-        if (!cName || !cPin) return;
+        if (!cName || !cPin) {
+            alert("Please enter company name and PIN");
+            return;
+        }
         
         document.getElementById('b2bAuthBtn').innerText = "CONNECTING... ⏳";
         const endpoint = authMode === 'login' ? '/api/login' : '/api/register';
@@ -400,7 +403,7 @@
         try {
             const res = await fetch(`${API_URL}${endpoint}`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json", "X-API-Key": API_KEY },
+                headers: { "Content-Type": "application/json", "X-API-Key": "MALIBORA_SECRET_KEY_2026" },
                 body: JSON.stringify({ company_name: cName, admin_pin: cPin })
             });
             const data = await res.json();
@@ -425,7 +428,7 @@
 
     async function syncDashboardWithCloud() {
         if (!currentCompanyId) return;
-        const h = { "X-API-Key": API_KEY };
+        const h = { "X-API-Key": "MALIBORA_SECRET_KEY_2026" };
         try {
             const [tRes, dRes, eRes, trRes, cRes] = await Promise.all([
                 fetch(`${API_URL}/api/trucks?company_id=${currentCompanyId}`, { headers:h }),
@@ -550,7 +553,9 @@
             document.getElementById('debtAmount').readOnly = true;
         } else {
             document.getElementById('debtAmount').value = '';
-            document.getElementById('debtAmount').readOnly = false }
+            document.getElementById('debtAmount').readOnly = false;
+        }
+    }
 
     async function saveDebtTx() {
         const amt = parseFloat(document.getElementById('debtAmount').value);
@@ -559,7 +564,7 @@
         try {
             const res = await fetch(`${API_URL}/api/debts`, { 
                 method: 'POST', 
-                headers: { 'Content-Type': 'application/json', 'X-API-Key': API_KEY }, 
+                headers: { 'Content-Type': 'application/json', 'X-API-Key': "MALIBORA_SECRET_KEY_2026" }, 
                 body: JSON.stringify({ 
                     company_id: currentCompanyId, 
                     date: new Date().toISOString().slice(0,10), 
@@ -567,8 +572,7 @@
                     amount: amt, 
                     description: "Direct Collection" 
                 }) 
-            });
-            if(res.ok) {
+           .ok) {
                 alert("Payment Recorded!");
                 document.getElementById('debtAmount').value = '';
                 syncDashboardWithCloud();
@@ -707,7 +711,7 @@
                 <td><b>${t.plate}</b></td>
                 <td style="color:${stats.p>=0?'#10b981':'#ef4444'}">${stats.p.toLocaleString()}</td>
                 <td>${eco}</td>
-                <td><div class="progress-bar-bg"><div class="progress-bar-fill" style="width:20%; background:green;"></div></div></td>
+                <td><div class="progress-bar-bg"><-bar-fill" style="width:20%; background:green;"></div></div></td>
                 <td><button style="border:none; background:none; font-size:1.2rem; cursor:pointer;" onclick="resetService('${t.plate}')">🔧</button></td>
             </tr>`;
         });
