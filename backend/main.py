@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException, Security, status, File, UploadFile
 from fastapi.security.api_key import APIKeyHeader
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse  # <-- Added HTMLResponse import
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import create_engine, text
@@ -27,14 +28,14 @@ def test_database():
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://malibora-logrender.com"],
+    allow_origins=["*"],  # Temporarily open for debugging, switch back to "https://malibora-logrender.com" later
     allow_credentials=False, 
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# --- THE BLACK SCREEN FIX ---
-# This correctly steps out of the 'backend' folder to find your 'public' folder
+# --- THE DIRECTORY SETUP ---
+# Assumes main.py is in a subfolder (like /backend) and public is next to it.
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PUBLIC_DIR = os.path.join(BASE_DIR, "public")
 UPLOAD_DIR = os.path.join(PUBLIC_DIR, "uploads")
@@ -116,7 +117,7 @@ class Compliance(BaseModel):
     company_id: int
     record_type: str
     truck: str
-    expiry_date: str  # Changed from expiry_date to date for consistency
+    expiry_date: str
     amount: Optional[float] = 0.0
     reference_no: Optional[str] = ""
     status: Optional[str] = "Pending"
@@ -289,7 +290,6 @@ def get_trucks(company_id: int, api_key: str = Depends(get_api_key)):
         with engine.connect() as connection:
             query = text("SELECT plate, model FROM trucks WHERE company_id = :company_id ORDER BY id DESC")
             result = connection.execute(query, {"company_id": company_id})
-            # Return only the fields expected by the frontend
             return [{"plate": row[0], "model": row[1]} for row in result]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -300,7 +300,6 @@ def get_drivers(company_id: int, api_key: str = Depends(get_api_key)):
         with engine.connect() as connection:
             query = text("SELECT name FROM drivers WHERE company_id = :company_id ORDER BY id DESC")
             result = connection.execute(query, {"company_id": company_id})
-            # Return only the fields expected by the frontend
             return [{"name": row[0]} for row in result]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -311,7 +310,6 @@ def get_expenses(company_id: int, api_key: str = Depends(get_api_key)):
         with engine.connect() as connection:
             query = text("SELECT description, amount FROM expenses WHERE company_id = :company_id ORDER BY id DESC")
             result = connection.execute(query, {"company_id": company_id})
-            # Return only the fields expected by the frontend
             return [{"description": row[0], "amount": row[1]} for row in result]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -322,7 +320,6 @@ def get_inventory(company_id: int, api_key: str = Depends(get_api_key)):
         with engine.connect() as connection:
             query = text("SELECT item_type, serial_number, assigned_truck, cost FROM inventory WHERE company_id = :company_id ORDER BY id DESC")
             result = connection.execute(query, {"company_id": company_id})
-            # Return only the fields expected by the frontend
             return [{"item_type": row[0], "serial_number": row[1], "assigned_truck": row[2], "cost": row[3]} for row in result]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -338,7 +335,6 @@ def get_trips(company_id: int, api_key: str = Depends(get_api_key)):
                 ORDER BY id DESC
             """)
             result = connection.execute(query, {"company_id": company_id})
-            # Return only the fields expected by the frontend
             return [
                 {
                     "date": row[0], 
@@ -362,7 +358,6 @@ def get_debts(company_id: int, api_key: str = Depends(get_api_key)):
         with engine.connect() as connection:
             query = text("SELECT customer, amount, description FROM debts WHERE company_id = :company_id ORDER BY id DESC")
             result = connection.execute(query, {"company_id": company_id})
-            # Return only the fields expected by the frontend
             return [{"customer": row[0], "amount": row[1], "description": row[2]} for row in result]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -373,7 +368,6 @@ def get_compliance(company_id: int, api_key: str = Depends(get_api_key)):
         with engine.connect() as connection:
             query = text("SELECT record_type, truck, expiry_date, amount, status FROM compliance WHERE company_id = :company_id ORDER BY id DESC")
             result = connection.execute(query, {"company_id": company_id})
-            # Return only the fields expected by the frontend
             return [
                 {
                     "record_type": row[0], 
@@ -417,11 +411,18 @@ def wipe_company(company_id: int, api_key: str = Depends(get_api_key)):
         raise HTTPException(status_code=500, detail=str(e))
 
 # Serve static files from a subdirectory to avoid conflict with API routes
-app.mount("/static", StaticFiles(directory=PUBLIC_DIR), name="static")
-app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
+try:
+    app.mount("/static", StaticFiles(directory=PUBLIC_DIR), name="static")
+    app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
+except RuntimeError:
+    print(f"Warning: Static directories not found. Expected at {PUBLIC_DIR}")
 
-# Serve the frontend from the root path
-@app.get("/")
+# --- THE CORRECTED ROOT ROUTE ---
+@app.get("/", response_class=HTMLResponse)
 def read_root():
-    with open(os.path.join(PUBLIC_DIR, "index.html")) as f:
-        return f.read()
+    index_path = os.path.join(PUBLIC_DIR, "index.html")
+    try:
+        with open(index_path, "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read(), status_code=200)
+    except FileNotFoundError:
+        return HTMLResponse(content=f"<h1>Error: index.html not found!</h1><p>FastAPI is looking here: {index_path}</p>", status_code=404)
