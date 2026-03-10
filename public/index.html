@@ -192,15 +192,11 @@
         #map { height: 450px; width: 100%; border-radius: 20px; border: 1px solid rgba(255,255,255,0.2); margin-bottom: 10px; z-index: 1;}
         .leaflet-routing-container { display: none !important; }
         
-        .hidden-role { display: none !important; }
-        .dispatcher-only { display: none; }
+        .hidden-role { display: none !important; } .dispatcher-only { display: none; }
 
-        @media (max-width: 768px) { 
-            .split-layout { grid-template-columns: 1fr; } 
-            .form-row { grid-template-columns: 1fr; } 
-            .header { flex-direction: column; text-align: center; gap: 15px; padding: 20px;}
-            .card p { font-size: 1.5rem;}
-        }
+        @media (max-width: 768px) { .split-layout { grid-template-columns: 1fr; } .form-row { grid-template-columns: 1fr; } .header { flex-direction: column; text-align: center; gap: 15px; padding: 20px;} .card p { font-size: 1.5rem;} }
+        
+        .logo { height: 60px; background: transparent; }
     </style>
 </head>
 <body>
@@ -432,9 +428,7 @@
     <div id="compliance" class="section">
         <div class="comp-header">
             <div class="comp-icon">
-                <svg width="40" height="40" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2L12 22M12 5L4 5M12 5L20 5M4 5L2 12C2 13.1046 2.89543 14 4 14C5.10457 14 6 13.1046 6 12L4 5ZM20 5L18 12C18 13.1046 18.8954 14 20 14C21.1046 14 22 13.1046 22 12L20 5ZM8 22L16 22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
+                <nav><img src="Roman-balance.png" class="logo"></nav>
             </div>
             <div>
                 <h2 style="margin:0;" data-key="reg_comp">Regulatory Compliance</h2>
@@ -607,11 +601,13 @@
                 initMap();
             } else { 
                 document.getElementById('loginError').innerText = data.detail; 
-                btn.innerText = "RETRY"; btn.disabled = false; 
+                btn.innerText = "RETRY"; 
+                btn.disabled = false; 
             }
         } catch(e) { 
             document.getElementById('loginError').innerText = "Server is asleep. Wait 30s and retry."; 
-            btn.innerText = "RETRY"; btn.disabled = false; 
+            btn.innerText = "RETRY"; 
+            btn.disabled = false; 
         }
     }
 
@@ -678,7 +674,7 @@
 
     function addRouteLeg() {
         const div = document.createElement('div'); div.className = 'route-row';
-        div.innerHTML = `<select class="route-region" onchange="calcRouteDist()">${window.regionOpts}</select><input type="number" class="route-km" placeholder="Km" oninput="calcRouteDist()"><span style="cursor:pointer; color:#fca5a5; font-weight:bold; padding:10px;" onclick="this.parentElement.remove();calcRouteDist()">×</span>`;
+        div.innerHTML = `<select class="route-region" onchange="calcRouteDist()">${window.regionOpts}</select><input type="number" class="route-km" placeholder="Km" oninput="calcRouteDist()"><span style="cursor:pointer; color:var(--danger); font-weight:bold; padding:10px;" onclick="this.parentElement.remove();calcRouteDist()">×</span>`;
         document.getElementById('routeRows').appendChild(div);
     }
 
@@ -902,7 +898,7 @@
         const fList = document.getElementById('fuelList'); if(fList) fList.innerHTML = '';
         for (let t of db.trucks) {
             let st = tStats[t.plate] || {k:0};
-            t.odo = st.k; // basic odo update
+            t.odo = st.k; 
             let ai = await processAIOilCheck(t.plate, t.odo, t.model);
             let hScore = ai ? `${ai.oil_health_percent}%` : "100%";
             let bCol = ai ? ai.indicator_color : "#10b981";
@@ -932,8 +928,7 @@
         const cP = document.getElementById('chartProfit'); const cE = document.getElementById('chartExpense');
         if(!cP || !cE) return; if(chartP) chartP.destroy(); if(chartE) chartE.destroy();
         
-        Chart.defaults.color = '#cbd5e1'; 
-        Chart.defaults.scale.grid.color = 'rgba(255,255,255,0.05)';
+        Chart.defaults.color = '#cbd5e1'; Chart.defaults.scale.grid.color = 'rgba(255,255,255,0.05)';
         
         let mData = {}, cData = {};
         db.txs.forEach(t => {
