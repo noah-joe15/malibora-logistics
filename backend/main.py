@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException, Security, status, File, UploadFile
 from fastapi.security.api_key import APIKeyHeader
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse  # <-- Added HTMLResponse import
+from fastapi.responses import HTMLResponse 
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import create_engine, text
@@ -28,14 +28,13 @@ def test_database():
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Temporarily open for debugging, switch back to "https://malibora-logrender.com" later
+    allow_origins=["*"], 
     allow_credentials=False, 
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # --- THE DIRECTORY SETUP ---
-# Assumes main.py is in a subfolder (like /backend) and public is next to it.
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PUBLIC_DIR = os.path.join(BASE_DIR, "public")
 UPLOAD_DIR = os.path.join(PUBLIC_DIR, "uploads")
@@ -308,9 +307,9 @@ def get_drivers(company_id: int, api_key: str = Depends(get_api_key)):
 def get_expenses(company_id: int, api_key: str = Depends(get_api_key)):
     try:
         with engine.connect() as connection:
-            query = text("SELECT description, amount FROM expenses WHERE company_id = :company_id ORDER BY id DESC")
+            query = text("SELECT id, description, amount FROM expenses WHERE company_id = :company_id ORDER BY id DESC")
             result = connection.execute(query, {"company_id": company_id})
-            return [{"description": row[0], "amount": row[1]} for row in result]
+            return [{"id": row[0], "description": row[1], "amount": row[2]} for row in result]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -318,9 +317,9 @@ def get_expenses(company_id: int, api_key: str = Depends(get_api_key)):
 def get_inventory(company_id: int, api_key: str = Depends(get_api_key)):
     try:
         with engine.connect() as connection:
-            query = text("SELECT item_type, serial_number, assigned_truck, cost FROM inventory WHERE company_id = :company_id ORDER BY id DESC")
+            query = text("SELECT id, item_type, serial_number, assigned_truck, cost FROM inventory WHERE company_id = :company_id ORDER BY id DESC")
             result = connection.execute(query, {"company_id": company_id})
-            return [{"item_type": row[0], "serial_number": row[1], "assigned_truck": row[2], "cost": row[3]} for row in result]
+            return [{"id": row[0], "item_type": row[1], "serial_number": row[2], "assigned_truck": row[3], "cost": row[4]} for row in result]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -329,7 +328,7 @@ def get_trips(company_id: int, api_key: str = Depends(get_api_key)):
     try:
         with engine.connect() as connection:
             query = text("""
-                SELECT date, truck, driver, customer, total_price, paid_amount, balance, trip_status, distance, route_full 
+                SELECT id, date, truck, driver, customer, total_price, paid_amount, balance, trip_status, distance, route_full 
                 FROM trips 
                 WHERE company_id = :company_id 
                 ORDER BY id DESC
@@ -337,16 +336,17 @@ def get_trips(company_id: int, api_key: str = Depends(get_api_key)):
             result = connection.execute(query, {"company_id": company_id})
             return [
                 {
-                    "date": row[0], 
-                    "truck": row[1], 
-                    "driver": row[2], 
-                    "customer": row[3], 
-                    "total_price": row[4], 
-                    "paid_amount": row[5], 
-                    "balance": row[6], 
-                    "trip_status": row[7],
-                    "distance": row[8],
-                    "route_full": row[9]
+                    "id": row[0],
+                    "date": row[1], 
+                    "truck": row[2], 
+                    "driver": row[3], 
+                    "customer": row[4], 
+                    "total_price": row[5], 
+                    "paid_amount": row[6], 
+                    "balance": row[7], 
+                    "trip_status": row[8],
+                    "distance": row[9],
+                    "route_full": row[10]
                 } for row in result
             ]
     except Exception as e:
@@ -356,9 +356,9 @@ def get_trips(company_id: int, api_key: str = Depends(get_api_key)):
 def get_debts(company_id: int, api_key: str = Depends(get_api_key)):
     try:
         with engine.connect() as connection:
-            query = text("SELECT customer, amount, description FROM debts WHERE company_id = :company_id ORDER BY id DESC")
+            query = text("SELECT id, customer, amount, description FROM debts WHERE company_id = :company_id ORDER BY id DESC")
             result = connection.execute(query, {"company_id": company_id})
-            return [{"customer": row[0], "amount": row[1], "description": row[2]} for row in result]
+            return [{"id": row[0], "customer": row[1], "amount": row[2], "description": row[3]} for row in result]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -366,15 +366,16 @@ def get_debts(company_id: int, api_key: str = Depends(get_api_key)):
 def get_compliance(company_id: int, api_key: str = Depends(get_api_key)):
     try:
         with engine.connect() as connection:
-            query = text("SELECT record_type, truck, expiry_date, amount, status FROM compliance WHERE company_id = :company_id ORDER BY id DESC")
+            query = text("SELECT id, record_type, truck, expiry_date, amount, status FROM compliance WHERE company_id = :company_id ORDER BY id DESC")
             result = connection.execute(query, {"company_id": company_id})
             return [
                 {
-                    "record_type": row[0], 
-                    "truck": row[1], 
-                    "expiry_date": row[2], 
-                    "amount": row[3], 
-                    "status": row[4]
+                    "id": row[0],
+                    "record_type": row[1], 
+                    "truck": row[2], 
+                    "expiry_date": row[3], 
+                    "amount": row[4], 
+                    "status": row[5]
                 } for row in result
             ]
     except Exception as e:
