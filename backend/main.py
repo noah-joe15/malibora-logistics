@@ -8,6 +8,7 @@ from sqlalchemy import create_engine, text
 import os
 import shutil
 from typing import Optional
+import math
 
 app = FastAPI()
 
@@ -120,6 +121,63 @@ class Compliance(BaseModel):
     amount: Optional[float] = 0.0
     reference_no: Optional[str] = ""
     status: Optional[str] = "Pending"
+
+class OilPredictionRequest(BaseModel):
+    truck_model: str
+    current_odo: float
+    last_service_odo: float
+    load_status: str
+    base_interval: float = 5000.0
+
+# ---------------------------------------------------------
+# AI SMART OIL CHANGE PREDICTOR (NEW)
+# ---------------------------------------------------------
+@app.post("/api/ai/predict-oil")
+def predict_oil_health(data: OilPredictionRequest, api_key: str = Depends(get_api_key)):
+    """
+    AI Logic: Adjusts the safe oil lifespan based on truck type and current stress (load).
+    Scania engines can handle stress slightly better than Fuso. Heavy loads degrade oil 15-25% faster.
+    """
+    km_driven = data.current_odo - data.last_service_odo
+    
+    # Base stress multiplier
+    stress_factor = 1.0 
+    
+    # Apply conditions
+    if data.load_status == "Loaded":
+        if "Scania" in data.truck_model:
+            stress_factor = 1.15  # 15% faster wear
+        elif "Fuso" in data.truck_model:
+            stress_factor = 1.25  # 25% faster wear
+        else:
+            stress_factor = 1.20
+            
+    # Calculate True Remaining KM using AI stress math
+    effective_interval = data.base_interval / stress_factor
+    km_remaining = effective_interval - km_driven
+    
+    health_percent = max(0, min(100, (km_remaining / effective_interval) * 100))
+    
+    status = "Good"
+    color = "#10b981" # Green
+    
+    if health_percent <= 20:
+        status = "Critical (Change Now)"
+        color = "#ef4444" # Red
+    elif health_percent <= 40:
+        status = "Degrading (Plan Service)"
+        color = "#f59e0b" # Orange
+
+    return {
+        "truck_model": data.truck_model,
+        "ai_effective_interval": round(effective_interval),
+        "km_driven": round(km_driven),
+        "estimated_km_remaining": max(0, round(km_remaining)),
+        "oil_health_percent": round(health_percent, 1),
+        "status_label": status,
+        "indicator_color": color
+    }
+
 
 # ---------------------------------------------------------
 # AUTH ENDPOINTS
@@ -382,7 +440,7 @@ def get_compliance(company_id: int, api_key: str = Depends(get_api_key)):
         raise HTTPException(status_code=500, detail=str(e))
 
 # ---------------------------------------------------------
-# DELETE ENDPOINTS: The Cloud Kill-Switches
+# DELETE ENDPOINTS
 # ---------------------------------------------------------
 @app.delete("/api/delete-record")
 def delete_record(table: str, record_id: int, company_id: int, api_key: str = Depends(get_api_key)):
@@ -411,14 +469,12 @@ def wipe_company(company_id: int, api_key: str = Depends(get_api_key)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# Serve static files from a subdirectory to avoid conflict with API routes
 try:
     app.mount("/static", StaticFiles(directory=PUBLIC_DIR), name="static")
     app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 except RuntimeError:
-    print(f"Warning: Static directories not found. Expected at {PUBLIC_DIR}")
+    print(f"Warning: Static directories not found.")
 
-# --- THE CORRECTED ROOT ROUTE ---
 @app.get("/", response_class=HTMLResponse)
 def read_root():
     index_path = os.path.join(PUBLIC_DIR, "index.html")
@@ -426,4 +482,4 @@ def read_root():
         with open(index_path, "r", encoding="utf-8") as f:
             return HTMLResponse(content=f.read(), status_code=200)
     except FileNotFoundError:
-        return HTMLResponse(content=f"<h1>Error: index.html not found!</h1><p>FastAPI is looking here: {index_path}</p>", status_code=404)
+        return HTMLResponse(content=f"<h1>Error: index.html not found!</h1>", status_code=404)
