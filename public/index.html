@@ -181,7 +181,10 @@
         .st-transit { background: rgba(245, 158, 11, 0.1); color: #fbbf24; border-color: rgba(245, 158, 11, 0.3);}
 
         .comp-header { background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); padding: 25px; border-radius: 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 20px; backdrop-filter: blur(10px);}
-        .comp-icon { fill: white; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.05)); padding: 15px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.2);}
+        .comp-icon { display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.05)); padding: 15px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.2);}
+        
+        /* Your custom logo class */
+        .logo { height: 60px; background: transparent; }
 
         .progress-bar-bg { background: rgba(0,0,0,0.3); height: 8px; border-radius: 10px; width: 100%; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);}
         .progress-bar-fill { height: 100%; transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 10px; box-shadow: 0 0 10px currentColor;}
@@ -195,8 +198,6 @@
         .hidden-role { display: none !important; } .dispatcher-only { display: none; }
 
         @media (max-width: 768px) { .split-layout { grid-template-columns: 1fr; } .form-row { grid-template-columns: 1fr; } .header { flex-direction: column; text-align: center; gap: 15px; padding: 20px;} .card p { font-size: 1.5rem;} }
-        
-        .logo { height: 60px; background: transparent; }
     </style>
 </head>
 <body>
@@ -237,7 +238,7 @@
         </div>
         <div style="display:flex; align-items:center; gap: 15px;">
             <button class="btn-sm btn-outline" style="border-radius: 50px;" onclick="toggleLanguage()" id="btnLang">🇹🇿 SW</button>
-            <button onclick="logout()" class="btn-sm btn-outline" style="border-radius: 50px; display:flex; align-items:center; gap:5px;">
+            <button onclick="logout()" class="btn-sm btn-outline" style="border-radius: 50px; display:flex; align-items:center; gap:5px; cursor:pointer;">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> <span data-key="exit">Exit</span>
             </button>
         </div>
@@ -428,7 +429,7 @@
     <div id="compliance" class="section">
         <div class="comp-header">
             <div class="comp-icon">
-                <nav><img src="Roman-balance.png" class="logo"></nav>
+                <img src="Roman-balance.png" class="logo" alt="Compliance Icon">
             </div>
             <div>
                 <h2 style="margin:0;" data-key="reg_comp">Regulatory Compliance</h2>
@@ -601,13 +602,11 @@
                 initMap();
             } else { 
                 document.getElementById('loginError').innerText = data.detail; 
-                btn.innerText = "RETRY"; 
-                btn.disabled = false; 
+                btn.innerText = "RETRY"; btn.disabled = false; 
             }
         } catch(e) { 
             document.getElementById('loginError').innerText = "Server is asleep. Wait 30s and retry."; 
-            btn.innerText = "RETRY"; 
-            btn.disabled = false; 
+            btn.innerText = "RETRY"; btn.disabled = false; 
         }
     }
 
@@ -898,11 +897,11 @@
         const fList = document.getElementById('fuelList'); if(fList) fList.innerHTML = '';
         for (let t of db.trucks) {
             let st = tStats[t.plate] || {k:0};
-            t.odo = st.k; 
+            t.odo = st.k; // basic odo update
             let ai = await processAIOilCheck(t.plate, t.odo, t.model);
             let hScore = ai ? `${ai.oil_health_percent}%` : "100%";
             let bCol = ai ? ai.indicator_color : "#10b981";
-            if(fList) fList.innerHTML += `<tr><td><b style="color:white;">${t.plate}</b></td><td><b style="color:${bCol}">${hScore}</b></td><td><span class="tag" style="background:${bCol}">${ai?ai.status_label:'Good'}</span></td><td><button style="border:none;background:none;font-size:1.2rem;cursor:pointer;">🔧</button></td></tr>`;
+            if(fList) fList.innerHTML += `<tr><td><b style="color:white;">${t.plate}</b></td><td><b style="color:${bCol}">${hScore}</b></td><td><div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${ai?ai.oil_health_percent:100}%; background:${bCol};"></div></div></td><td><button style="border:none;background:none;font-size:1.2rem;cursor:pointer;">🔧</button></td></tr>`;
         }
 
         const faList = document.getElementById('fuelAnalyticsList');
