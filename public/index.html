@@ -182,15 +182,21 @@
 
         .comp-header { background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); padding: 25px; border-radius: 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 20px; backdrop-filter: blur(10px);}
         
-        /* NEW GRADIENT COMPLIANCE ICON */
+        /* MODERN GRAPHIC GRADIENT ICON FOR COMPLIANCE */
         .comp-icon { 
             display: flex; align-items: center; justify-content: center; 
-            background: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899); 
-            padding: 15px; border-radius: 16px; 
-            border: 1px solid rgba(255,255,255,0.4);
-            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+            width: 70px; height: 70px;
+            background: linear-gradient(135deg, #10b981, #3b82f6); 
+            border-radius: 20px; 
+            border: 2px solid rgba(255,255,255,0.5);
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
+            animation: pulse-glow 3s infinite alternate;
         }
-        .comp-icon svg { fill: white; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3); transform: scale(1); }
+            100% { box-shadow: 0 15px 30px rgba(16, 185, 129, 0.6); transform: scale(1.05); }
+        }
+        .comp-icon svg { fill: white; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); width: 35px; height: 35px; }
 
         .progress-bar-bg { background: rgba(0,0,0,0.3); height: 8px; border-radius: 10px; width: 100%; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);}
         .progress-bar-fill { height: 100%; transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 10px; box-shadow: 0 0 10px currentColor;}
@@ -204,6 +210,11 @@
         .hidden-role { display: none !important; } .dispatcher-only { display: none; }
 
         @media (max-width: 768px) { .split-layout { grid-template-columns: 1fr; } .form-row { grid-template-columns: 1fr; } .header { flex-direction: column; text-align: center; gap: 15px; padding: 20px;} .card p { font-size: 1.5rem;} }
+        
+        .upload-btn {
+            background: rgba(255,255,255,0.1); border: 1px dashed rgba(255,255,255,0.3);
+            color: #fff; padding: 10px; border-radius: 8px; text-align: center; cursor: pointer; display: block;
+        }
     </style>
 </head>
 <body>
@@ -343,7 +354,47 @@
                             <div><label style="color:#6ee7b7" data-key="lbl_tp">Total Price</label><input type="number" id="opTotal" oninput="calcBal()" style="border-color:rgba(16,185,129,0.3)"></div>
                             <div><label style="color:#6ee7b7" data-key="lbl_pn">Paid Now</label><input type="number" id="opPaid" oninput="calcBal()" style="border-color:rgba(16,185,129,0.3)"></div>
                         </div>
-                        <div style="text-align:right; font-weight:800; color:#34d399; margin-top: 10px; font-size:1.1rem;"><span data-key="lbl_bal">Balance:</span> <span id="lblBal">0</span></div>
+                        
+                        <div style="margin-top: 15px;">
+                            <label style="color:#6ee7b7">Payment Method</label>
+                            <select id="opPaymentMethod" onchange="togglePaymentFields()" style="border-color:rgba(16,185,129,0.3)">
+                                <option value="Cash">Cash</option>
+                                <option value="Bank">Bank Transfer</option>
+                                <option value="Mobile">Mobile Money</option>
+                            </select>
+                        </div>
+                        
+                        <div id="bankFields" class="hidden" style="margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 10px;">
+                            <label style="color:#93c5fd">Select Bank</label>
+                            <select id="opBankName" style="border-color:rgba(59,130,246,0.3)">
+                                <option value="CRDB">CRDB Bank</option>
+                                <option value="NMB">NMB Bank</option>
+                                <option value="NBC">NBC Bank</option>
+                                <option value="KCB">KCB Bank</option>
+                                <option value="Stanbic">Stanbic Bank</option>
+                                <option value="Equity">Equity Bank</option>
+                            </select>
+                            <label style="color:#93c5fd">Account Number</label>
+                            <input type="text" id="opBankAcc" placeholder="e.g. 01JXXXXXXX" style="border-color:rgba(59,130,246,0.3)">
+                            <label class="upload-btn">
+                                📎 Upload Receipt
+                                <input type="file" style="display:none;" id="opBankReceipt">
+                            </label>
+                        </div>
+
+                        <div id="mobileFields" class="hidden" style="margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 10px;">
+                            <label style="color:#fcd34d">Select Network</label>
+                            <select id="opMobileNet" style="border-color:rgba(245,158,11,0.3)">
+                                <option value="M-Pesa">Vodacom M-Pesa</option>
+                                <option value="Tigo Pesa">Tigo Pesa</option>
+                                <option value="Airtel Money">Airtel Money</option>
+                                <option value="HaloPesa">Halotel HaloPesa</option>
+                            </select>
+                            <label style="color:#fcd34d">Paste SMS Transaction Message</label>
+                            <textarea id="opMobileMsg" rows="3" placeholder="Paste the confirmation message here..." style="border-color:rgba(245,158,11,0.3)"></textarea>
+                        </div>
+
+                        <div style="text-align:right; font-weight:800; color:#34d399; margin-top: 15px; font-size:1.1rem;"><span data-key="lbl_bal">Balance:</span> <span id="lblBal">0</span></div>
                     </div>
                 </div>
 
@@ -435,8 +486,8 @@
     <div id="compliance" class="section">
         <div class="comp-header">
             <div class="comp-icon">
-                <svg width="40" height="40" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/>
                 </svg>
             </div>
             <div>
@@ -716,6 +767,13 @@
         document.getElementById('lblBal').innerText = ((parseFloat(document.getElementById('opTotal').value)||0) - (parseFloat(document.getElementById('opPaid').value)||0)).toLocaleString(); 
     }
 
+    // --- NEW: TOGGLE PAYMENT FIELDS ---
+    function togglePaymentFields() {
+        const pMode = document.getElementById('opPaymentMethod').value;
+        document.getElementById('bankFields').classList.toggle('hidden', pMode !== 'Bank');
+        document.getElementById('mobileFields').classList.toggle('hidden', pMode !== 'Mobile');
+    }
+
     async function saveOp() {
         const mode = document.getElementById('opMode').value;
         const truck = document.getElementById('opTruck').value;
@@ -736,6 +794,17 @@
                 tx.route_from = document.getElementById('opFrom').value || "Multiple";
                 tx.route_to = document.getElementById('opTo').value || "Multiple";
                 tx.route_full = document.getElementById('opTripType').value === 'Round' ? Array.from(document.querySelectorAll('.route-region')).map(s=>s.value).join("➝") : `${tx.route_from}➝${tx.route_to}`;
+                
+                // Add Payment Mode details (If the backend API supports these fields, they will save. Otherwise they just exist locally for now)
+                const pMode = document.getElementById('opPaymentMethod').value;
+                tx.payment_method = pMode;
+                if(pMode === 'Bank') {
+                    tx.bank_name = document.getElementById('opBankName').value;
+                    tx.bank_account = document.getElementById('opBankAcc').value;
+                } else if(pMode === 'Mobile') {
+                    tx.mobile_network = document.getElementById('opMobileNet').value;
+                    tx.mobile_msg = document.getElementById('opMobileMsg').value;
+                }
 
                 await fetch(`${API_URL}/api/trips`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-API-Key': API_KEY }, body: JSON.stringify(tx) });
             } else {
@@ -749,6 +818,8 @@
             document.getElementById('opExpAmount').value = ''; document.getElementById('opDesc').value = '';
             document.getElementById('opDist').value = ''; document.getElementById('opCargo').value = '';
             document.getElementById('routeRows').innerHTML = '';
+            if(document.getElementById('opBankAcc')) document.getElementById('opBankAcc').value = '';
+            if(document.getElementById('opMobileMsg')) document.getElementById('opMobileMsg').value = '';
             
             syncDashboardWithCloud();
         } catch(e) { alert("Failed to save to cloud."); }
