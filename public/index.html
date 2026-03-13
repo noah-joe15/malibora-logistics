@@ -182,7 +182,6 @@
 
         .comp-header { background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); padding: 25px; border-radius: 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 20px; backdrop-filter: blur(10px);}
         
-        /* MODERN GRAPHIC GRADIENT ICON FOR COMPLIANCE */
         .comp-icon { 
             display: flex; align-items: center; justify-content: center; 
             width: 70px; height: 70px;
@@ -516,15 +515,27 @@
         <div class="split-layout">
             <div class="panel glass-panel">
                 <h3 data-key="mng_fl">Manage Fleet</h3>
-                <div style="display:flex; gap:10px; margin-bottom:15px;">
-                    <input id="newTruckPlate" placeholder="Plate No." style="margin:0; flex:2;">
+                
+                <div style="display:flex; gap:10px; margin-bottom:10px;">
+                    <input id="newTruckPlate" placeholder="Truck Head Plate No." style="margin:0; flex:2;">
                     <select id="newTruckModel" style="margin:0; flex:1;">
                         <option value="Scania">Scania</option><option value="Howo">Howo</option><option value="Fuso">Fuso</option>
                     </select>
+                </div>
+                <div style="display:flex; gap:10px; margin-bottom:15px;">
+                    <select id="trailerCount" style="margin:0; flex:1;" onchange="toggleTrailerInputs()">
+                        <option value="0">0 Trailers (Rigid)</option>
+                        <option value="1">1 Trailer</option>
+                        <option value="2">2 Trailers (Superlink)</option>
+                    </select>
+                    <input id="trailer1Plate" class="hidden" placeholder="Trailer 1 Plate" style="margin:0; flex:1;">
+                    <input id="trailer2Plate" class="hidden" placeholder="Trailer 2 Plate" style="margin:0; flex:1;">
                     <button class="btn btn-primary" style="width:auto; padding: 0 20px;" onclick="addTruck()">Add</button>
                 </div>
-                <div id="lst-trucks" style="max-height: 200px; overflow-y:auto;"></div>
+                
+                <div id="lst-trucks" style="max-height: 200px; overflow-y:auto; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;"></div>
             </div>
+            
             <div class="panel glass-panel">
                 <h3 data-key="mng_st">Manage Staff</h3>
                 <div style="display:flex; gap:10px; margin-bottom:15px;">
@@ -741,20 +752,34 @@
         document.getElementById('opDist').value = total || ''; calcEstFuel();
     }
 
+    // --- REPAIRED: REAL-TIME FUEL ESTIMATOR ---
     function calcEstFuel() {
         const trkName = document.getElementById('opTruck').value;
         const dist = parseFloat(document.getElementById('opDist').value) || 0;
         const load = document.getElementById('opLoadStatus').value;
+        
         if(!trkName || dist <= 0) {
             document.getElementById('estLiters').innerText = "0 L";
             document.getElementById('estCost').innerText = "0 TZS";
             return;
         }
         
+        // Base consumption rates (Liters per Km)
         let cons = 0.35; 
-        if(trkName.includes("Scania")) cons = load === 'Loaded' ? 0.5 : 0.3;
-        else if(trkName.includes("Fuso")) cons = load === 'Loaded' ? 0.4 : 0.2;
+        
+        // Find the specific truck in the DB to check its model
+        const truckData = db.trucks.find(t => t.plate === trkName) || { model: 'Other' };
+        const isScania = truckData.model === 'Scania';
+        const isFuso = truckData.model === 'Fuso';
+
+        if(isScania) cons = load === 'Loaded' ? 0.5 : 0.3;
+        else if(isFuso) cons = load === 'Loaded' ? 0.4 : 0.2;
         else cons = load === 'Loaded' ? 0.45 : 0.25;
+
+        // If the truck plate contains brackets indicating trailers (e.g. T123ABC [T456XYZ]), increase consumption
+        if(trkName.includes('[')) {
+            cons += 0.15; // Penalty for hauling trailers
+        }
 
         const liters = dist * cons;
         const cost = liters * FUEL_PRICE;
@@ -767,11 +792,18 @@
         document.getElementById('lblBal').innerText = ((parseFloat(document.getElementById('opTotal').value)||0) - (parseFloat(document.getElementById('opPaid').value)||0)).toLocaleString(); 
     }
 
-    // --- NEW: TOGGLE PAYMENT FIELDS ---
+    // --- TOGGLE PAYMENT FIELDS ---
     function togglePaymentFields() {
         const pMode = document.getElementById('opPaymentMethod').value;
         document.getElementById('bankFields').classList.toggle('hidden', pMode !== 'Bank');
         document.getElementById('mobileFields').classList.toggle('hidden', pMode !== 'Mobile');
+    }
+
+    // --- NEW: TOGGLE TRAILER FIELDS IN SETTINGS ---
+    function toggleTrailerInputs() {
+        const count = document.getElementById('trailerCount').value;
+        document.getElementById('trailer1Plate').classList.toggle('hidden', count === "0");
+        document.getElementById('trailer2Plate').classList.toggle('hidden', count !== "2");
     }
 
     async function saveOp() {
@@ -795,7 +827,6 @@
                 tx.route_to = document.getElementById('opTo').value || "Multiple";
                 tx.route_full = document.getElementById('opTripType').value === 'Round' ? Array.from(document.querySelectorAll('.route-region')).map(s=>s.value).join("➝") : `${tx.route_from}➝${tx.route_to}`;
                 
-                // Add Payment Mode details (If the backend API supports these fields, they will save. Otherwise they just exist locally for now)
                 const pMode = document.getElementById('opPaymentMethod').value;
                 tx.payment_method = pMode;
                 if(pMode === 'Bank') {
@@ -836,11 +867,33 @@
         } catch(e) { return null; }
     }
 
+    // --- REPAIRED: ADD TRUCK WITH TRAILER LOGIC ---
     async function addTruck() {
-        const p = document.getElementById('newTruckPlate').value, m = document.getElementById('newTruckModel').value;
-        if(!p) return;
+        let p = document.getElementById('newTruckPlate').value.trim();
+        const m = document.getElementById('newTruckModel').value;
+        const count = document.getElementById('trailerCount').value;
+        
+        if(!p) return alert("Please enter a truck plate.");
+
+        // Append trailer plates to the main plate string if they exist
+        if (count === "1") {
+            const t1 = document.getElementById('trailer1Plate').value.trim();
+            if(t1) p = `${p} [${t1}]`;
+        } else if (count === "2") {
+            const t1 = document.getElementById('trailer1Plate').value.trim();
+            const t2 = document.getElementById('trailer2Plate').value.trim();
+            if(t1 && t2) p = `${p} [${t1}, ${t2}]`;
+            else if (t1) p = `${p} [${t1}]`;
+        }
+
         await fetch(`${API_URL}/api/trucks`, { method: 'POST', headers: {'Content-Type':'application/json','X-API-Key':API_KEY}, body: JSON.stringify({ plate:p, model:m, company_id: currentCompanyId }) });
+        
         document.getElementById('newTruckPlate').value = '';
+        document.getElementById('trailer1Plate').value = '';
+        document.getElementById('trailer2Plate').value = '';
+        document.getElementById('trailerCount').value = "0";
+        toggleTrailerInputs();
+        
         syncDashboardWithCloud();
     }
 
