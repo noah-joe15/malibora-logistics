@@ -1,7 +1,77 @@
-fastapi
-uvicorn
-pydantic
-python-multipart
-africastalking
-sqlalchemy
-psycopg2-binary
+# ============================================================
+#  MALIBORA INTERTRADE — Backend Requirements
+#  FastAPI + Supabase (PostgreSQL) + Africa's Talking
+# ============================================================
+#
+#  Install:      pip install -r requirements.txt
+#  Upgrade all:  pip install -r requirements.txt --upgrade
+#  Freeze exact: pip freeze > requirements.lock
+# ============================================================
+
+
+# ── CORE FRAMEWORK ──────────────────────────────────────────
+fastapi==0.115.6            # Main web framework
+uvicorn[standard]==0.32.1   # ASGI server — [standard] adds websocket + http/2 support
+gunicorn==23.0.0            # Production process manager (runs multiple uvicorn workers)
+                            # Usage: gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker
+
+
+# ── DATA VALIDATION ─────────────────────────────────────────
+pydantic==2.10.3            # Request/response schemas — v2 is significantly faster than v1
+pydantic-settings==2.6.1    # Loads settings from .env file into Pydantic models
+email-validator==2.2.0      # Required by Pydantic to validate EmailStr fields
+
+
+# ── DATABASE ────────────────────────────────────────────────
+sqlalchemy==2.0.36          # ORM — v2 has async support and better type hints
+psycopg2-binary==2.9.10     # PostgreSQL driver for Supabase
+alembic==1.14.0             # Database migration tool — track schema changes safely
+                            # Init: alembic init alembic
+                            # New migration: alembic revision --autogenerate -m "add field"
+                            # Apply: alembic upgrade head
+
+
+# ── SECURITY & AUTH ─────────────────────────────────────────
+python-jose[cryptography]==3.3.0   # JWT token creation & verification
+passlib[bcrypt]==1.7.4             # Password hashing — bcrypt is the gold standard
+bcrypt==4.2.1                      # bcrypt backend used by passlib
+python-multipart==0.0.20           # Required for file upload (bank receipt) & form parsing
+
+
+# ── ENVIRONMENT & CONFIG ────────────────────────────────────
+python-dotenv==1.0.1        # Loads DATABASE_URL, API_KEY etc from .env file
+                            # Usage in main.py: from dotenv import load_dotenv; load_dotenv()
+
+
+# ── LOGGING ─────────────────────────────────────────────────
+loguru==0.7.2               # Structured logging with rotation, colors, and JSON output
+                            # Replaces standard logging — simpler and more powerful
+
+
+# ── HTTP CLIENT ─────────────────────────────────────────────
+httpx==0.28.1               # Async HTTP client — for calling external APIs
+                            # (Africa's Talking webhooks, push notifications, etc.)
+
+
+# ── RATE LIMITING ───────────────────────────────────────────
+slowapi==0.1.9              # Rate limiter for FastAPI — prevents API abuse
+                            # Usage: @limiter.limit("10/minute") on endpoints
+
+
+# ── AFRICA'S TALKING ────────────────────────────────────────
+africastalking==1.2.7       # SMS & USSD integration for Tanzania notifications
+                            # Used for: compliance expiry alerts, debt reminders via SMS
+
+
+# ── MIGRATIONS SUPPORT ──────────────────────────────────────
+# alembic already listed above — also needs this for async support:
+aiofiles==24.1.0            # Async file I/O (for receipt file handling)
+
+
+# ── CORS & MIDDLEWARE ───────────────────────────────────────
+# Already included in FastAPI — no extra package needed
+
+
+# ── OPTIONAL: PRODUCTION MONITORING ────────────────────────
+# Uncomment if you deploy on Render/Railway and want error tracking:
+# sentry-sdk[fastapi]==2.19.0
