@@ -1,21 +1,202 @@
 {
-  "name": "Malibora Logistics",
+  "name": "Malibora Intertrade - Logistics System",
   "short_name": "Malibora",
-  "description": "Enterprise Logistics and Truck Management System",
-  "start_url": "/",
+  "description": "Enterprise fleet management, trip logging, compliance tracking, and AI-powered maintenance prediction for Malibora Intertrade Tanzania.",
+
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "id": "malibora-logistics-pwa-v2",
+
   "display": "standalone",
-  "background_color": "#1e40af",
+  "display_override": ["standalone", "minimal-ui", "browser"],
+  "orientation": "any",
+
+  "background_color": "#0f172a",
   "theme_color": "#1e40af",
+
+  "lang": "en-TZ",
+  "dir": "ltr",
+
+  "categories": ["business", "productivity", "utilities"],
+  "keywords": ["logistics", "fleet", "trucking", "Tanzania", "transport", "management"],
+
   "icons": [
     {
-      "src": "https://dummyimage.com/192x192/1e40af/ffffff.png&text=Truck",
-      "sizes": "192x192",
-      "type": "image/png"
+      "src": "icons/icon-48.png",
+      "sizes": "48x48",
+      "type": "image/png",
+      "purpose": "any"
     },
     {
-      "src": "https://dummyimage.com/512x512/1e40af/ffffff.png&text=Truck",
+      "src": "icons/icon-72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-256.png",
+      "sizes": "256x256",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
-  ]
+  ],
+
+  "screenshots": [
+    {
+      "src": "screenshots/dashboard-desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "label": "Admin Dashboard — Fleet KPIs and AI Predictor",
+      "form_factor": "wide"
+    },
+    {
+      "src": "screenshots/operations-desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "label": "Operations — Log Trips and Expenses",
+      "form_factor": "wide"
+    },
+    {
+      "src": "screenshots/map-desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "label": "Live Map — Real-time Fleet Route Tracking",
+      "form_factor": "wide"
+    },
+    {
+      "src": "screenshots/dashboard-mobile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "label": "Dashboard on Mobile",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "screenshots/compliance-mobile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "label": "Regulatory Compliance — Permit Status",
+      "form_factor": "narrow"
+    }
+  ],
+
+  "shortcuts": [
+    {
+      "name": "Log a Trip",
+      "short_name": "New Trip",
+      "description": "Quickly log a new truck trip with route and payment details",
+      "url": "/?shortcut=log-trip&source=pwa",
+      "icons": [
+        {
+          "src": "icons/shortcut-trip.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Log Expense",
+      "short_name": "Expense",
+      "description": "Record fuel, driver allowance or mechanic expense",
+      "url": "/?shortcut=log-expense&source=pwa",
+      "icons": [
+        {
+          "src": "icons/shortcut-expense.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Live Map",
+      "short_name": "Map",
+      "description": "View real-time fleet route tracking across Tanzania",
+      "url": "/?shortcut=map&source=pwa",
+      "icons": [
+        {
+          "src": "icons/shortcut-map.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Compliance",
+      "short_name": "Permits",
+      "description": "Check permit expiry dates and regulatory status",
+      "url": "/?shortcut=compliance&source=pwa",
+      "icons": [
+        {
+          "src": "icons/shortcut-compliance.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
+
+  "share_target": {
+    "action": "/?action=share",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "files": [
+        {
+          "name": "receipt",
+          "accept": ["image/png", "image/jpeg", "image/jpg", "application/pdf"]
+        }
+      ]
+    }
+  },
+
+  "protocol_handlers": [
+    {
+      "protocol": "web+malibora",
+      "url": "/?protocol=%s"
+    }
+  ],
+
+  "prefer_related_applications": false,
+  "related_applications": [],
+
+  "edge_side_panel": {
+    "preferred_width": 400
+  }
 }
