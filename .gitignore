@@ -1,4 +1,52 @@
-venv/
+# ── Python ──────────────────────────────────────────────────
 __pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+
+# ── Virtual Environments ────────────────────────────────────
+venv/
+env/
+.venv/
+.env_backup
+
+# ── CRITICAL: Environment Variables ─────────────────────────
+# NEVER commit these — they contain database passwords & API keys
 .env
+.env.local
+.env.production
+*.env
+
+# ── Database ────────────────────────────────────────────────
+*.db
+*.sqlite3
+*.sqlite
+
+# ── Alembic ─────────────────────────────────────────────────
+# Keep alembic/versions/ tracked, but not the local DB
+alembic/versions/__pycache__/
+
+# ── Logs ────────────────────────────────────────────────────
+*.log
+logs/
+
+# ── IDEs ────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ── Uploads ─────────────────────────────────────────────────
 uploads/
+*.pdf
+receipts/
+
+# ── Frozen deps ─────────────────────────────────────────────
+requirements.lock
