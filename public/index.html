@@ -9,10 +9,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
     <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
-    
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <style>
@@ -22,15 +20,31 @@
             --success: rgba(16, 185, 129, 0.9);
             --danger: rgba(239, 68, 68, 0.9);
             --warning: rgba(245, 158, 11, 0.9);
-            --text-dark: #f8fafc; 
+            --text-dark: #f8fafc;
             --text-muted: #cbd5e1;
-            
             --glass-bg: rgba(255, 255, 255, 0.1);
             --glass-border: rgba(255, 255, 255, 0.2);
             --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
             --blur: blur(12px);
             --blur-heavy: blur(20px);
         }
+
+        /* ── LOADING SCREEN ── */
+        #loading-screen {
+            position: fixed; inset: 0; z-index: 99999;
+            background: #0f172a;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 24px;
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        #loading-screen.fade-out { opacity: 0; transform: scale(1.05); pointer-events: none; }
+        .loader-logo { font-size: 2.8rem; font-weight: 900; letter-spacing: 4px; color: #fff; }
+        .loader-logo span { color: #60a5fa; }
+        .loader-bar-wrap { width: 220px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 99px; overflow: hidden; }
+        .loader-bar { height: 100%; width: 0%; background: linear-gradient(90deg, #3b82f6, #10b981); border-radius: 99px; transition: width 0.4s ease; }
+        .loader-text { font-size: 0.75rem; color: #64748b; letter-spacing: 2px; text-transform: uppercase; }
+        .loader-truck { font-size: 2.4rem; animation: truckRoll 1.2s ease-in-out infinite alternate; }
+        @keyframes truckRoll { from { transform: translateX(-12px); } to { transform: translateX(12px); } }
 
         body {
             font-family: 'Inter', sans-serif;
@@ -40,195 +54,432 @@
             min-height: 100vh;
             background-color: #0f172a;
         }
-        
+
         #app-background {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-image: url('https://images.unsplash.com/photo-1586528116311-ad8ed7e66a5a?q=80&w=2070&auto=format&fit=crop'); 
-            background-size: cover; background-position: center; opacity: 0.5; 
-            z-index: -1; display: none; 
+            background-image: url('https://images.unsplash.com/photo-1586528116311-ad8ed7e66a5a?q=80&w=2070&auto=format&fit=crop');
+            background-size: cover; background-position: center; opacity: 0.5;
+            z-index: -1; display: none;
             transition: background-image 0.05s ease-in-out;
         }
 
         .glass-panel {
             background: var(--glass-bg); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
-            border: 1px solid var(--glass-border); border-top: 1px solid rgba(255,255,255,0.3); border-left: 1px solid rgba(255,255,255,0.3);
+            border: 1px solid var(--glass-border);
+            border-top: 1px solid rgba(255,255,255,0.3); border-left: 1px solid rgba(255,255,255,0.3);
             box-shadow: var(--glass-shadow); border-radius: 20px;
         }
 
-        .container { max-width: 1200px; margin: 0 auto; display: none; position: relative; z-index: 1;}
+        .container { max-width: 1200px; margin: 0 auto; display: none; position: relative; z-index: 1; }
 
+        /* ── LOGIN ── */
         #login-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-image: url('https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?q=80&w=2070&auto=format&fit=crop');
             background-size: cover; background-position: center; animation: slider 20s infinite alternate;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             z-index: 9999; padding: 20px; box-sizing: border-box;
-            transition: background-image 0.05s ease-in-out;
         }
-        
         @keyframes slider {
             0%, 25% { background-image: url('https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?q=80&w=2070&auto=format&fit=crop'); }
             33%, 58% { background-image: url('https://images.unsplash.com/photo-1586528116311-ad8ed7e66a5a?q=80&w=2070&auto=format&fit=crop'); }
             66%, 100% { background-image: url('https://images.unsplash.com/photo-1519003722824-194d4455a60c?q=80&w=2075&auto=format&fit=crop'); }
         }
-        
         #login-screen::before { content: ''; position: absolute; top:0; left:0; right:0; bottom:0; background: rgba(15, 23, 42, 0.7); z-index: 0; }
-
         .login-box {
-            position: relative; z-index: 1; background: rgba(20, 30, 50, 0.6); 
+            position: relative; z-index: 1; background: rgba(20, 30, 50, 0.6);
             backdrop-filter: var(--blur-heavy); -webkit-backdrop-filter: var(--blur-heavy);
             padding: 40px 30px; border-radius: 30px; width: 100%; max-width: 380px;
             box-shadow: var(--glass-shadow); border: 1px solid rgba(255,255,255,0.15); text-align: center;
+            animation: loginPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
         }
-        
+        @keyframes loginPop { from { opacity: 0; transform: scale(0.9) translateY(20px); } to { opacity: 1; transform: none; } }
         .truck-icon { width: 80px; height: auto; margin: 0 auto 10px; display: block; fill: #fff; filter: drop-shadow(0px 2px 5px rgba(0,0,0,0.5)); }
-        .login-box h1 { margin: 5px 0 25px; font-size: 2.2rem; letter-spacing: 1px; font-weight: 800; color: #fff;}
-        
+        .login-box h1 { margin: 5px 0 25px; font-size: 2.2rem; letter-spacing: 1px; font-weight: 800; color: #fff; }
+
+        /* ── INPUTS ── */
         input, select, textarea, .pin-input, #loginRole {
             width: 100%; padding: 14px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.2);
             background: rgba(255,255,255,0.05); color: #fff; font-size: 1rem; font-family: 'Inter', sans-serif;
             box-sizing: border-box; margin-bottom: 15px; outline: none; transition: 0.3s;
             backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
         }
-        input:focus, select:focus, textarea:focus, .pin-input:focus { background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.5); box-shadow: 0 0 15px rgba(255,255,255,0.1); }
+        input:focus, select:focus, textarea:focus, .pin-input:focus {
+            background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.5);
+            box-shadow: 0 0 15px rgba(255,255,255,0.1);
+        }
+        input.valid { border-color: rgba(16, 185, 129, 0.6) !important; box-shadow: 0 0 10px rgba(16,185,129,0.15) !important; }
+        input.invalid { border-color: rgba(239, 68, 68, 0.6) !important; box-shadow: 0 0 10px rgba(239,68,68,0.15) !important; }
         select option { background: #1e293b; color: white; }
         .pin-input { text-align: center; font-size: 1.2rem; letter-spacing: 2px; }
-        #loginRole { font-weight: 600; text-align: center; margin-bottom: 20px;}
+        #loginRole { font-weight: 600; text-align: center; margin-bottom: 20px; }
 
+        /* ── BUTTONS ── */
         .btn, .login-btn {
             width: 100%; padding: 15px; border-radius: 14px; border: none;
-            background: linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.05)); border: 1px solid rgba(255,255,255,0.4);
-            color: white; font-weight: 700; font-size: 1.05rem; letter-spacing: 0.5px; cursor: pointer; transition: all 0.3s ease;
-            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            background: linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.05));
+            border: 1px solid rgba(255,255,255,0.4);
+            color: white; font-weight: 700; font-size: 1.05rem; letter-spacing: 0.5px; cursor: pointer;
+            transition: all 0.3s ease; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2); position: relative; overflow: hidden;
         }
-        .btn:hover, .login-btn:hover { transform: translateY(-2px); background: linear-gradient(135deg, rgba(255,255,255,0.3), rgba(255,255,255,0.1)); box-shadow: 0 8px 25px rgba(255,255,255,0.15); }
+        .btn::after, .login-btn::after {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+            opacity: 0; transition: opacity 0.3s;
+        }
+        .btn:hover::after, .login-btn:hover::after { opacity: 1; }
+        .btn:hover, .login-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(255,255,255,0.15); }
         .btn:active, .login-btn:active { transform: scale(0.97); }
         .btn-primary { background: linear-gradient(135deg, var(--primary), rgba(30, 58, 138, 0.9)); border-color: rgba(96, 165, 250, 0.5); }
         .btn-primary:hover { background: linear-gradient(135deg, rgba(59, 130, 246, 0.9), rgba(30, 58, 138, 0.9)); }
         .btn-outline { background: transparent; border: 1px solid rgba(255,255,255,0.3); color: white; }
-        .btn-sm { padding: 8px 14px; font-size: 0.85rem; width: auto; display: inline-block; border-radius: 10px;}
-        
+        .btn-sm { padding: 8px 14px; font-size: 0.85rem; width: auto; display: inline-block; border-radius: 10px; }
+        .btn-icon { display: flex; align-items: center; gap: 7px; justify-content: center; }
         .error-msg { color: #fca5a5; font-size: 0.9rem; margin-bottom: 15px; min-height: 20px; font-weight: 600; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
 
-        .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; margin-bottom: 20px; }
+        /* ── HEADER ── */
+        .header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 20px; margin-bottom: 20px;
+        }
         .header h1 { margin: 0; font-size: 1.3rem; font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
-        
+        .header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+        /* ── LIVE CLOCK ── */
+        .live-clock {
+            background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 50px; padding: 7px 14px; font-size: 0.78rem; font-weight: 700;
+            color: #93c5fd; letter-spacing: 1px; display: flex; align-items: center; gap: 6px;
+        }
+        .clock-dot { width: 6px; height: 6px; border-radius: 50%; background: #34d399; animation: blink 1s infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        /* ── NOTIFICATION BELL ── */
+        .notif-wrap { position: relative; }
+        .notif-btn {
+            width: 38px; height: 38px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.08); color: white; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; transition: 0.3s; position: relative;
+        }
+        .notif-btn:hover { background: rgba(255,255,255,0.18); }
+        .notif-badge {
+            position: absolute; top: -4px; right: -4px; width: 17px; height: 17px;
+            background: #ef4444; border-radius: 50%; font-size: 0.6rem; font-weight: 800;
+            color: white; display: flex; align-items: center; justify-content: center;
+            border: 2px solid #0f172a; animation: pulseBadge 2s infinite;
+        }
+        @keyframes pulseBadge { 0%,100%{transform:scale(1)} 50%{transform:scale(1.2)} }
+        .notif-dropdown {
+            position: absolute; top: 48px; right: 0; width: 300px;
+            background: rgba(15,23,42,0.97); backdrop-filter: var(--blur-heavy);
+            border: 1px solid rgba(255,255,255,0.15); border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6); z-index: 100;
+            display: none; overflow: hidden;
+        }
+        .notif-dropdown.show { display: block; animation: dropIn 0.25s ease; }
+        @keyframes dropIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: none; } }
+        .notif-header { padding: 14px 18px; font-size: 0.8rem; font-weight: 700; color: #93c5fd; border-bottom: 1px solid rgba(255,255,255,0.07); display: flex; justify-content: space-between; }
+        .notif-item { padding: 12px 18px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; gap: 12px; align-items: flex-start; cursor: pointer; transition: background 0.2s; }
+        .notif-item:hover { background: rgba(255,255,255,0.05); }
+        .notif-item:last-child { border-bottom: none; }
+        .notif-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+        .notif-dot.warn { background: #fbbf24; } .notif-dot.danger { background: #f87171; } .notif-dot.info { background: #60a5fa; }
+        .notif-text { font-size: 0.8rem; color: #cbd5e1; line-height: 1.5; }
+        .notif-time { font-size: 0.68rem; color: #475569; margin-top: 2px; }
+
+        /* ── QUICK STATS STRIP ── */
+        .quick-stats {
+            display: flex; gap: 10px; margin-bottom: 18px; overflow-x: auto; padding-bottom: 4px;
+        }
+        .quick-stats::-webkit-scrollbar { display: none; }
+        .qstat {
+            flex-shrink: 0; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 50px; padding: 8px 16px; font-size: 0.78rem; font-weight: 600;
+            color: var(--text-muted); display: flex; align-items: center; gap: 8px; white-space: nowrap;
+        }
+        .qstat-dot { width: 7px; height: 7px; border-radius: 50%; }
+
+        /* ── NAV ── */
         .nav-scroller { overflow-x: auto; white-space: nowrap; margin-bottom: 25px; padding-bottom: 10px; -webkit-overflow-scrolling: touch; }
         .nav-scroller::-webkit-scrollbar { display: none; }
         .nav-menu { display: inline-flex; gap: 12px; }
         .nav-btn { border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.4); padding: 12px 24px; border-radius: 50px; font-weight: 600; color: var(--text-muted); transition: 0.3s; cursor: pointer; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); }
         .nav-btn.active { background: rgba(255,255,255,0.25); color: white; border-color: rgba(255,255,255,0.5); box-shadow: 0 4px 15px rgba(255,255,255,0.1); }
 
+        /* ── KPI CARDS ── */
         .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px; margin-bottom: 25px; }
-        .card { padding: 22px; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: center; }
+        .card { padding: 22px; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: center; transition: transform 0.2s; }
+        .card:hover { transform: translateY(-3px); }
         .card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; }
-        .card.income::before { background: #10b981; } .card.expense::before { background: #ef4444; } .card.pending::before { background: #f59e0b; } .card.profit::before { background: #3b82f6; }
+        .card.income::before { background: #10b981; } .card.expense::before { background: #ef4444; }
+        .card.pending::before { background: #f59e0b; } .card.profit::before { background: #3b82f6; }
         .card h3 { margin: 0; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); font-weight: 600; }
-        .card p { margin: 8px 0 0; font-size: 1.8rem; font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .card p { margin: 8px 0 0; font-size: 1.8rem; font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: all 0.6s; }
+        .card-trend { font-size: 0.72rem; font-weight: 700; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+        .trend-up { color: #34d399; } .trend-down { color: #f87171; } .trend-flat { color: #64748b; }
+        /* animated counter */
+        .kpi-counter { display: inline-block; }
 
+        /* ── SECTIONS ── */
         .section { display: none; animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         .section.active { display: block; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
         .panel { padding: 25px; margin-bottom: 20px; overflow-x: auto; }
         .panel h3 { margin-top: 0; font-weight: 700; font-size: 1.2rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 20px; }
-        
         .split-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; }
-
-        label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.85rem; color: var(--text-muted); letter-spacing: 0.5px;}
+        label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.85rem; color: var(--text-muted); letter-spacing: 0.5px; }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 0px; }
 
-        .mode-switcher { display: flex; background: rgba(0,0,0,0.4); padding: 5px; border-radius: 16px; margin-bottom: 25px; border: 1px solid rgba(255,255,255,0.05);}
-        .mode-btn { flex: 1; padding: 12px; border: none; background: transparent; font-weight: 700; cursor: pointer; border-radius: 12px; color: var(--text-muted); transition: 0.3s;}
+        /* ── MODE SWITCHER ── */
+        .mode-switcher { display: flex; background: rgba(0,0,0,0.4); padding: 5px; border-radius: 16px; margin-bottom: 25px; border: 1px solid rgba(255,255,255,0.05); }
+        .mode-btn { flex: 1; padding: 12px; border: none; background: transparent; font-weight: 700; cursor: pointer; border-radius: 12px; color: var(--text-muted); transition: 0.3s; }
         .mode-btn.active.inc { background: rgba(16, 185, 129, 0.3); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.4); }
         .mode-btn.active.exp { background: rgba(239, 68, 68, 0.3); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.4); }
 
+        /* ── TABLE ── */
         table { width: 100%; border-collapse: separate; border-spacing: 0 8px; font-size: 0.9rem; min-width: 500px; }
-        th { text-align: left; color: var(--text-muted); font-size: 0.75rem; padding: 10px 15px; text-transform: uppercase; letter-spacing: 1px;}
-        td { padding: 15px; background: rgba(255,255,255,0.03); vertical-align: middle; }
+        th { text-align: left; color: var(--text-muted); font-size: 0.75rem; padding: 10px 15px; text-transform: uppercase; letter-spacing: 1px; }
+        td { padding: 15px; background: rgba(255,255,255,0.03); vertical-align: middle; transition: background 0.2s; }
+        tr:hover td { background: rgba(255,255,255,0.07); }
         tr td:first-child { border-top-left-radius: 12px; border-bottom-left-radius: 12px; }
         tr td:last-child { border-top-right-radius: 12px; border-bottom-right-radius: 12px; }
-        
-        .tag { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2);}
-        .tag.active { background: rgba(16, 185, 129, 0.2); color: #34d399; border-color: rgba(16, 185, 129, 0.3);}
-        .tag.expired { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border-color: rgba(239, 68, 68, 0.3);}
-        
-        .hidden { display: none !important; }
-        .text-success { color: #34d399; text-shadow: 0 0 10px rgba(52, 211, 153, 0.3);}
-        .text-danger { color: #f87171; text-shadow: 0 0 10px rgba(248, 113, 113, 0.3);}
-        
-        .info-box { background: rgba(14, 165, 233, 0.1); padding: 15px; border-radius: 14px; border: 1px solid rgba(14, 165, 233, 0.3); margin-bottom: 15px; }
-        .info-box p { margin: 0; font-size: 0.9rem; color: #7dd3fc; font-weight: 600;}
-        .info-box strong { font-size: 1.2rem; display:block; margin-top:4px; color: white;}
 
+        /* ── TAGS ── */
+        .tag { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); }
+        .tag.active { background: rgba(16, 185, 129, 0.2); color: #34d399; border-color: rgba(16, 185, 129, 0.3); }
+        .tag.expired { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border-color: rgba(239, 68, 68, 0.3); }
+        .tag.expiring { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border-color: rgba(245, 158, 11, 0.3); }
+
+        .hidden { display: none !important; }
+        .text-success { color: #34d399; text-shadow: 0 0 10px rgba(52, 211, 153, 0.3); }
+        .text-danger { color: #f87171; text-shadow: 0 0 10px rgba(248, 113, 113, 0.3); }
+
+        .info-box { background: rgba(14, 165, 233, 0.1); padding: 15px; border-radius: 14px; border: 1px solid rgba(14, 165, 233, 0.3); margin-bottom: 15px; }
+        .info-box p { margin: 0; font-size: 0.9rem; color: #7dd3fc; font-weight: 600; }
+        .info-box strong { font-size: 1.2rem; display: block; margin-top: 4px; color: white; }
+
+        /* ── HISTORY CARDS ── */
         .history-card {
-            background: rgba(255,255,255,0.05); border-radius: 16px; padding: 18px;
-            margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.1);
-            border-left: 4px solid transparent; display: flex;
-            justify-content: space-between; align-items: center;
+            background: rgba(255,255,255,0.05); border-radius: 16px; padding: 18px; margin-bottom: 15px;
+            border: 1px solid rgba(255,255,255,0.1); border-left: 4px solid transparent;
+            display: flex; justify-content: space-between; align-items: center;
             backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
+            transition: transform 0.2s, box-shadow 0.2s;
         }
+        .history-card:hover { transform: translateX(4px); box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
         .history-card.income { border-left-color: #34d399; }
         .history-card.expense { border-left-color: #f87171; }
         .history-card.debt { border-left-color: #60a5fa; }
-
-        .h-date { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; letter-spacing: 0.5px;}
+        .h-date { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; letter-spacing: 0.5px; }
         .h-title { font-weight: 800; font-size: 1.1rem; margin: 4px 0; color: white; }
         .h-sub { font-size: 0.85rem; color: #94a3b8; }
         .h-amt { font-weight: 900; font-size: 1.2rem; }
-        .h-status { font-size: 0.7rem; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; font-weight: 800; margin-top: 8px; display: inline-block; border: 1px solid;}
-        .st-done { background: rgba(16, 185, 129, 0.1); color: #34d399; border-color: rgba(16, 185, 129, 0.3);}
-        .st-transit { background: rgba(245, 158, 11, 0.1); color: #fbbf24; border-color: rgba(245, 158, 11, 0.3);}
+        .h-status { font-size: 0.7rem; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; font-weight: 800; margin-top: 8px; display: inline-block; border: 1px solid; }
+        .st-done { background: rgba(16, 185, 129, 0.1); color: #34d399; border-color: rgba(16, 185, 129, 0.3); }
+        .st-transit { background: rgba(245, 158, 11, 0.1); color: #fbbf24; border-color: rgba(245, 158, 11, 0.3); }
 
-        .comp-header { background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); padding: 25px; border-radius: 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 20px; backdrop-filter: blur(10px);}
-        
-        /* MODERN GRAPHIC GRADIENT ICON FOR COMPLIANCE */
-        .comp-icon { 
-            display: flex; align-items: center; justify-content: center; 
-            width: 70px; height: 70px;
-            background: linear-gradient(135deg, #10b981, #3b82f6); 
-            border-radius: 20px; 
-            border: 2px solid rgba(255,255,255,0.5);
-            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
+        /* ── HISTORY FILTERS ── */
+        .history-filters {
+            display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; align-items: center;
+        }
+        .filter-chip {
+            padding: 6px 14px; border-radius: 50px; border: 1px solid rgba(255,255,255,0.15);
+            background: rgba(0,0,0,0.3); color: var(--text-muted); font-size: 0.8rem; font-weight: 600;
+            cursor: pointer; transition: 0.2s;
+        }
+        .filter-chip.active { background: rgba(59, 130, 246, 0.3); color: #93c5fd; border-color: rgba(59, 130, 246, 0.4); }
+        .filter-chip:hover { border-color: rgba(255,255,255,0.3); color: white; }
+
+        /* ── HISTORY SUMMARY ROW ── */
+        .hist-summary {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px;
+        }
+        .hist-stat {
+            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px; padding: 14px; text-align: center;
+        }
+        .hist-stat-val { font-family: 'Inter', sans-serif; font-size: 1.3rem; font-weight: 800; margin-bottom: 3px; }
+        .hist-stat-lbl { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+
+        /* ── COMPLIANCE ── */
+        .comp-header { background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); padding: 25px; border-radius: 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 20px; backdrop-filter: blur(10px); }
+        .comp-icon {
+            display: flex; align-items: center; justify-content: center; width: 70px; height: 70px;
+            background: linear-gradient(135deg, #10b981, #3b82f6); border-radius: 20px;
+            border: 2px solid rgba(255,255,255,0.5); box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
             animation: pulse-glow 3s infinite alternate;
         }
-        @keyframes pulse-glow {
-            0% { box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3); transform: scale(1); }
-            100% { box-shadow: 0 15px 30px rgba(16, 185, 129, 0.6); transform: scale(1.05); }
-        }
+        @keyframes pulse-glow { 0% { box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3); transform: scale(1); } 100% { box-shadow: 0 15px 30px rgba(16, 185, 129, 0.6); transform: scale(1.05); } }
         .comp-icon svg { fill: white; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); width: 35px; height: 35px; }
 
-        .progress-bar-bg { background: rgba(0,0,0,0.3); height: 8px; border-radius: 10px; width: 100%; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);}
-        .progress-bar-fill { height: 100%; transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 10px; box-shadow: 0 0 10px currentColor;}
+        /* ── COMPLIANCE COUNTDOWN ── */
+        .comp-countdown { font-size: 0.72rem; color: #94a3b8; margin-top: 4px; }
 
-        .btn-end-trip { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); padding: 6px 14px; border-radius: 8px; font-size: 0.75rem; font-weight: 800; cursor: pointer; transition: 0.2s;}
+        /* ── PROGRESS BAR ── */
+        .progress-bar-bg { background: rgba(0,0,0,0.3); height: 8px; border-radius: 10px; width: 100%; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.5); }
+        .progress-bar-fill { height: 100%; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 10px; box-shadow: 0 0 10px currentColor; }
+
+        .btn-end-trip { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); padding: 6px 14px; border-radius: 8px; font-size: 0.75rem; font-weight: 800; cursor: pointer; transition: 0.2s; }
         .btn-end-trip:hover { background: rgba(59, 130, 246, 0.4); }
 
-        #map { height: 450px; width: 100%; border-radius: 20px; border: 1px solid rgba(255,255,255,0.2); margin-bottom: 10px; z-index: 1;}
+        /* ── MAP ── */
+        #map { height: 450px; width: 100%; border-radius: 20px; border: 1px solid rgba(255,255,255,0.2); margin-bottom: 10px; z-index: 1; }
         .leaflet-routing-container { display: none !important; }
-        
-        .hidden-role { display: none !important; } .dispatcher-only { display: none; }
 
-        @media (max-width: 768px) { .split-layout { grid-template-columns: 1fr; } .form-row { grid-template-columns: 1fr; } .header { flex-direction: column; text-align: center; gap: 15px; padding: 20px;} .card p { font-size: 1.5rem;} }
-        
-        .upload-btn {
-            background: rgba(255,255,255,0.1); border: 1px dashed rgba(255,255,255,0.3);
-            color: #fff; padding: 10px; border-radius: 8px; text-align: center; cursor: pointer; display: block;
+        /* ── ACTIVE TRUCKS LIST ── */
+        .active-truck-card {
+            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; transition: 0.2s;
+            cursor: pointer;
+        }
+        .active-truck-card:hover { background: rgba(255,255,255,0.09); border-color: rgba(255,255,255,0.2); }
+        .atc-plate { font-weight: 800; color: white; font-size: 1rem; }
+        .atc-route { font-size: 0.78rem; color: #94a3b8; margin-top: 3px; }
+        .atc-status { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
+        .atc-dot { width: 7px; height: 7px; border-radius: 50%; background: #34d399; animation: blink 1.5s infinite; }
+        .atc-status-text { font-size: 0.7rem; color: #34d399; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* ── EXPORT BUTTON ── */
+        .export-btn {
+            background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #34d399; border-radius: 10px; padding: 8px 14px; font-size: 0.82rem;
+            font-weight: 700; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 6px;
+        }
+        .export-btn:hover { background: rgba(16, 185, 129, 0.3); }
+
+        /* ── TOAST NOTIFICATIONS ── */
+        .toast-container { position: fixed; top: 20px; right: 20px; z-index: 99998; display: flex; flex-direction: column; gap: 10px; }
+        .toast {
+            background: rgba(15, 23, 42, 0.97); backdrop-filter: var(--blur-heavy);
+            border: 1px solid rgba(255,255,255,0.12); border-radius: 14px;
+            padding: 14px 18px; min-width: 260px; max-width: 340px;
+            display: flex; align-items: flex-start; gap: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            animation: toastIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes toastIn { from { opacity: 0; transform: translateX(60px) scale(0.9); } to { opacity: 1; transform: none; } }
+        .toast.toast-out { animation: toastOut 0.3s ease forwards; }
+        @keyframes toastOut { to { opacity: 0; transform: translateX(60px); } }
+        .toast-icon { font-size: 1.2rem; flex-shrink: 0; margin-top: 1px; }
+        .toast-body { flex: 1; }
+        .toast-title { font-weight: 700; font-size: 0.88rem; color: white; }
+        .toast-msg { font-size: 0.78rem; color: #94a3b8; margin-top: 2px; line-height: 1.4; }
+        .toast-close { color: #475569; cursor: pointer; font-size: 1.1rem; flex-shrink: 0; transition: color 0.2s; }
+        .toast-close:hover { color: white; }
+        .toast.success { border-left: 3px solid #34d399; }
+        .toast.error { border-left: 3px solid #f87171; }
+        .toast.warning { border-left: 3px solid #fbbf24; }
+        .toast.info { border-left: 3px solid #60a5fa; }
+
+        /* ── SPEED DIAL / FAB ── */
+        .fab-wrap { position: fixed; bottom: 26px; right: 20px; z-index: 900; display: flex; flex-direction: column-reverse; align-items: flex-end; gap: 10px; }
+        .fab-main {
+            width: 58px; height: 58px; border-radius: 50%; border: none;
+            background: linear-gradient(135deg, #2563eb, #10b981); color: white; font-size: 1.6rem;
+            cursor: pointer; box-shadow: 0 6px 24px rgba(37, 99, 235, 0.5);
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .fab-main:hover { transform: scale(1.1) rotate(45deg); box-shadow: 0 10px 32px rgba(37, 99, 235, 0.7); }
+        .fab-main.open { transform: rotate(45deg); }
+        .fab-sub { display: flex; align-items: center; gap: 10px; opacity: 0; transform: translateY(10px); pointer-events: none; transition: 0.3s; }
+        .fab-sub.show { opacity: 1; transform: translateY(0); pointer-events: all; }
+        .fab-sub-btn {
+            width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(15,23,42,0.9); color: white; font-size: 1.1rem; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; transition: 0.2s;
+            backdrop-filter: blur(10px);
+        }
+        .fab-sub-btn:hover { background: rgba(37, 99, 235, 0.6); transform: scale(1.1); }
+        .fab-label { font-size: 0.75rem; font-weight: 700; color: white; background: rgba(0,0,0,0.7); padding: 4px 10px; border-radius: 50px; white-space: nowrap; }
+
+        /* ── SEARCH ── */
+        .search-wrap { position: relative; margin-bottom: 20px; }
+        .search-wrap svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); opacity: 0.5; }
+        .search-wrap input { padding-left: 42px; margin-bottom: 0; }
+
+        /* ── ANALYTICS HEADER ROW ── */
+        .analytics-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+        .date-range { display: flex; gap: 8px; align-items: center; }
+        .date-range input { margin-bottom: 0; padding: 8px 12px; font-size: 0.82rem; border-radius: 10px; width: auto; }
+
+        /* ── AI PREDICTOR ENHANCED ── */
+        .ai-truck-row { display: flex; gap: 15px; padding: 14px 0; border-bottom: 1px solid rgba(255,255,255,0.06); align-items: center; }
+        .ai-truck-row:last-child { border-bottom: none; }
+        .ai-truck-plate { font-weight: 800; color: white; font-size: 0.95rem; min-width: 110px; }
+        .ai-truck-model { font-size: 0.72rem; color: #64748b; margin-top: 2px; }
+        .ai-health-wrap { flex: 1; }
+        .ai-health-top { display: flex; justify-content: space-between; font-size: 0.78rem; margin-bottom: 5px; }
+        .ai-health-score { font-weight: 800; }
+        .ai-health-km { color: #64748b; }
+        .ai-action { flex-shrink: 0; }
+
+        /* ── DISPATCHER DASHBOARD ── */
+        .trip-live-card {
+            background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 16px; padding: 18px; margin-bottom: 14px;
+            position: relative; overflow: hidden;
+        }
+        .trip-live-card::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(59,130,246,0.05), transparent); }
+        .trip-live-pulse { position: absolute; top: 14px; right: 14px; width: 10px; height: 10px; border-radius: 50%; background: #34d399; animation: liveRing 1.5s infinite; }
+        @keyframes liveRing { 0% { box-shadow: 0 0 0 0 rgba(52,211,153,0.4); } 70% { box-shadow: 0 0 0 10px rgba(52,211,153,0); } 100% { box-shadow: 0 0 0 0 rgba(52,211,153,0); } }
+
+        /* ── PAYMENT FIELDS ── */
+        .upload-btn { background: rgba(255,255,255,0.1); border: 1px dashed rgba(255,255,255,0.3); color: #fff; padding: 10px; border-radius: 8px; text-align: center; cursor: pointer; display: block; }
+
+        /* ── HIDDEN ROLES ── */
+        .hidden-role { display: none !important; }
+        .dispatcher-only { display: none; }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 768px) {
+            .split-layout { grid-template-columns: 1fr; }
+            .form-row { grid-template-columns: 1fr; }
+            .header { flex-direction: column; text-align: center; gap: 15px; padding: 20px; }
+            .card p { font-size: 1.5rem; }
+            .hist-summary { grid-template-columns: 1fr 1fr; }
+            .quick-stats { gap: 7px; }
+        }
+
+        /* ── SKELETON LOADER ── */
+        .skeleton {
+            background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.09) 50%, rgba(255,255,255,0.04) 75%);
+            background-size: 200% 100%; animation: skeleton 1.5s infinite; border-radius: 8px;
+        }
+        @keyframes skeleton { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+        /* ── PRINT STYLES ── */
+        @media print {
+            #loading-screen, .fab-wrap, .toast-container, .notif-wrap, .nav-scroller, .header { display: none !important; }
+            body { background: white !important; color: black !important; }
+            .glass-panel { background: white !important; border: 1px solid #ccc !important; }
         }
     </style>
 </head>
 <body>
 
+<!-- LOADING SCREEN (NEW) -->
+<div id="loading-screen">
+    <div class="loader-truck">🚛</div>
+    <div class="loader-logo">MALI<span>BORA</span></div>
+    <div class="loader-bar-wrap"><div class="loader-bar" id="loaderBar"></div></div>
+    <div class="loader-text" id="loaderText">Initializing system...</div>
+</div>
+
+<!-- TOAST CONTAINER (NEW) -->
+<div class="toast-container" id="toastContainer"></div>
+
 <div id="app-background"></div>
 
-<div id="login-screen">
+<!-- ══ LOGIN ══ -->
+<div id="login-screen" style="display:none;">
     <div class="login-box">
         <svg class="truck-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path d="M4.5 9h15c.8 0 1.5.7 1.5 1.5v6c0 .8-.7 1.5-1.5 1.5h-1v1.5c0 .8-.7 1.5-1.5 1.5s-1.5-.7-1.5-1.5v-1.5h-7v1.5c0 .8-.7 1.5-1.5 1.5s-1.5-.7-1.5-1.5v-1.5h-1c-.8 0-1.5-.7-1.5-1.5v-6c0-.8.7-1.5 1.5-1.5zm1 1.5v4h13v-4h-13zm2 5.5c-.6 0-1 .4-1 1s.4 1 1 1 1-.4 1-1-.4-1-1-1zm9 0c-.6 0-1 .4-1 1s.4 1 1 1 1-.4 1-1-.4-1-1-1zm-9.5-11h10v2h-10v-2z"/>
         </svg>
-
         <h1 data-key="title">MALIBORA</h1>
-        
+
         <div style="display:flex; margin-bottom:25px; border-radius:14px; background: rgba(0,0,0,0.4); padding: 5px; border: 1px solid rgba(255,255,255,0.1);">
             <button id="btnTabLogin" onclick="setAuthMode('login')" style="flex:1; padding:12px; background:rgba(255,255,255,0.15); color:white; font-weight:700; border:1px solid rgba(255,255,255,0.2); border-radius:10px; cursor:pointer; transition:0.3s; box-shadow: 0 2px 10px rgba(0,0,0,0.2);" data-key="login_tab">Login</button>
             <button id="btnTabReg" onclick="setAuthMode('register')" style="flex:1; padding:12px; background:transparent; color:#cbd5e1; border:none; border-radius:10px; cursor:pointer; transition:0.3s; font-weight:600;" data-key="reg_tab">Register</button>
@@ -241,26 +492,55 @@
 
         <input type="text" id="b2bCompany" placeholder="Company Name" style="text-align: center; font-weight: bold; letter-spacing: 1px;">
         <input type="password" id="pinInput" class="pin-input" placeholder="Admin PIN (e.g. 1234)">
-        
+
         <div class="error-msg" id="loginError"></div>
         <button class="login-btn" id="b2bAuthBtn" onclick="executeB2BAuth()" data-key="acc_sys">ACCESS SYSTEM</button>
     </div>
 </div>
 
+<!-- ══ APP ══ -->
 <div class="container" id="app-container">
+    <!-- HEADER -->
     <div class="header glass-panel">
         <div>
             <h1 id="appHeaderName" style="letter-spacing: 1px;">MALIBORA LOGISTICS</h1>
             <small id="uiRoleDisplay" style="color:#60a5fa; font-weight:700; letter-spacing: 2px;">ADMIN PANEL</small>
         </div>
-        <div style="display:flex; align-items:center; gap: 15px;">
+        <div class="header-right">
+            <!-- LIVE CLOCK (NEW) -->
+            <div class="live-clock">
+                <div class="clock-dot"></div>
+                <span id="liveClock">--:-- --</span>
+            </div>
+            <!-- NOTIFICATION BELL (NEW) -->
+            <div class="notif-wrap">
+                <button class="notif-btn" onclick="toggleNotifDropdown()">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                    <div class="notif-badge" id="notifCount">0</div>
+                </button>
+                <div class="notif-dropdown" id="notifDropdown">
+                    <div class="notif-header"><span>Alerts</span><span style="cursor:pointer;color:#475569;font-size:0.75rem;" onclick="clearNotifs()">Clear all</span></div>
+                    <div id="notifList"></div>
+                </div>
+            </div>
             <button class="btn-sm btn-outline" style="border-radius: 50px;" onclick="toggleLanguage()" id="btnLang">🇹🇿 SW</button>
             <button onclick="logout()" class="btn-sm btn-outline" style="border-radius: 50px; display:flex; align-items:center; gap:5px; cursor:pointer;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> <span data-key="exit">Exit</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                <span data-key="exit">Exit</span>
             </button>
         </div>
     </div>
 
+    <!-- QUICK STATS STRIP (NEW) -->
+    <div class="quick-stats" id="quickStats">
+        <div class="qstat"><div class="qstat-dot" style="background:#34d399;"></div><span id="qs-trips">0 Active Trips</span></div>
+        <div class="qstat"><div class="qstat-dot" style="background:#60a5fa;"></div><span id="qs-trucks">0 Trucks</span></div>
+        <div class="qstat"><div class="qstat-dot" style="background:#fbbf24;"></div><span id="qs-debt">0 Pending Debts</span></div>
+        <div class="qstat"><div class="qstat-dot" style="background:#a78bfa;"></div><span id="qs-compliance">0 Compliance Records</span></div>
+        <div class="qstat"><div class="qstat-dot" style="background:#f87171; animation:blink 1.5s infinite;"></div><span id="qs-expiring">Checking permits...</span></div>
+    </div>
+
+    <!-- NAV -->
     <div class="nav-scroller">
         <div class="nav-menu">
             <button class="nav-btn admin-only active" onclick="nav('dashboard')" data-key="nav_dash">Dashboard</button>
@@ -275,26 +555,43 @@
         </div>
     </div>
 
+    <!-- ══ DASHBOARD ══ -->
     <div id="dashboard" class="section active admin-only">
         <div class="kpi-grid">
-            <div class="card income glass-panel"><h3 data-key="kpi_cash">Cash In Hand</h3><p id="kpi-cash" class="text-success">0</p></div>
-            <div class="card pending glass-panel"><h3 data-key="kpi_debt">Pending Debt</h3><p id="kpi-pending" style="color: #fbbf24; text-shadow: 0 0 10px rgba(251, 191, 36, 0.3);">0</p></div>
-            <div class="card expense glass-panel"><h3 data-key="kpi_exp">Expenses</h3><p id="kpi-expense" class="text-danger">0</p></div>
-            <div class="card profit glass-panel"><h3 data-key="kpi_profit">Net Profit</h3><p id="kpi-profit" style="color: #60a5fa; text-shadow: 0 0 10px rgba(96, 165, 250, 0.3);">0</p></div>
+            <div class="card income glass-panel">
+                <h3 data-key="kpi_cash">Cash In Hand</h3>
+                <p id="kpi-cash" class="text-success kpi-counter">0</p>
+                <div class="card-trend" id="trend-cash"><span class="trend-flat">— Loading...</span></div>
+            </div>
+            <div class="card pending glass-panel">
+                <h3 data-key="kpi_debt">Pending Debt</h3>
+                <p id="kpi-pending" style="color: #fbbf24; text-shadow: 0 0 10px rgba(251, 191, 36, 0.3);" class="kpi-counter">0</p>
+                <div class="card-trend" id="trend-debt"><span class="trend-flat">— Loading...</span></div>
+            </div>
+            <div class="card expense glass-panel">
+                <h3 data-key="kpi_exp">Expenses</h3>
+                <p id="kpi-expense" class="text-danger kpi-counter">0</p>
+                <div class="card-trend" id="trend-exp"><span class="trend-flat">— Loading...</span></div>
+            </div>
+            <div class="card profit glass-panel">
+                <h3 data-key="kpi_profit">Net Profit</h3>
+                <p id="kpi-profit" style="color: #60a5fa; text-shadow: 0 0 10px rgba(96, 165, 250, 0.3);" class="kpi-counter">0</p>
+                <div class="card-trend" id="trend-profit"><span class="trend-flat">— Loading...</span></div>
+            </div>
         </div>
 
         <div class="panel glass-panel">
             <h3 data-key="ai_pred">🤖 AI Smart Fleet Predictor (Oil & Maintenance)</h3>
-            <table id="fuelTable">
-                <thead><tr><th data-key="th_truck">Truck</th><th data-key="th_health">AI Health Score</th><th data-key="th_status">Status</th><th data-key="th_act">Act</th></tr></thead>
-                <tbody id="fuelList"></tbody>
-            </table>
+            <div id="aiPredictorList"></div>
         </div>
     </div>
 
+    <!-- ══ TRUCK DASHBOARD (DISPATCHER) ══ -->
     <div id="truck-dashboard" class="section dispatcher-only hidden-role">
-        <div class="panel glass-panel" style="background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.3);">
+        <div class="trip-live-card">
+            <div class="trip-live-pulse"></div>
             <h2 style="margin-top:0; color:#93c5fd;" data-key="my_truck">My Truck: <span id="myTruckTitle"></span></h2>
+            <div style="font-size:0.82rem; color:#64748b; margin-top:4px;">Live driver view — your earnings & trip data</div>
         </div>
         <div class="kpi-grid">
             <div class="card income glass-panel"><h3 data-key="rev_in">Revenue Brought In</h3><p id="my-truck-rev" class="text-success">0</p></div>
@@ -303,6 +600,7 @@
         </div>
     </div>
 
+    <!-- ══ OPERATIONS ══ -->
     <div id="operations" class="section">
         <div class="split-layout">
             <div class="panel glass-panel">
@@ -311,7 +609,7 @@
                     <button class="mode-btn exp" onclick="setMode('expense')" data-key="log_exp">Log Expense</button>
                 </div>
                 <input type="hidden" id="opMode" value="income">
-                
+
                 <div class="form-row">
                     <div><label data-key="lbl_date">Date</label><input type="date" id="opDate"></div>
                     <div><label data-key="lbl_truck">Truck</label><select id="opTruck" onchange="calcEstFuel()"></select></div>
@@ -333,8 +631,8 @@
                             <div id="routeRows"></div>
                             <button class="btn-sm btn-outline" style="margin-top: 5px; width:100%" onclick="addRouteLeg()" data-key="add_way">+ Add Waypoint</button>
                         </div>
-                        <label style="margin-top:15px;" data-key="lbl_tot_dist">Total Distance (Km)</label><input type="number" id="opDist" oninput="calcEstFuel()">
-                        
+                        <label style="margin-top:15px;" data-key="lbl_tot_dist">Total Distance (Km)</label>
+                        <input type="number" id="opDist" oninput="calcEstFuel()">
                         <div class="info-box">
                             <p data-key="sm_fuel">Smart Fuel Estimate</p>
                             <div style="display:flex; justify-content:space-between; margin-top:5px;">
@@ -343,18 +641,17 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="form-row">
                         <div><label data-key="lbl_cargo">Cargo Type</label><input type="text" id="opCargo" placeholder="e.g. Copper"></div>
                         <div><label data-key="lbl_cust">Customer</label><input type="text" id="opCustomer"></div>
                     </div>
-                    
+
                     <div class="admin-only glass-panel" style="padding: 15px; background: rgba(16, 185, 129, 0.05); border-color: rgba(16, 185, 129, 0.2); margin-bottom: 15px;">
                         <div class="form-row">
                             <div><label style="color:#6ee7b7" data-key="lbl_tp">Total Price</label><input type="number" id="opTotal" oninput="calcBal()" style="border-color:rgba(16,185,129,0.3)"></div>
                             <div><label style="color:#6ee7b7" data-key="lbl_pn">Paid Now</label><input type="number" id="opPaid" oninput="calcBal()" style="border-color:rgba(16,185,129,0.3)"></div>
                         </div>
-                        
                         <div style="margin-top: 15px;">
                             <label style="color:#6ee7b7">Payment Method</label>
                             <select id="opPaymentMethod" onchange="togglePaymentFields()" style="border-color:rgba(16,185,129,0.3)">
@@ -363,37 +660,26 @@
                                 <option value="Mobile">Mobile Money</option>
                             </select>
                         </div>
-                        
                         <div id="bankFields" class="hidden" style="margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 10px;">
                             <label style="color:#93c5fd">Select Bank</label>
                             <select id="opBankName" style="border-color:rgba(59,130,246,0.3)">
-                                <option value="CRDB">CRDB Bank</option>
-                                <option value="NMB">NMB Bank</option>
-                                <option value="NBC">NBC Bank</option>
-                                <option value="KCB">KCB Bank</option>
-                                <option value="Stanbic">Stanbic Bank</option>
-                                <option value="Equity">Equity Bank</option>
+                                <option value="CRDB">CRDB Bank</option><option value="NMB">NMB Bank</option>
+                                <option value="NBC">NBC Bank</option><option value="KCB">KCB Bank</option>
+                                <option value="Stanbic">Stanbic Bank</option><option value="Equity">Equity Bank</option>
                             </select>
                             <label style="color:#93c5fd">Account Number</label>
                             <input type="text" id="opBankAcc" placeholder="e.g. 01JXXXXXXX" style="border-color:rgba(59,130,246,0.3)">
-                            <label class="upload-btn">
-                                📎 Upload Receipt
-                                <input type="file" style="display:none;" id="opBankReceipt">
-                            </label>
+                            <label class="upload-btn">📎 Upload Receipt<input type="file" style="display:none;" id="opBankReceipt"></label>
                         </div>
-
                         <div id="mobileFields" class="hidden" style="margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 10px;">
                             <label style="color:#fcd34d">Select Network</label>
                             <select id="opMobileNet" style="border-color:rgba(245,158,11,0.3)">
-                                <option value="M-Pesa">Vodacom M-Pesa</option>
-                                <option value="Tigo Pesa">Tigo Pesa</option>
-                                <option value="Airtel Money">Airtel Money</option>
-                                <option value="HaloPesa">Halotel HaloPesa</option>
+                                <option value="M-Pesa">Vodacom M-Pesa</option><option value="Tigo Pesa">Tigo Pesa</option>
+                                <option value="Airtel Money">Airtel Money</option><option value="HaloPesa">Halotel HaloPesa</option>
                             </select>
                             <label style="color:#fcd34d">Paste SMS Transaction Message</label>
                             <textarea id="opMobileMsg" rows="3" placeholder="Paste the confirmation message here..." style="border-color:rgba(245,158,11,0.3)"></textarea>
                         </div>
-
                         <div style="text-align:right; font-weight:800; color:#34d399; margin-top: 15px; font-size:1.1rem;"><span data-key="lbl_bal">Balance:</span> <span id="lblBal">0</span></div>
                     </div>
                 </div>
@@ -402,11 +688,14 @@
                     <label data-key="lbl_cat">Category</label><select id="opCat"></select>
                     <label data-key="lbl_amt">Amount (TZS)</label><input type="number" id="opExpAmount">
                 </div>
-                
+
                 <label data-key="lbl_desc">Description</label><textarea id="opDesc" rows="2"></textarea>
-                <button class="btn btn-primary" onclick="saveOp()" data-key="btn_save_rec">SAVE RECORD</button>
+                <button class="btn btn-primary btn-icon" onclick="saveOp()" data-key="btn_save_rec">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                    SAVE RECORD
+                </button>
             </div>
-            
+
             <div class="panel glass-panel">
                 <h3 data-key="recent_act">Recent Activity</h3>
                 <div id="txList" style="max-height: 600px; overflow-y: auto; padding-right:5px;"></div>
@@ -414,6 +703,7 @@
         </div>
     </div>
 
+    <!-- ══ MAP ══ -->
     <div id="map-section" class="section">
         <div class="split-layout">
             <div class="panel glass-panel" style="flex:2;">
@@ -428,15 +718,52 @@
         </div>
     </div>
 
+    <!-- ══ HISTORY ══ -->
     <div id="history" class="section">
         <div class="panel glass-panel">
-            <h3 data-key="op_hist">📜 Operations History</h3>
-            <input type="text" id="histSearch" placeholder="Search by driver, truck, or customer..." onkeyup="renderHistory()" style="margin-bottom: 20px; background:rgba(0,0,0,0.2);">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:16px;">
+                <h3 style="margin:0;" data-key="op_hist">📜 Operations History</h3>
+                <button class="export-btn" onclick="exportCSV()">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    Export CSV
+                </button>
+            </div>
+
+            <!-- HISTORY SUMMARY (NEW) -->
+            <div class="hist-summary" id="histSummary">
+                <div class="hist-stat"><div class="hist-stat-val text-success" id="hs-income">0</div><div class="hist-stat-lbl">Total Income</div></div>
+                <div class="hist-stat"><div class="hist-stat-val text-danger" id="hs-expense">0</div><div class="hist-stat-lbl">Total Expenses</div></div>
+                <div class="hist-stat"><div class="hist-stat-val" style="color:#60a5fa;" id="hs-profit">0</div><div class="hist-stat-lbl">Net Profit</div></div>
+            </div>
+
+            <!-- FILTER CHIPS (NEW) -->
+            <div class="history-filters">
+                <span style="font-size:0.78rem; color:#64748b; font-weight:600;">Filter:</span>
+                <button class="filter-chip active" onclick="setHistFilter('all', this)">All</button>
+                <button class="filter-chip" onclick="setHistFilter('income', this)">Trips</button>
+                <button class="filter-chip" onclick="setHistFilter('expense', this)">Expenses</button>
+                <button class="filter-chip" onclick="setHistFilter('debt', this)">Debt</button>
+                <input type="month" id="histMonth" onchange="renderHistory()" style="margin:0; padding:7px 12px; font-size:0.8rem; border-radius:10px; width:auto;">
+            </div>
+
+            <div class="search-wrap">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="top:50%;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" id="histSearch" placeholder="Search by driver, truck, or customer..." onkeyup="renderHistory()" style="margin-bottom: 0; background:rgba(0,0,0,0.2);">
+            </div>
             <div id="historyList"></div>
         </div>
     </div>
 
+    <!-- ══ ANALYTICS ══ -->
     <div id="analytics" class="section admin-only">
+        <div class="analytics-header">
+            <h3 style="margin:0;">⛽ Smart Fuel Dashboard</h3>
+            <button class="export-btn" onclick="window.print()">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                Print Report
+            </button>
+        </div>
+
         <div class="panel glass-panel">
             <h3 data-key="sm_fuel_dash">⛽ Smart Fuel Dashboard</h3>
             <div class="kpi-grid">
@@ -461,34 +788,34 @@
         </div>
     </div>
 
+    <!-- ══ DEBT ══ -->
     <div id="debt" class="section admin-only">
         <div class="panel glass-panel" style="background:rgba(245, 158, 11, 0.05); border-color: rgba(245, 158, 11, 0.2);">
             <h3 style="color:#fbbf24" data-key="col_debt">💰 Collect Debt</h3>
             <label data-key="sel_cust">Select Customer</label>
             <select id="debtCustomer" onchange="checkCustomerDebt()"></select>
-            
             <div id="debtDisplay" class="info-box" style="display:none; background:rgba(245, 158, 11, 0.1); border-color:rgba(245, 158, 11, 0.3);">
                 <p style="color:#fcd34d" data-key="out_debt">Outstanding Debt:</p>
                 <strong id="currentDebtVal" style="font-size: 1.5rem; color:#fbbf24;">0 TZS</strong>
             </div>
-
             <div class="form-row" style="margin-bottom:15px;">
                 <button class="btn btn-outline" onclick="setDebtType('full')" style="border-color:rgba(16, 185, 129, 0.5); color:#34d399;" data-key="btn_fp">Full Payment</button>
                 <button class="btn btn-outline" onclick="setDebtType('partial')" style="border-color:rgba(245, 158, 11, 0.5); color:#fbbf24;" data-key="btn_pp">Partial Payment</button>
             </div>
-
             <label data-key="amt_off">Amount Offered</label>
             <input type="number" id="debtAmount" placeholder="Enter amount">
-            <button class="btn btn-primary" style="background:linear-gradient(135deg, #f59e0b, #d97706); border:none;" onclick="saveDebtTx()" data-key="proc_pay">PROCESS PAYMENT</button>
+            <button class="btn btn-primary btn-icon" style="background:linear-gradient(135deg, #f59e0b, #d97706); border:none;" onclick="saveDebtTx()" data-key="proc_pay">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                PROCESS PAYMENT
+            </button>
         </div>
     </div>
 
+    <!-- ══ COMPLIANCE ══ -->
     <div id="compliance" class="section">
         <div class="comp-header">
             <div class="comp-icon">
-                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/>
-                </svg>
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
             </div>
             <div>
                 <h2 style="margin:0;" data-key="reg_comp">Regulatory Compliance</h2>
@@ -504,14 +831,18 @@
                 <div><label data-key="exp_dt">Expiry Date</label><input type="date" id="cpDate"></div>
                 <div><label data-key="cost_tz">Cost (TZS)</label><input type="number" id="cpAmount"></div>
             </div>
-            <button class="btn btn-primary" onclick="addCompliance()" data-key="add_cr">ADD COMPLIANCE RECORD</button>
+            <button class="btn btn-primary btn-icon" onclick="addCompliance()" data-key="add_cr">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                ADD COMPLIANCE RECORD
+            </button>
             <table id="cpTable" style="margin-top:25px;">
-                <thead><tr><th data-key="th_perm">Permit</th><th data-key="th_truck">Truck</th><th data-key="th_exp">Expiry</th><th data-key="th_status">Status</th><th data-key="th_act">Act</th></tr></thead>
+                <thead><tr><th data-key="th_perm">Permit</th><th data-key="th_truck">Truck</th><th data-key="th_exp">Expiry</th><th>Days Left</th><th data-key="th_status">Status</th><th data-key="th_act">Act</th></tr></thead>
                 <tbody></tbody>
             </table>
         </div>
     </div>
 
+    <!-- ══ SETTINGS ══ -->
     <div id="settings" class="section admin-only">
         <div class="split-layout">
             <div class="panel glass-panel">
@@ -535,7 +866,6 @@
                 <div id="lst-drivers" style="max-height: 200px; overflow-y:auto;"></div>
             </div>
         </div>
-        
         <div class="panel glass-panel" style="background:rgba(239, 68, 68, 0.05); border-color:rgba(239, 68, 68, 0.2); margin-top:20px;">
             <h3 style="color:#f87171" data-key="dz">Danger Zone</h3>
             <button class="btn btn-outline" style="border-color:#ef4444; color:#f87171;" onclick="wipeData()" data-key="frwc">FACTORY RESET (WIPE CLOUD)</button>
@@ -543,60 +873,136 @@
     </div>
 </div>
 
+<!-- SPEED DIAL FAB (NEW) -->
+<div class="fab-wrap" id="fabWrap">
+    <button class="fab-main" id="fabMain" onclick="toggleFab()">＋</button>
+    <div class="fab-sub" id="fabSub1"><span class="fab-label">Log Trip</span><button class="fab-sub-btn" onclick="closeFab();nav2('operations');setMode('income')">🚛</button></div>
+    <div class="fab-sub" id="fabSub2"><span class="fab-label">Log Expense</span><button class="fab-sub-btn" onclick="closeFab();nav2('operations');setMode('expense')">💸</button></div>
+    <div class="fab-sub" id="fabSub3"><span class="fab-label">Compliance</span><button class="fab-sub-btn" onclick="closeFab();nav2('compliance')">🛡️</button></div>
+</div>
+
 <script>
     const API_KEY = 'MALIBORA_SECRET_KEY_2026';
-    const API_URL = "https://malibora-logistics.onrender.com"; 
-    let currentCompanyId = null; 
+    const API_URL = "https://malibora-logistics.onrender.com";
+    let currentCompanyId = null;
     let currentUserRole = 'admin';
     let authMode = 'login';
+    let histFilter = 'all';
+    let fabOpen = false;
+    let notifs = [];
+    let chartP, chartE;
+    let map;
 
     const FUEL_PRICE = 3430;
-    const REGIONS = [
-        "Arusha", "Dar es Salaam", "Dodoma", "Geita", "Iringa", "Kagera", "Katavi", "Kigoma", "Kilimanjaro", "Lindi", 
-        "Manyara", "Mara", "Mbeya", "Morogoro", "Mtwara", "Mwanza", "Njombe", "Pemba North", "Pemba South", "Pwani", 
-        "Rukwa", "Ruvuma", "Shinyanga", "Simiyu", "Singida", "Songwe", "Tabora", "Tanga", "Zanzibar North", "Zanzibar South", "Zanzibar West"
-    ];
-    const REGION_COORDS = { "Arusha": [-3.3667, 36.6833], "Dar es Salaam": [-6.8235, 39.2695], "Dodoma": [-6.1630, 35.7516], "Mbeya": [-8.9000, 33.4500], "Mwanza": [-2.5167, 32.9000], "Tanga": [-5.0667, 39.0983], "Morogoro": [-6.8278, 37.6611], "Iringa": [-7.7667, 35.7000], "Kigoma": [-4.8769, 29.6267], "Tabora": [-5.0167, 32.8000], "Mtwara": [-10.2736, 40.1828] };
-    const COMPLIANCE_TYPES = ["LATRA License", "TRA Road License", "Comprehensive Insurance", "Vehicle Inspection", "Parking Penalty", "Speed Fine"];
-
-    let db = { trucks: [], drivers: [], customers: [], categories: ["Fuel", "Driver Allowance", "Turnboy", "Mechanic", "Tolls", "Office Rent"], txs: [], compliance: [] };
+    const REGIONS = ["Arusha","Dar es Salaam","Dodoma","Geita","Iringa","Kagera","Katavi","Kigoma","Kilimanjaro","Lindi","Manyara","Mara","Mbeya","Morogoro","Mtwara","Mwanza","Njombe","Pemba North","Pemba South","Pwani","Rukwa","Ruvuma","Shinyanga","Simiyu","Singida","Songwe","Tabora","Tanga","Zanzibar North","Zanzibar South","Zanzibar West"];
+    const REGION_COORDS = {"Arusha":[-3.3667,36.6833],"Dar es Salaam":[-6.8235,39.2695],"Dodoma":[-6.1630,35.7516],"Mbeya":[-8.9000,33.4500],"Mwanza":[-2.5167,32.9000],"Tanga":[-5.0667,39.0983],"Morogoro":[-6.8278,37.6611],"Iringa":[-7.7667,35.7000],"Kigoma":[-4.8769,29.6267],"Tabora":[-5.0167,32.8000],"Mtwara":[-10.2736,40.1828]};
+    const COMPLIANCE_TYPES = ["LATRA License","TRA Road License","Comprehensive Insurance","Vehicle Inspection","Parking Penalty","Speed Fine"];
+    let db = { trucks: [], drivers: [], customers: [], categories: ["Fuel","Driver Allowance","Turnboy","Mechanic","Tolls","Office Rent"], txs: [], compliance: [] };
 
     const i18n = {
-        en: {
-            title: "MALIBORA", login_tab: "Login", reg_tab: "Register", acc_sys: "ACCESS SYSTEM", exit: "Exit", nav_dash: "Dashboard", nav_ops: "Operations", nav_map: "Live Map", nav_hist: "History", nav_analytics: "Analytics", nav_debt: "Debt", nav_comp: "Compliance", nav_set: "Settings", kpi_cash: "Cash In Hand", kpi_debt: "Pending Debt", kpi_exp: "Expenses", kpi_profit: "Net Profit", ai_pred: "🤖 AI Smart Fleet Predictor (Oil & Maintenance)", th_truck: "Truck", th_health: "AI Health Score", th_status: "Status", th_act: "Act", my_truck: "My Truck: ", rev_in: "Revenue Brought In", op_exp: "Operational Expenses", curr_odo: "Current Odometer", log_trip: "Log Trip", log_exp: "Log Expense", lbl_date: "Date", lbl_truck: "Truck", lbl_driver: "Driver", rt_build: "🗺️ Route Builder", lbl_trip: "Trip Type", opt_single: "Single Destination", opt_multi: "Multi-Stop", lbl_load: "Load Status", opt_loaded: "Loaded", opt_empty: "Empty", lbl_from: "From", lbl_to: "To", add_way: "+ Add Waypoint", lbl_tot_dist: "Total Distance (Km)", sm_fuel: "Smart Fuel Estimate", lbl_cargo: "Cargo Type", lbl_cust: "Customer", lbl_tp: "Total Price", lbl_pn: "Paid Now", lbl_bal: "Balance:", lbl_cat: "Category", lbl_amt: "Amount (TZS)", lbl_desc: "Description", btn_save_rec: "SAVE RECORD", recent_act: "Recent Activity", ai_fleet: "🗺️ AI Fleet Route Tracking", rt_rend: "Real-time rendering of active highway paths across Tanzania using OSRM routing.", act_trucks: "Active Trucks", op_hist: "📜 Operations History", sm_fuel_dash: "⛽ Smart Fuel Dashboard", tot_f_l: "Total Fleet Fuel (Liters)", tot_f_t: "Total Fleet Fuel (TZS)", th_l_u: "Liters Used", th_c_t: "Cost (TZS)", th_f_p: "Fleet %", inc_v_exp: "Income vs Expense", exp_break: "Expense Breakdown", col_debt: "💰 Collect Debt", sel_cust: "Select Customer", out_debt: "Outstanding Debt:", btn_fp: "Full Payment", btn_pp: "Partial Payment", amt_off: "Amount Offered", proc_pay: "PROCESS PAYMENT", reg_comp: "Regulatory Compliance", leg_stat: "Legal status of Fleet & Permits", perm_typ: "Permit Type", trk_ass: "Truck Assigned", exp_dt: "Expiry Date", cost_tz: "Cost (TZS)", add_cr: "ADD COMPLIANCE RECORD", th_perm: "Permit", th_exp: "Expiry", mng_fl: "Manage Fleet", mng_st: "Manage Staff", dz: "Danger Zone", frwc: "FACTORY RESET (WIPE CLOUD)"
-        },
-        sw: {
-            title: "MALIBORA", login_tab: "Ingia", reg_tab: "Sajili", acc_sys: "INGIA KWENYE MFUMO", exit: "Toka", nav_dash: "Dashibodi", nav_ops: "Rekodi", nav_map: "Ramani", nav_hist: "Historia", nav_analytics: "Uchambuzi", nav_debt: "Madeni", nav_comp: "Sheria", nav_set: "Mipangilio", kpi_cash: "Pesa Mkononi", kpi_debt: "Madeni", kpi_exp: "Matumizi", kpi_profit: "Faida Halisi", ai_pred: "🤖 Utabiri wa AI wa Malori (Oil & Matengenezo)", th_truck: "Lori", th_health: "Afya ya AI", th_status: "Hali", th_act: "Hatua", my_truck: "Lori Langu: ", rev_in: "Mapato Yaliyoingizwa", op_exp: "Gharama za Uendeshaji", curr_odo: "Odomita ya Sasa", log_trip: "Rekodi Safari", log_exp: "Rekodi Matumizi", lbl_date: "Tarehe", lbl_truck: "Lori", lbl_driver: "Dereva", rt_build: "🗺️ Mjenzi wa Njia", lbl_trip: "Aina ya Safari", opt_single: "Sehemu Moja", opt_multi: "Vituo Vingi", lbl_load: "Hali ya Mzigo", opt_loaded: "Ina Mzigo", opt_empty: "Tupu", lbl_from: "Kutoka", lbl_to: "Kwenda", add_way: "+ Ongeza Kituo", lbl_tot_dist: "Umbali Jumla (Km)", sm_fuel: "Makadirio ya Mafuta", lbl_cargo: "Aina ya Mzigo", lbl_cust: "Mteja", lbl_tp: "Bei Jumla", lbl_pn: "Imelipwa Sasa", lbl_bal: "Deni:", lbl_cat: "Aina", lbl_amt: "Kiasi (TZS)", lbl_desc: "Maelezo", btn_save_rec: "HIFADHI REKODI", recent_act: "Shughuli za Hivi Karibuni", ai_fleet: "🗺️ Ufuatiliaji wa Njia wa AI", rt_rend: "Uchoraji wa wakati halisi wa njia za barabara kuu kote Tanzania kutumia OSRM.", act_trucks: "Malori Yaliyo Kazini", op_hist: "📜 Historia ya Rekodi", sm_fuel_dash: "⛽ Dashibodi ya Mafuta", tot_f_l: "Jumla ya Mafuta (Lita)", tot_f_t: "Jumla ya Mafuta (TZS)", th_l_u: "Lita Zilizotumika", th_c_t: "Gharama (TZS)", th_f_p: "Asilimia %", inc_v_exp: "Mapato vs Matumizi", exp_break: "Mchanganuo wa Matumizi", col_debt: "💰 Kusanya Deni", sel_cust: "Chagua Mteja", out_debt: "Deni Linalodaiwa:", btn_fp: "Malipo Kamili", btn_pp: "Malipo ya Sehemu", amt_off: "Kiasi Kilichotolewa", proc_pay: "KAMILISHA MALIPO", reg_comp: "Utekelezaji wa Sheria", leg_stat: "Hali ya kisheria ya Malori & Vibali", perm_typ: "Aina ya Kibali", trk_ass: "Lori Lililopangiwa", exp_dt: "Tarehe ya Kuisha", cost_tz: "Gharama (TZS)", add_cr: "ONGEZA REKODI", th_perm: "Kibali", th_exp: "Kuisha", mng_fl: "Simamia Malori", mng_st: "Simamia Wafanyakazi", dz: "Eneo la Hatari", frwc: "FUTA DATA ZOTE"
-        }
+        en: { title:"MALIBORA",login_tab:"Login",reg_tab:"Register",acc_sys:"ACCESS SYSTEM",exit:"Exit",nav_dash:"Dashboard",nav_ops:"Operations",nav_map:"Live Map",nav_hist:"History",nav_analytics:"Analytics",nav_debt:"Debt",nav_comp:"Compliance",nav_set:"Settings",kpi_cash:"Cash In Hand",kpi_debt:"Pending Debt",kpi_exp:"Expenses",kpi_profit:"Net Profit",ai_pred:"🤖 AI Smart Fleet Predictor (Oil & Maintenance)",th_truck:"Truck",th_health:"AI Health Score",th_status:"Status",th_act:"Act",my_truck:"My Truck: ",rev_in:"Revenue Brought In",op_exp:"Operational Expenses",curr_odo:"Current Odometer",log_trip:"Log Trip",log_exp:"Log Expense",lbl_date:"Date",lbl_truck:"Truck",lbl_driver:"Driver",rt_build:"🗺️ Route Builder",lbl_trip:"Trip Type",opt_single:"Single Destination",opt_multi:"Multi-Stop",lbl_load:"Load Status",opt_loaded:"Loaded",opt_empty:"Empty",lbl_from:"From",lbl_to:"To",add_way:"+ Add Waypoint",lbl_tot_dist:"Total Distance (Km)",sm_fuel:"Smart Fuel Estimate",lbl_cargo:"Cargo Type",lbl_cust:"Customer",lbl_tp:"Total Price",lbl_pn:"Paid Now",lbl_bal:"Balance:",lbl_cat:"Category",lbl_amt:"Amount (TZS)",lbl_desc:"Description",btn_save_rec:"SAVE RECORD",recent_act:"Recent Activity",ai_fleet:"🗺️ AI Fleet Route Tracking",rt_rend:"Real-time rendering of active highway paths across Tanzania using OSRM routing.",act_trucks:"Active Trucks",op_hist:"📜 Operations History",sm_fuel_dash:"⛽ Smart Fuel Dashboard",tot_f_l:"Total Fleet Fuel (Liters)",tot_f_t:"Total Fleet Fuel (TZS)",th_l_u:"Liters Used",th_c_t:"Cost (TZS)",th_f_p:"Fleet %",inc_v_exp:"Income vs Expense",exp_break:"Expense Breakdown",col_debt:"💰 Collect Debt",sel_cust:"Select Customer",out_debt:"Outstanding Debt:",btn_fp:"Full Payment",btn_pp:"Partial Payment",amt_off:"Amount Offered",proc_pay:"PROCESS PAYMENT",reg_comp:"Regulatory Compliance",leg_stat:"Legal status of Fleet & Permits",perm_typ:"Permit Type",trk_ass:"Truck Assigned",exp_dt:"Expiry Date",cost_tz:"Cost (TZS)",add_cr:"ADD COMPLIANCE RECORD",th_perm:"Permit",th_exp:"Expiry",mng_fl:"Manage Fleet",mng_st:"Manage Staff",dz:"Danger Zone",frwc:"FACTORY RESET (WIPE CLOUD)" },
+        sw: { title:"MALIBORA",login_tab:"Ingia",reg_tab:"Sajili",acc_sys:"INGIA KWENYE MFUMO",exit:"Toka",nav_dash:"Dashibodi",nav_ops:"Rekodi",nav_map:"Ramani",nav_hist:"Historia",nav_analytics:"Uchambuzi",nav_debt:"Madeni",nav_comp:"Sheria",nav_set:"Mipangilio",kpi_cash:"Pesa Mkononi",kpi_debt:"Madeni",kpi_exp:"Matumizi",kpi_profit:"Faida Halisi",ai_pred:"🤖 Utabiri wa AI wa Malori (Oil & Matengenezo)",th_truck:"Lori",th_health:"Afya ya AI",th_status:"Hali",th_act:"Hatua",my_truck:"Lori Langu: ",rev_in:"Mapato Yaliyoingizwa",op_exp:"Gharama za Uendeshaji",curr_odo:"Odomita ya Sasa",log_trip:"Rekodi Safari",log_exp:"Rekodi Matumizi",lbl_date:"Tarehe",lbl_truck:"Lori",lbl_driver:"Dereva",rt_build:"🗺️ Mjenzi wa Njia",lbl_trip:"Aina ya Safari",opt_single:"Sehemu Moja",opt_multi:"Vituo Vingi",lbl_load:"Hali ya Mzigo",opt_loaded:"Ina Mzigo",opt_empty:"Tupu",lbl_from:"Kutoka",lbl_to:"Kwenda",add_way:"+ Ongeza Kituo",lbl_tot_dist:"Umbali Jumla (Km)",sm_fuel:"Makadirio ya Mafuta",lbl_cargo:"Aina ya Mzigo",lbl_cust:"Mteja",lbl_tp:"Bei Jumla",lbl_pn:"Imelipwa Sasa",lbl_bal:"Deni:",lbl_cat:"Aina",lbl_amt:"Kiasi (TZS)",lbl_desc:"Maelezo",btn_save_rec:"HIFADHI REKODI",recent_act:"Shughuli za Hivi Karibuni",ai_fleet:"🗺️ Ufuatiliaji wa Njia wa AI",rt_rend:"Uchoraji wa wakati halisi wa njia za barabara kuu kote Tanzania kutumia OSRM.",act_trucks:"Malori Yaliyo Kazini",op_hist:"📜 Historia ya Rekodi",sm_fuel_dash:"⛽ Dashibodi ya Mafuta",tot_f_l:"Jumla ya Mafuta (Lita)",tot_f_t:"Jumla ya Mafuta (TZS)",th_l_u:"Lita Zilizotumika",th_c_t:"Gharama (TZS)",th_f_p:"Asilimia %",inc_v_exp:"Mapato vs Matumizi",exp_break:"Mchanganuo wa Matumizi",col_debt:"💰 Kusanya Deni",sel_cust:"Chagua Mteja",out_debt:"Deni Linalodaiwa:",btn_fp:"Malipo Kamili",btn_pp:"Malipo ya Sehemu",amt_off:"Kiasi Kilichotolewa",proc_pay:"KAMILISHA MALIPO",reg_comp:"Utekelezaji wa Sheria",leg_stat:"Hali ya kisheria ya Malori & Vibali",perm_typ:"Aina ya Kibali",trk_ass:"Lori Lililopangiwa",exp_dt:"Tarehe ya Kuisha",cost_tz:"Gharama (TZS)",add_cr:"ONGEZA REKODI",th_perm:"Kibali",th_exp:"Kuisha",mng_fl:"Simamia Malori",mng_st:"Simamia Wafanyakazi",dz:"Eneo la Hatari",frwc:"FUTA DATA ZOTE" }
     };
 
+    /* ══ LOADING SCREEN ══ */
+    (function bootLoader() {
+        const bar = document.getElementById('loaderBar');
+        const txt = document.getElementById('loaderText');
+        const msgs = ['Initializing system...', 'Loading fleet data...', 'Connecting to cloud...', 'Ready!'];
+        let p = 0;
+        const step = () => {
+            p += Math.random() * 30 + 10;
+            if (p > 100) p = 100;
+            bar.style.width = p + '%';
+            txt.innerText = msgs[Math.min(Math.floor(p / 30), msgs.length - 1)];
+            if (p < 100) setTimeout(step, 350);
+            else setTimeout(showLogin, 400);
+        };
+        setTimeout(step, 300);
+    })();
+
+    function showLogin() {
+        const ls = document.getElementById('loading-screen');
+        ls.classList.add('fade-out');
+        setTimeout(() => { ls.style.display = 'none'; document.getElementById('login-screen').style.display = 'flex'; }, 600);
+    }
+
+    /* ══ LIVE CLOCK ══ */
+    function updateClock() {
+        const now = new Date();
+        let h = now.getHours(), m = now.getMinutes(), s = now.getSeconds();
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        h = h % 12 || 12;
+        document.getElementById('liveClock').innerText = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')} ${ampm}`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    /* ══ TOAST SYSTEM ══ */
+    function showToast(title, msg, type = 'info') {
+        const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+        const id = 'toast-' + Date.now();
+        const t = document.createElement('div');
+        t.className = `toast ${type}`;
+        t.id = id;
+        t.innerHTML = `<div class="toast-icon">${icons[type]}</div><div class="toast-body"><div class="toast-title">${title}</div><div class="toast-msg">${msg}</div></div><div class="toast-close" onclick="closeToast('${id}')">×</div>`;
+        document.getElementById('toastContainer').appendChild(t);
+        setTimeout(() => closeToast(id), 4500);
+    }
+    function closeToast(id) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.classList.add('toast-out');
+        setTimeout(() => el.remove(), 300);
+    }
+
+    /* ══ NOTIFICATIONS ══ */
+    function addNotif(msg, type = 'info') {
+        notifs.unshift({ msg, type, time: new Date().toLocaleTimeString() });
+        renderNotifs();
+    }
+    function renderNotifs() {
+        document.getElementById('notifCount').innerText = notifs.length;
+        document.getElementById('notifList').innerHTML = notifs.length
+            ? notifs.slice(0, 8).map(n => `<div class="notif-item"><div class="notif-dot ${n.type}"></div><div><div class="notif-text">${n.msg}</div><div class="notif-time">${n.time}</div></div></div>`).join('')
+            : '<div style="padding:20px; text-align:center; font-size:0.8rem; color:#475569;">No new alerts</div>';
+    }
+    function toggleNotifDropdown() {
+        document.getElementById('notifDropdown').classList.toggle('show');
+    }
+    function clearNotifs() { notifs = []; renderNotifs(); document.getElementById('notifDropdown').classList.remove('show'); }
+    document.addEventListener('click', e => { if (!e.target.closest('.notif-wrap')) document.getElementById('notifDropdown')?.classList.remove('show'); });
+
+    /* ══ FAB ══ */
+    function toggleFab() {
+        fabOpen = !fabOpen;
+        document.getElementById('fabMain').classList.toggle('open', fabOpen);
+        ['fabSub1','fabSub2','fabSub3'].forEach((id, i) => {
+            setTimeout(() => document.getElementById(id).classList.toggle('show', fabOpen), fabOpen ? i * 60 : (2 - i) * 40);
+        });
+    }
+    function closeFab() { fabOpen = false; document.getElementById('fabMain').classList.remove('open'); ['fabSub1','fabSub2','fabSub3'].forEach(id => document.getElementById(id).classList.remove('show')); }
+
+    /* ══ AUTH ══ */
     function toggleLanguage() {
         const btn = document.getElementById('btnLang');
         let currentLang = btn.innerText.includes('SW') ? 'sw' : 'en';
         btn.innerText = currentLang === 'sw' ? '🇺🇸 EN' : '🇹🇿 SW';
-        
         document.querySelectorAll('[data-key]').forEach(el => {
             const key = el.getAttribute('data-key');
-            if(i18n[currentLang][key]) {
-                if(el.tagName === 'OPTION' || el.tagName === 'BUTTON') el.innerText = i18n[currentLang][key];
+            if (i18n[currentLang][key]) {
+                if (el.tagName === 'OPTION' || el.tagName === 'BUTTON') el.innerText = i18n[currentLang][key];
                 else el.innerHTML = i18n[currentLang][key];
             }
         });
-        
         if (chartP && chartE) renderCharts();
     }
 
     function setAuthMode(mode) {
         authMode = mode;
-        if (mode === 'login') {
-            document.getElementById('btnTabLogin').style.background = 'rgba(255,255,255,0.15)';
-            document.getElementById('btnTabReg').style.background = 'transparent';
-            document.getElementById('b2bAuthBtn').innerText = document.getElementById('btnLang').innerText.includes('SW') ? 'ACCESS SYSTEM' : 'INGIA KWENYE MFUMO';
-        } else {
-            document.getElementById('btnTabReg').style.background = 'rgba(255,255,255,0.15)';
-            document.getElementById('btnTabLogin').style.background = 'transparent';
-            document.getElementById('b2bAuthBtn').innerText = 'CREATE ACCOUNT';
-        }
+        document.getElementById('btnTabLogin').style.background = mode === 'login' ? 'rgba(255,255,255,0.15)' : 'transparent';
+        document.getElementById('btnTabReg').style.background = mode === 'register' ? 'rgba(255,255,255,0.15)' : 'transparent';
+        document.getElementById('b2bAuthBtn').innerText = mode === 'login' ? 'ACCESS SYSTEM' : 'CREATE ACCOUNT';
     }
 
     async function executeB2BAuth() {
@@ -604,116 +1010,127 @@
         const cPin = document.getElementById('pinInput').value.trim();
         const role = document.getElementById('loginRole').value;
         const btn = document.getElementById('b2bAuthBtn');
-        
-        if (!cName || !cPin) return;
-        btn.innerText = "CONNECTING... ⏳";
-        btn.disabled = true;
-
+        if (!cName || !cPin) { showToast('Missing Fields', 'Please enter company name and PIN.', 'warning'); return; }
+        btn.innerText = "CONNECTING... ⏳"; btn.disabled = true;
         const endpoint = authMode === 'login' ? '/api/login' : '/api/register';
-        
         try {
-            const res = await fetch(`${API_URL}${endpoint}`, {
-                method: "POST", headers: { "Content-Type": "application/json", "X-API-Key": API_KEY },
-                body: JSON.stringify({ company_name: cName, admin_pin: cPin })
-            });
+            const res = await fetch(`${API_URL}${endpoint}`, { method: "POST", headers: { "Content-Type": "application/json", "X-API-Key": API_KEY }, body: JSON.stringify({ company_name: cName, admin_pin: cPin }) });
             const data = await res.json();
-            
             if (res.ok) {
                 currentCompanyId = data.company_id;
-                
                 const h = { "X-API-Key": API_KEY };
-                const tRes = await fetch(`${API_URL}/api/trucks?company_id=${currentCompanyId}`, { headers:h });
+                const tRes = await fetch(`${API_URL}/api/trucks?company_id=${currentCompanyId}`, { headers: h });
                 const cloudTrucks = await tRes.json();
-                
                 if (role === 'dispatcher') {
                     const validTruck = cloudTrucks.find(t => t.plate.toUpperCase() === cPin.toUpperCase());
-                    if(!validTruck) {
-                        document.getElementById('loginError').innerText = "Truck Plate Not Found.";
-                        btn.innerText = "RETRY"; btn.disabled = false;
-                        return;
-                    }
+                    if (!validTruck) { document.getElementById('loginError').innerText = "Truck Plate Not Found."; btn.innerText = "RETRY"; btn.disabled = false; return; }
                     currentUserRole = validTruck.plate;
-                } else {
-                    currentUserRole = 'admin';
-                }
-
+                } else { currentUserRole = 'admin'; }
                 document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('app-background').style.display = 'block'; 
+                document.getElementById('app-background').style.display = 'block';
                 document.getElementById('app-container').style.display = 'block';
                 document.getElementById('appHeaderName').innerText = cName.toUpperCase();
                 document.getElementById('uiRoleDisplay').innerText = currentUserRole === 'admin' ? "ADMIN PANEL" : currentUserRole;
-
                 if (currentUserRole !== 'admin') {
                     document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden-role'));
                     document.querySelectorAll('.dispatcher-only').forEach(el => el.classList.remove('hidden-role'));
                     document.getElementById('myTruckTitle').innerText = currentUserRole;
                     document.getElementById('opTruck').value = currentUserRole;
                     document.getElementById('opTruck').disabled = true;
-                    nav('truck-dashboard');
+                    nav2('truck-dashboard');
                 } else {
                     document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden-role'));
                     document.querySelectorAll('.dispatcher-only').forEach(el => el.classList.add('hidden-role'));
                     document.getElementById('opTruck').disabled = false;
-                    nav('dashboard');
+                    nav2('dashboard');
                 }
-                
                 await syncDashboardWithCloud();
                 initMap();
-            } else { 
-                document.getElementById('loginError').innerText = data.detail; 
-                btn.innerText = "RETRY"; btn.disabled = false; 
-            }
-        } catch(e) { 
-            document.getElementById('loginError').innerText = "Server is asleep. Wait 30s and retry."; 
-            btn.innerText = "RETRY"; btn.disabled = false; 
-        }
+                showToast('Login Successful', `Welcome to ${cName}`, 'success');
+            } else { document.getElementById('loginError').innerText = data.detail; btn.innerText = "RETRY"; btn.disabled = false; }
+        } catch(e) { document.getElementById('loginError').innerText = "Server is asleep. Wait 30s and retry."; btn.innerText = "RETRY"; btn.disabled = false; }
     }
 
     function logout() { location.reload(); }
 
+    /* ══ SYNC ══ */
     async function syncDashboardWithCloud() {
         if (!currentCompanyId) return;
         const h = { "X-API-Key": API_KEY };
         try {
             const [tRes, dRes, eRes, trRes, cRes] = await Promise.all([
-                fetch(`${API_URL}/api/trucks?company_id=${currentCompanyId}`, { headers:h }),
-                fetch(`${API_URL}/api/drivers?company_id=${currentCompanyId}`, { headers:h }),
-                fetch(`${API_URL}/api/expenses?company_id=${currentCompanyId}`, { headers:h }),
-                fetch(`${API_URL}/api/trips?company_id=${currentCompanyId}`, { headers:h }),
-                fetch(`${API_URL}/api/compliance?company_id=${currentCompanyId}`, { headers:h })
+                fetch(`${API_URL}/api/trucks?company_id=${currentCompanyId}`, { headers: h }),
+                fetch(`${API_URL}/api/drivers?company_id=${currentCompanyId}`, { headers: h }),
+                fetch(`${API_URL}/api/expenses?company_id=${currentCompanyId}`, { headers: h }),
+                fetch(`${API_URL}/api/trips?company_id=${currentCompanyId}`, { headers: h }),
+                fetch(`${API_URL}/api/compliance?company_id=${currentCompanyId}`, { headers: h })
             ]);
-            const tData = await tRes.json();
-            const dData = await dRes.json();
-            const eData = await eRes.json();
-            const trData = await trRes.json();
-            const cData = await cRes.json();
-
+            const tData = await tRes.json(), dData = await dRes.json(), eData = await eRes.json(), trData = await trRes.json(), cData = await cRes.json();
             db.trucks = tData.map(t => ({ id: t.id, plate: t.plate, model: t.model, odo: 0, lastServiceOdo: 0, interval: 5000 }));
-            db.drivers = dData.map(d => {
-                let n = d.name, t = "";
-                if (n.includes("(") && n.includes(")")) { let p = n.split("("); n = p[0].trim(); t = p[1].replace(")", "").trim(); }
-                return { id: d.id, name: n, truck: t, cloudName: d.name };
-            });
+            db.drivers = dData.map(d => { let n = d.name, t = ""; if (n.includes("(") && n.includes(")")) { let p = n.split("("); n = p[0].trim(); t = p[1].replace(")", "").trim(); } return { id: d.id, name: n, truck: t, cloudName: d.name }; });
             const expTxs = eData.map(e => ({ id: e.id, type: 'expense', date: 'Cloud Data', truck: 'N/A', driver: 'N/A', cat: e.description.split(" - ")[0] || "Other", desc: e.description.split(" - ")[1] || "", amount: e.amount }));
             const tripTxs = trData.map(t => ({ id: t.id, type: 'income', date: t.date, truck: t.truck, driver: t.driver, customer: t.customer, total: t.total_price, paid: t.paid_amount, bal: t.balance, tripStatus: t.trip_status, dist: t.distance, routeFull: t.route_full }));
-            
             db.txs = [...expTxs, ...tripTxs];
             db.compliance = cData.map(c => ({ id: c.id, type: c.record_type, truck: c.truck, date: c.expiry_date, amount: c.amount, status: c.status }));
             db.customers = [...new Set(tripTxs.map(t => t.customer))];
-            
             renderAll();
-        } catch(e) { console.error(e); }
+            checkComplianceAlerts();
+        } catch(e) { console.error(e); showToast('Sync Issue', 'Could not load all data from cloud.', 'warning'); }
     }
 
-    function nav(id) { 
-        document.querySelectorAll('.section').forEach(el => el.classList.remove('active')); 
-        document.getElementById(id).classList.add('active'); 
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); 
-        event.target.classList.add('active'); 
-        if(id==='analytics') setTimeout(renderCharts, 200); 
-        if(id==='map-section') setTimeout(()=> {if(map){map.invalidateSize(); updateMap();}}, 200);
+    /* ══ COMPLIANCE ALERTS ══ */
+    function checkComplianceAlerts() {
+        const today = new Date();
+        let expiring = 0, expired = 0;
+        db.compliance.forEach(c => {
+            if (!c.date) return;
+            const exp = new Date(c.date);
+            const diff = Math.ceil((exp - today) / (1000 * 60 * 60 * 24));
+            if (diff < 0) { expired++; addNotif(`🔴 ${c.type} (${c.truck}) EXPIRED ${Math.abs(diff)} days ago`, 'danger'); }
+            else if (diff <= 30) { expiring++; addNotif(`🟡 ${c.type} (${c.truck}) expires in ${diff} days`, 'warn'); }
+        });
+        const qs = document.getElementById('qs-expiring');
+        if (expired > 0) qs.innerHTML = `<span style="color:#f87171">⚠️ ${expired} expired permit${expired > 1 ? 's' : ''}</span>`;
+        else if (expiring > 0) qs.innerHTML = `<span style="color:#fbbf24">⏰ ${expiring} expiring soon</span>`;
+        else qs.innerHTML = `<span style="color:#34d399">✅ All permits valid</span>`;
     }
 
+    /* ══ ANIMATED COUNTER ══ */
+    function animateCounter(el, target) {
+        const duration = 800, start = 0, startTime = performance.now();
+        const update = (now) => {
+            const elapsed = now - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const eased = 1 - Math.pow(1 - progress, 3);
+            const val = Math.round(start + (target - start) * eased);
+            el.innerText = val.toLocaleString();
+            if (progress < 1) requestAnimationFrame(update);
+        };
+        requestAnimationFrame(update);
+    }
+
+    /* ══ NAV ══ */
+    function nav(id) {
+        document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        if (event && event.target) event.target.classList.add('active');
+        if (id === 'analytics') setTimeout(renderCharts, 200);
+        if (id === 'map-section') setTimeout(() => { if (map) { map.invalidateSize(); updateMap(); } }, 200);
+        if (id === 'history') renderHistory();
+    }
+    function nav2(id) {
+        document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        const btn = document.querySelector(`[onclick*="${id}"]`);
+        if (btn) btn.classList.add('active');
+        if (id === 'analytics') setTimeout(renderCharts, 200);
+        if (id === 'map-section') setTimeout(() => { if (map) { map.invalidateSize(); updateMap(); } }, 200);
+        if (id === 'history') renderHistory();
+    }
+
+    /* ══ OPERATIONS ══ */
     function setMode(mode) {
         document.getElementById('opMode').value = mode;
         document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
@@ -721,53 +1138,31 @@
         document.getElementById('grp-income').classList.toggle('hidden', mode !== 'income');
         document.getElementById('grp-expense').classList.toggle('hidden', mode !== 'expense');
     }
-
     function updateTripUI() {
         const type = document.getElementById('opTripType').value;
         document.getElementById('singleTripUI').classList.toggle('hidden', type === 'Round');
         document.getElementById('multiStopUI').classList.toggle('hidden', type !== 'Round');
         document.getElementById('opDist').readOnly = type === 'Round';
-        if(type==='Single') { document.getElementById('routeRows').innerHTML = ''; calcEstFuel(); }
+        if (type === 'Single') { document.getElementById('routeRows').innerHTML = ''; calcEstFuel(); }
     }
-
     function addRouteLeg() {
         const div = document.createElement('div'); div.className = 'route-row';
-        div.innerHTML = `<select class="route-region" onchange="calcRouteDist()">${window.regionOpts}</select><input type="number" class="route-km" placeholder="Km" oninput="calcRouteDist()"><span style="cursor:pointer; color:var(--danger); font-weight:bold; padding:10px;" onclick="this.parentElement.remove();calcRouteDist()">×</span>`;
+        div.style.cssText = 'display:flex;gap:8px;margin-bottom:8px;align-items:center;';
+        div.innerHTML = `<select class="route-region" onchange="calcRouteDist()" style="flex:2;">${window.regionOpts}</select><input type="number" class="route-km" placeholder="Km" oninput="calcRouteDist()" style="flex:1;margin:0;"><span style="cursor:pointer;color:#f87171;font-weight:bold;padding:6px;font-size:1.2rem;" onclick="this.parentElement.remove();calcRouteDist()">×</span>`;
         document.getElementById('routeRows').appendChild(div);
     }
-
-    function calcRouteDist() {
-        let total = 0; document.querySelectorAll('.route-km').forEach(i => total += (parseFloat(i.value) || 0));
-        document.getElementById('opDist').value = total || ''; calcEstFuel();
-    }
-
+    function calcRouteDist() { let total = 0; document.querySelectorAll('.route-km').forEach(i => total += (parseFloat(i.value) || 0)); document.getElementById('opDist').value = total || ''; calcEstFuel(); }
     function calcEstFuel() {
         const trkName = document.getElementById('opTruck').value;
         const dist = parseFloat(document.getElementById('opDist').value) || 0;
         const load = document.getElementById('opLoadStatus').value;
-        if(!trkName || dist <= 0) {
-            document.getElementById('estLiters').innerText = "0 L";
-            document.getElementById('estCost').innerText = "0 TZS";
-            return;
-        }
-        
-        let cons = 0.35; 
-        if(trkName.includes("Scania")) cons = load === 'Loaded' ? 0.5 : 0.3;
-        else if(trkName.includes("Fuso")) cons = load === 'Loaded' ? 0.4 : 0.2;
-        else cons = load === 'Loaded' ? 0.45 : 0.25;
-
+        if (!trkName || dist <= 0) { document.getElementById('estLiters').innerText = "0 L"; document.getElementById('estCost').innerText = "0 TZS"; return; }
+        let cons = trkName.includes("Scania") ? (load === 'Loaded' ? 0.5 : 0.3) : trkName.includes("Fuso") ? (load === 'Loaded' ? 0.4 : 0.2) : (load === 'Loaded' ? 0.45 : 0.25);
         const liters = dist * cons;
-        const cost = liters * FUEL_PRICE;
-
         document.getElementById('estLiters').innerText = liters.toFixed(1) + " L";
-        document.getElementById('estCost').innerText = Math.round(cost).toLocaleString() + " TZS";
+        document.getElementById('estCost').innerText = Math.round(liters * FUEL_PRICE).toLocaleString() + " TZS";
     }
-
-    function calcBal() { 
-        document.getElementById('lblBal').innerText = ((parseFloat(document.getElementById('opTotal').value)||0) - (parseFloat(document.getElementById('opPaid').value)||0)).toLocaleString(); 
-    }
-
-    // --- NEW: TOGGLE PAYMENT FIELDS ---
+    function calcBal() { document.getElementById('lblBal').innerText = ((parseFloat(document.getElementById('opTotal').value) || 0) - (parseFloat(document.getElementById('opPaid').value) || 0)).toLocaleString(); }
     function togglePaymentFields() {
         const pMode = document.getElementById('opPaymentMethod').value;
         document.getElementById('bankFields').classList.toggle('hidden', pMode !== 'Bank');
@@ -778,10 +1173,8 @@
         const mode = document.getElementById('opMode').value;
         const truck = document.getElementById('opTruck').value;
         const driver = document.getElementById('opDriver').value || "System";
-        if(!truck) return alert("Please select a Truck.");
-
+        if (!truck) { showToast('Missing Truck', 'Please select a truck before saving.', 'warning'); return; }
         let tx = { company_id: currentCompanyId, date: document.getElementById('opDate').value, truck, driver };
-
         try {
             if (mode === 'income') {
                 tx.customer = document.getElementById('opCustomer').value || 'Unknown';
@@ -793,268 +1186,315 @@
                 tx.trip_status = 'In Transit';
                 tx.route_from = document.getElementById('opFrom').value || "Multiple";
                 tx.route_to = document.getElementById('opTo').value || "Multiple";
-                tx.route_full = document.getElementById('opTripType').value === 'Round' ? Array.from(document.querySelectorAll('.route-region')).map(s=>s.value).join("➝") : `${tx.route_from}➝${tx.route_to}`;
-                
-                // Add Payment Mode details (If the backend API supports these fields, they will save. Otherwise they just exist locally for now)
+                tx.route_full = document.getElementById('opTripType').value === 'Round' ? Array.from(document.querySelectorAll('.route-region')).map(s => s.value).join("➝") : `${tx.route_from}➝${tx.route_to}`;
                 const pMode = document.getElementById('opPaymentMethod').value;
                 tx.payment_method = pMode;
-                if(pMode === 'Bank') {
-                    tx.bank_name = document.getElementById('opBankName').value;
-                    tx.bank_account = document.getElementById('opBankAcc').value;
-                } else if(pMode === 'Mobile') {
-                    tx.mobile_network = document.getElementById('opMobileNet').value;
-                    tx.mobile_msg = document.getElementById('opMobileMsg').value;
-                }
-
+                if (pMode === 'Bank') { tx.bank_name = document.getElementById('opBankName').value; tx.bank_account = document.getElementById('opBankAcc').value; }
+                else if (pMode === 'Mobile') { tx.mobile_network = document.getElementById('opMobileNet').value; tx.mobile_msg = document.getElementById('opMobileMsg').value; }
                 await fetch(`${API_URL}/api/trips`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-API-Key': API_KEY }, body: JSON.stringify(tx) });
             } else {
                 const amount = parseFloat(document.getElementById('opExpAmount').value) || 0;
                 const desc = `${document.getElementById('opCat').value} - ${document.getElementById('opDesc').value}`;
                 await fetch(`${API_URL}/api/expenses`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-API-Key': API_KEY }, body: JSON.stringify({ company_id: currentCompanyId, description: desc, amount }) });
             }
-            alert("Transaction Saved to Cloud!"); 
-            
-            document.getElementById('opTotal').value = ''; document.getElementById('opPaid').value = '';
-            document.getElementById('opExpAmount').value = ''; document.getElementById('opDesc').value = '';
-            document.getElementById('opDist').value = ''; document.getElementById('opCargo').value = '';
+            showToast('Saved!', 'Transaction recorded to cloud.', 'success');
+            addNotif(`New ${mode} recorded for truck ${truck}`, 'info');
+            ['opTotal','opPaid','opExpAmount','opDesc','opDist','opCargo'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+            ['opBankAcc','opMobileMsg'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
             document.getElementById('routeRows').innerHTML = '';
-            if(document.getElementById('opBankAcc')) document.getElementById('opBankAcc').value = '';
-            if(document.getElementById('opMobileMsg')) document.getElementById('opMobileMsg').value = '';
-            
             syncDashboardWithCloud();
-        } catch(e) { alert("Failed to save to cloud."); }
+        } catch(e) { showToast('Save Failed', 'Could not save to cloud. Try again.', 'error'); }
     }
 
+    /* ══ AI OIL PREDICTOR ══ */
     async function processAIOilCheck(plate, odo, model) {
         try {
-            const res = await fetch(`${API_URL}/api/ai/predict-oil`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json', 'X-API-Key': API_KEY },
-                body: JSON.stringify({ truck_model: model, current_odo: odo, last_service_odo: 0, load_status: "Loaded" })
-            });
-            const aiData = await res.json();
-            return aiData;
+            const res = await fetch(`${API_URL}/api/ai/predict-oil`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-API-Key': API_KEY }, body: JSON.stringify({ truck_model: model, current_odo: odo, last_service_odo: 0, load_status: "Loaded" }) });
+            return await res.json();
         } catch(e) { return null; }
     }
 
+    /* ══ FLEET MANAGEMENT ══ */
     async function addTruck() {
-        const p = document.getElementById('newTruckPlate').value, m = document.getElementById('newTruckModel').value;
-        if(!p) return;
-        await fetch(`${API_URL}/api/trucks`, { method: 'POST', headers: {'Content-Type':'application/json','X-API-Key':API_KEY}, body: JSON.stringify({ plate:p, model:m, company_id: currentCompanyId }) });
+        const p = document.getElementById('newTruckPlate').value.trim(), m = document.getElementById('newTruckModel').value;
+        if (!p) { showToast('Missing Plate', 'Enter a truck plate number.', 'warning'); return; }
+        await fetch(`${API_URL}/api/trucks`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-API-Key': API_KEY }, body: JSON.stringify({ plate: p, model: m, company_id: currentCompanyId }) });
         document.getElementById('newTruckPlate').value = '';
+        showToast('Truck Added', `${p} (${m}) added to fleet.`, 'success');
         syncDashboardWithCloud();
     }
-
     async function addDriver() {
-        const n = document.getElementById('newDriver').value, t = document.getElementById('newDriverTruck').value;
-        if(!n) return;
+        const n = document.getElementById('newDriver').value.trim(), t = document.getElementById('newDriverTruck').value;
+        if (!n) { showToast('Missing Name', 'Enter a driver name.', 'warning'); return; }
         const finalName = t ? `${n} (${t})` : n;
-        await fetch(`${API_URL}/api/drivers`, { method: 'POST', headers: {'Content-Type':'application/json','X-API-Key':API_KEY}, body: JSON.stringify({ name: finalName, company_id: currentCompanyId }) });
+        await fetch(`${API_URL}/api/drivers`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-API-Key': API_KEY }, body: JSON.stringify({ name: finalName, company_id: currentCompanyId }) });
         document.getElementById('newDriver').value = '';
+        showToast('Driver Added', `${n} registered.`, 'success');
         syncDashboardWithCloud();
     }
-
     async function addCompliance() {
         const type = document.getElementById('cpType').value, truck = document.getElementById('cpTruck').value, date = document.getElementById('cpDate').value;
-        if(!truck||!date||!type) return alert("Fill all details");
-        await fetch(`${API_URL}/api/compliance`, { method: 'POST', headers: {'Content-Type':'application/json','X-API-Key':API_KEY}, body: JSON.stringify({ company_id: currentCompanyId, record_type: type, truck: truck, expiry_date: date, amount: parseFloat(document.getElementById('cpAmount').value)||0, status: 'Active' }) });
-        alert("Compliance Logged!");
+        if (!truck || !date || !type) { showToast('Missing Fields', 'Fill all compliance details.', 'warning'); return; }
+        await fetch(`${API_URL}/api/compliance`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-API-Key': API_KEY }, body: JSON.stringify({ company_id: currentCompanyId, record_type: type, truck, expiry_date: date, amount: parseFloat(document.getElementById('cpAmount').value) || 0, status: 'Active' }) });
+        showToast('Compliance Added', `${type} logged for ${truck}.`, 'success');
         syncDashboardWithCloud();
     }
-
     async function deleteTx(id, type) {
-        if(confirm("Permanently delete from cloud?")) {
+        if (confirm("Permanently delete from cloud?")) {
             let table = type === 'income' ? 'trips' : (type === 'expense' ? 'expenses' : 'debts');
-            await fetch(`${API_URL}/api/delete-record?table=${table}&record_id=${id}&company_id=${currentCompanyId}`, { method: 'DELETE', headers: {'X-API-Key': API_KEY} });
+            await fetch(`${API_URL}/api/delete-record?table=${table}&record_id=${id}&company_id=${currentCompanyId}`, { method: 'DELETE', headers: { 'X-API-Key': API_KEY } });
+            showToast('Deleted', 'Record removed from cloud.', 'info');
             syncDashboardWithCloud();
         }
     }
-
-    function wipeData() { 
-        if(confirm("CRITICAL WARNING: This will permanently delete ALL your company's data from the cloud. Proceed?")) {
+    function wipeData() {
+        if (confirm("CRITICAL WARNING: This will permanently delete ALL your company's data from the cloud. Proceed?")) {
             let pass = prompt("Type 'YES' to confirm cloud wipe:");
-            if(pass === "YES") {
-                fetch(`${API_URL}/api/wipe-company?company_id=${currentCompanyId}`, { method: 'DELETE', headers: {'X-API-Key': API_KEY} }).then(() => location.reload());
-            }
-        } 
+            if (pass === "YES") { fetch(`${API_URL}/api/wipe-company?company_id=${currentCompanyId}`, { method: 'DELETE', headers: { 'X-API-Key': API_KEY } }).then(() => location.reload()); }
+        }
     }
 
+    /* ══ DEBT ══ */
     function checkCustomerDebt() {
         const c = document.getElementById('debtCustomer').value;
         let d = 0;
-        db.txs.forEach(t => { if(t.customer === c) { if(t.type==='income') d += t.bal; else if(t.type==='debt') d -= t.amount; }});
+        db.txs.forEach(t => { if (t.customer === c) { if (t.type === 'income') d += t.bal; else if (t.type === 'debt') d -= t.amount; } });
         document.getElementById('currentDebtVal').innerText = d.toLocaleString() + " TZS";
         document.getElementById('debtDisplay').style.display = 'block';
         window.activeDebt = d;
     }
-
     function setDebtType(t) {
-        if(t==='full') {
-            document.getElementById('debtAmount').value = window.activeDebt > 0 ? window.activeDebt : 0;
-            document.getElementById('debtAmount').readOnly = true;
-        } else {
-            document.getElementById('debtAmount').value = '';
-            document.getElementById('debtAmount').readOnly = false;
-            document.getElementById('debtAmount').focus();
-        }
+        if (t === 'full') { document.getElementById('debtAmount').value = window.activeDebt > 0 ? window.activeDebt : 0; document.getElementById('debtAmount').readOnly = true; }
+        else { document.getElementById('debtAmount').value = ''; document.getElementById('debtAmount').readOnly = false; document.getElementById('debtAmount').focus(); }
     }
-
     async function saveDebtTx() {
         const amt = parseFloat(document.getElementById('debtAmount').value);
         const cust = document.getElementById('debtCustomer').value;
-        if(!amt || !cust) return alert("Please specify customer and amount.");
+        if (!amt || !cust) { showToast('Missing Info', 'Select customer and enter amount.', 'warning'); return; }
         try {
-            await fetch(`${API_URL}/api/debts`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-API-Key': API_KEY }, body: JSON.stringify({ company_id: currentCompanyId, date: new Date().toISOString().slice(0,10), customer: cust, amount: amt, description: "Payment Collected" }) });
-            alert("Payment Recorded!");
+            await fetch(`${API_URL}/api/debts`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-API-Key': API_KEY }, body: JSON.stringify({ company_id: currentCompanyId, date: new Date().toISOString().slice(0, 10), customer: cust, amount: amt, description: "Payment Collected" }) });
+            showToast('Payment Recorded', `${amt.toLocaleString()} TZS collected from ${cust}.`, 'success');
+            addNotif(`💰 Debt payment of ${amt.toLocaleString()} TZS from ${cust}`, 'info');
             document.getElementById('debtAmount').value = '';
             document.getElementById('debtDisplay').style.display = 'none';
             syncDashboardWithCloud();
-        } catch(e) { alert("Failed to save."); }
+        } catch(e) { showToast('Failed', 'Could not save payment.', 'error'); }
     }
 
+    /* ══ MAP ══ */
     let routingControl = null;
     function initMap() {
-        if(!map && document.getElementById('map')) {
+        if (!map && document.getElementById('map')) {
             map = L.map('map').setView([-6.36, 34.88], 6);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM' }).addTo(map);
         }
     }
-
     function updateMap() {
-        if(!map) return;
-        if(routingControl) { map.removeControl(routingControl); }
-        
+        if (!map) return;
+        if (routingControl) { map.removeControl(routingControl); }
         let waypoints = [];
         const activeTrip = db.txs.find(t => t.type === 'income' && t.tripStatus === 'In Transit' && t.routeFull);
-        
-        if(activeTrip) {
+        if (activeTrip) {
             let stops = activeTrip.routeFull.split("➝");
-            stops.forEach(r => {
-                let cleanR = r.trim();
-                if(REGION_COORDS[cleanR]) { waypoints.push(L.latLng(REGION_COORDS[cleanR][0], REGION_COORDS[cleanR][1])); }
-            });
-            
-            if(waypoints.length >= 2) {
-                routingControl = L.Routing.control({
-                    waypoints: waypoints,
-                    routeWhileDragging: false,
-                    show: false, 
-                    lineOptions: { styles: [{ color: '#60a5fa', opacity: 0.9, weight: 6 }] },
-                    createMarker: function() { return null; } 
-                }).addTo(map);
-                
+            stops.forEach(r => { let cleanR = r.trim(); if (REGION_COORDS[cleanR]) waypoints.push(L.latLng(REGION_COORDS[cleanR][0], REGION_COORDS[cleanR][1])); });
+            if (waypoints.length >= 2) {
+                routingControl = L.Routing.control({ waypoints, routeWhileDragging: false, show: false, lineOptions: { styles: [{ color: '#60a5fa', opacity: 0.9, weight: 6 }] }, createMarker: () => null }).addTo(map);
                 L.marker(waypoints[0]).addTo(map).bindPopup("Origin");
-                L.marker(waypoints[waypoints.length-1]).addTo(map).bindPopup("Destination");
+                L.marker(waypoints[waypoints.length - 1]).addTo(map).bindPopup("Destination");
             }
         }
     }
 
+    /* ══ RENDER ALL ══ */
     async function renderAll() {
-        const fill = (id, list) => { const el = document.getElementById(id); if(el){ el.innerHTML='<option value="">Select...</option>'; list.forEach(i=>el.innerHTML+=`<option value="${i.plate||i.cloudName||i}">${i.plate||i.name||i}</option>`);}};
+        const fill = (id, list) => { const el = document.getElementById(id); if (el) { el.innerHTML = '<option value="">Select...</option>'; list.forEach(i => el.innerHTML += `<option value="${i.plate || i.cloudName || i}">${i.plate || i.name || i}</option>`); } };
         fill('opTruck', db.trucks); fill('cpTruck', db.trucks); fill('opCat', db.categories); fill('opDriver', db.drivers); fill('cpType', COMPLIANCE_TYPES); fill('debtCustomer', db.customers); fill('newDriverTruck', db.trucks);
 
-        const lstT = document.getElementById('lst-trucks'); if(lstT) lstT.innerHTML = db.trucks.map(t=>`<div style="display:flex; justify-content:space-between; padding:5px; border-bottom:1px solid rgba(255,255,255,0.1)"><span>${t.plate} <small>(${t.model})</small></span></div>`).join('');
-        const lstD = document.getElementById('lst-drivers'); if(lstD) lstD.innerHTML = db.drivers.map(d=>`<div style="display:flex; justify-content:space-between; padding:5px; border-bottom:1px solid rgba(255,255,255,0.1)"><span>${d.cloudName}</span></div>`).join('');
+        const lstT = document.getElementById('lst-trucks');
+        if (lstT) lstT.innerHTML = db.trucks.map(t => `<div style="display:flex;justify-content:space-between;padding:8px 5px;border-bottom:1px solid rgba(255,255,255,0.07);font-size:0.85rem;"><span>${t.plate} <small style="color:#64748b;">(${t.model})</small></span><span style="color:#64748b;font-size:0.75rem;">${t.odo || 0} km</span></div>`).join('');
+        const lstD = document.getElementById('lst-drivers');
+        if (lstD) lstD.innerHTML = db.drivers.map(d => `<div style="display:flex;justify-content:space-between;padding:8px 5px;border-bottom:1px solid rgba(255,255,255,0.07);font-size:0.85rem;"><span>${d.cloudName}</span></div>`).join('');
 
-        let cash=0, exp=0, pend=0, tLiters=0, tCost=0, tStats={};
-        const txL = document.getElementById('txList'); if(txL) txL.innerHTML='';
-        
+        let cash = 0, exp = 0, pend = 0, tCost = 0, tStats = {};
+        const txL = document.getElementById('txList'); if (txL) txL.innerHTML = '';
+
         db.txs.forEach(t => {
-            if(t.type==='income') { cash+=t.paid; pend+=t.bal; } else if(t.type==='expense') { exp+=t.amount; if(t.cat==='Fuel') tCost+=t.amount; }
-            if(t.truck !== 'N/A') {
-                if(!tStats[t.truck]) tStats[t.truck] = {l:0, c:0, k:0};
-                if (t.type==='income') tStats[t.truck].k += t.dist||0;
-                if (t.type==='expense' && t.cat==='Fuel') { tStats[t.truck].l += (t.amount / FUEL_PRICE); tStats[t.truck].c += t.amount; }
+            if (t.type === 'income') { cash += t.paid; pend += t.bal; }
+            else if (t.type === 'expense') { exp += t.amount; if (t.cat === 'Fuel') tCost += t.amount; }
+            if (t.truck !== 'N/A') {
+                if (!tStats[t.truck]) tStats[t.truck] = { l: 0, c: 0, k: 0 };
+                if (t.type === 'income') tStats[t.truck].k += t.dist || 0;
+                if (t.type === 'expense' && t.cat === 'Fuel') { tStats[t.truck].l += (t.amount / FUEL_PRICE); tStats[t.truck].c += t.amount; }
             }
-            if(txL) {
-                let aH = t.type==='income'?`<span class="text-success">+${t.paid}</span>`:`<span class="text-danger">-${t.amount}</span>`;
-                txL.innerHTML += `<div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid rgba(255,255,255,0.1);"><div><b>${t.truck}</b><br><small>${t.type==='income'?t.customer:t.cat}</small></div><div>${aH}</div></div>`;
+            if (txL) {
+                let aH = t.type === 'income' ? `<span class="text-success">+${(t.paid||0).toLocaleString()}</span>` : `<span class="text-danger">-${(t.amount||0).toLocaleString()}</span>`;
+                txL.innerHTML += `<div style="display:flex;justify-content:space-between;padding:10px;border-bottom:1px solid rgba(255,255,255,0.06);transition:background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.04)'" onmouseout="this.style.background=''"><div><b style="color:white">${t.truck}</b><br><small style="color:#64748b;">${t.type === 'income' ? t.customer : t.cat}</small></div><div style="text-align:right">${aH}<br><small style="color:#475569;">${t.date||''}</small></div></div>`;
             }
         });
 
-        document.getElementById('kpi-cash').innerText = cash.toLocaleString(); document.getElementById('kpi-pending').innerText = pend.toLocaleString(); document.getElementById('kpi-expense').innerText = exp.toLocaleString(); document.getElementById('kpi-profit').innerText = (cash-exp).toLocaleString();
+        // ANIMATED KPI UPDATE
+        const kpiPairs = [['kpi-cash', cash], ['kpi-pending', pend], ['kpi-expense', exp], ['kpi-profit', cash - exp]];
+        kpiPairs.forEach(([id, val]) => {
+            const el = document.getElementById(id);
+            if (el) animateCounter(el, val);
+        });
 
-        const fList = document.getElementById('fuelList'); if(fList) fList.innerHTML = '';
-        for (let t of db.trucks) {
-            let st = tStats[t.plate] || {k:0};
-            t.odo = st.k; // basic odo update
-            let ai = await processAIOilCheck(t.plate, t.odo, t.model);
-            let hScore = ai ? `${ai.oil_health_percent}%` : "100%";
-            let bCol = ai ? ai.indicator_color : "#10b981";
-            if(fList) fList.innerHTML += `<tr><td><b style="color:white;">${t.plate}</b></td><td><b style="color:${bCol}">${hScore}</b></td><td><div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${ai?ai.oil_health_percent:100}%; background:${bCol};"></div></div></td><td><button style="border:none;background:none;font-size:1.2rem;cursor:pointer;">🔧</button></td></tr>`;
+        // QUICK STATS
+        const activeTrips = db.txs.filter(t => t.type === 'income' && t.tripStatus === 'In Transit').length;
+        document.getElementById('qs-trips').innerText = `${activeTrips} Active Trip${activeTrips !== 1 ? 's' : ''}`;
+        document.getElementById('qs-trucks').innerText = `${db.trucks.length} Truck${db.trucks.length !== 1 ? 's' : ''}`;
+        document.getElementById('qs-debt').innerText = `${pend.toLocaleString()} TZS Pending`;
+        document.getElementById('qs-compliance').innerText = `${db.compliance.length} Permit${db.compliance.length !== 1 ? 's' : ''}`;
+
+        // TREND LABELS (simple heuristic)
+        const setTrend = (id, val) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            if (val > 0) el.innerHTML = `<span class="trend-up">↑ ${val.toLocaleString()} TZS incoming</span>`;
+            else if (val < 0) el.innerHTML = `<span class="trend-down">↓ ${Math.abs(val).toLocaleString()} TZS outgoing</span>`;
+            else el.innerHTML = `<span class="trend-flat">— No data yet</span>`;
+        };
+        setTrend('trend-cash', cash); setTrend('trend-debt', -pend); setTrend('trend-exp', -exp); setTrend('trend-profit', cash - exp);
+
+        // AI PREDICTOR (enhanced cards instead of plain table)
+        const aiList = document.getElementById('aiPredictorList');
+        if (aiList) {
+            aiList.innerHTML = '<div style="color:#64748b;font-size:0.85rem;padding:10px 0;">Analyzing fleet health...</div>';
+            const rows = [];
+            for (let t of db.trucks) {
+                let st = tStats[t.plate] || { k: 0 };
+                t.odo = st.k;
+                let ai = await processAIOilCheck(t.plate, t.odo, t.model);
+                let score = ai ? ai.oil_health_percent : 100;
+                let bCol = ai ? ai.indicator_color : "#10b981";
+                rows.push(`<div class="ai-truck-row"><div><div class="ai-truck-plate">${t.plate}</div><div class="ai-truck-model">${t.model} · ${(t.odo || 0).toFixed(0)} km</div></div><div class="ai-health-wrap"><div class="ai-health-top"><span class="ai-health-score" style="color:${bCol}">${score}%</span><span class="ai-health-km">${ai ? ai.km_until_service || '—' : '—'} km left</span></div><div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${score}%;background:${bCol};"></div></div></div><div class="ai-action"><button style="border:none;background:none;font-size:1.3rem;cursor:pointer;" title="Schedule Service">🔧</button></div></div>`);
+            }
+            aiList.innerHTML = rows.length ? rows.join('') : '<div style="color:#64748b;font-size:0.85rem;padding:20px 0;text-align:center;">No trucks in fleet. Add trucks in Settings.</div>';
         }
 
+        // FUEL ANALYTICS
         const faList = document.getElementById('fuelAnalyticsList');
-        if(faList) {
+        if (faList) {
             faList.innerHTML = '';
             document.getElementById('total-fuel-liters').innerText = (tCost / FUEL_PRICE).toFixed(1) + " L";
             document.getElementById('total-fuel-cost').innerText = tCost.toLocaleString() + " TZS";
             Object.keys(tStats).forEach(truck => {
-                if(tStats[truck].c > 0) {
-                    let pct = ((tStats[truck].c/tCost)*100).toFixed(1);
-                    faList.innerHTML += `<tr><td><b style="color:white">${truck}</b></td><td>${tStats[truck].l.toFixed(1)} L</td><td>${tStats[truck].c.toLocaleString()}</td><td><div style="display:flex;align-items:center;gap:5px"><div style="flex:1;height:6px;background:rgba(255,255,255,0.1);border-radius:3px"><div style="width:${pct}%;height:100%;background:#f59e0b;border-radius:3px"></div></div><small>${pct}%</small></div></td></tr>`;
+                if (tStats[truck].c > 0) {
+                    let pct = ((tStats[truck].c / tCost) * 100).toFixed(1);
+                    faList.innerHTML += `<tr><td><b style="color:white">${truck}</b></td><td>${tStats[truck].l.toFixed(1)} L</td><td>${tStats[truck].c.toLocaleString()}</td><td><div style="display:flex;align-items:center;gap:8px"><div style="flex:1;height:6px;background:rgba(255,255,255,0.1);border-radius:3px"><div style="width:${pct}%;height:100%;background:#f59e0b;border-radius:3px;transition:width 0.8s;"></div></div><small>${pct}%</small></div></td></tr>`;
                 }
             });
         }
-        
+
+        // COMPLIANCE TABLE (enhanced with countdown)
         const cpBody = document.querySelector('#cpTable tbody');
-        if(cpBody) cpBody.innerHTML = db.compliance.map(c => `<tr><td>${c.type}</td><td>${c.truck}</td><td>${c.date}</td><td><span class="tag active">${c.status}</span></td><td><button style="color:#ef4444;border:none;background:none;cursor:pointer;" onclick="deleteTx(${c.id}, 'compliance')">×</button></td></tr>`).join('');
-        
+        if (cpBody) {
+            const today = new Date();
+            cpBody.innerHTML = db.compliance.map(c => {
+                const expDate = new Date(c.date);
+                const diff = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));
+                let tagClass = 'active', tagText = c.status || 'Active';
+                if (diff < 0) { tagClass = 'expired'; tagText = 'EXPIRED'; }
+                else if (diff <= 30) { tagClass = 'expiring'; tagText = 'EXPIRING'; }
+                const daysLabel = diff < 0 ? `<span style="color:#f87171;font-size:0.75rem;">Expired ${Math.abs(diff)}d ago</span>` : `<span style="color:${diff <= 30 ? '#fbbf24' : '#34d399'};font-size:0.75rem;">${diff}d remaining</span>`;
+                return `<tr><td><b style="color:white">${c.type}</b></td><td>${c.truck}</td><td>${c.date}</td><td>${daysLabel}</td><td><span class="tag ${tagClass}">${tagText}</span></td><td><button style="color:#ef4444;border:none;background:none;cursor:pointer;font-size:1.2rem;" onclick="deleteTx(${c.id},'compliance')">×</button></td></tr>`;
+            }).join('');
+        }
+
+        // ACTIVE TRUCKS MAP PANEL
+        const atList = document.getElementById('activeTrucksList');
+        if (atList) {
+            const active = db.txs.filter(t => t.type === 'income' && t.tripStatus === 'In Transit');
+            atList.innerHTML = active.length
+                ? active.map(t => `<div class="active-truck-card"><div class="atc-plate">🚛 ${t.truck}</div><div class="atc-route">${t.routeFull || 'Route N/A'}</div><div style="font-size:0.75rem;color:#64748b;margin-top:4px;">👤 ${t.driver} · 📦 ${t.cargo || 'N/A'}</div><div class="atc-status"><div class="atc-dot"></div><span class="atc-status-text">In Transit</span></div></div>`).join('')
+                : '<div style="text-align:center;padding:30px;color:#475569;font-size:0.85rem;">No active trips at the moment</div>';
+        }
+
         if (document.getElementById('analytics').classList.contains('active')) renderCharts();
+        renderHistory();
     }
 
+    /* ══ HISTORY FILTER ══ */
+    function setHistFilter(filter, btn) {
+        histFilter = filter;
+        document.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderHistory();
+    }
+
+    /* ══ HISTORY RENDER ══ */
+    function renderHistory() {
+        const hDiv = document.getElementById('historyList');
+        const srch = document.getElementById('histSearch')?.value.toLowerCase() || '';
+        const monthFilter = document.getElementById('histMonth')?.value || '';
+        if (!hDiv) return;
+        hDiv.innerHTML = '';
+        let totalInc = 0, totalExp = 0;
+        let visibleTxs = [...db.txs].reverse().filter(t => {
+            if (histFilter !== 'all' && t.type !== histFilter) return false;
+            if (monthFilter && t.date && !t.date.startsWith(monthFilter)) return false;
+            return (t.driver + t.truck + (t.customer || '') + t.cat + (t.desc || '')).toLowerCase().includes(srch);
+        });
+        visibleTxs.forEach(t => {
+            let cCls = 'income', tit = `TRIP: ${t.customer}`, sub = `${t.routeFull || t.truck} · ${t.driver}`, am = `<span class="text-success">+${(t.paid || 0).toLocaleString()}</span>`;
+            if (t.type === 'expense') { cCls = 'expense'; tit = `EXP: ${t.cat}`; sub = `${t.desc} · ${t.truck}`; am = `<span class="text-danger">-${(t.amount || 0).toLocaleString()}</span>`; totalExp += t.amount; }
+            else if (t.type === 'debt') { cCls = 'debt'; tit = `DEBT: ${t.customer}`; sub = "Debt Collection"; am = `<span class="text-success">+${(t.amount || 0).toLocaleString()}</span>`; }
+            else { totalInc += t.paid || 0; }
+            hDiv.innerHTML += `<div class="history-card ${cCls}"><div style="flex:1;"><div class="h-date">${t.date}</div><div class="h-title">${tit}</div><div class="h-sub">${sub}</div></div><div style="text-align:right;"><div class="h-amt">${am}</div><button onclick="deleteTx(${t.id},'${t.type}')" style="color:#fca5a5;border:none;background:none;font-size:1.4rem;cursor:pointer;margin-top:4px;">×</button></div></div>`;
+        });
+        if (!visibleTxs.length) hDiv.innerHTML = '<div style="text-align:center;padding:40px;color:#475569;">No records found.</div>';
+        // Update summary
+        const hs = document.getElementById('hs-income'), he = document.getElementById('hs-expense'), hp = document.getElementById('hs-profit');
+        if (hs) hs.innerText = totalInc.toLocaleString();
+        if (he) he.innerText = totalExp.toLocaleString();
+        if (hp) hp.innerText = (totalInc - totalExp).toLocaleString();
+    }
+
+    /* ══ EXPORT CSV ══ */
+    function exportCSV() {
+        const rows = [['Type', 'Date', 'Truck', 'Driver', 'Customer', 'Route', 'Amount', 'Status']];
+        db.txs.forEach(t => {
+            if (t.type === 'income') rows.push(['Trip', t.date, t.truck, t.driver, t.customer, t.routeFull || '', t.total || 0, t.tripStatus || '']);
+            else if (t.type === 'expense') rows.push(['Expense', t.date, t.truck, t.driver, '', '', t.amount || 0, t.cat]);
+            else rows.push(['Debt', t.date, '', '', t.customer, '', t.amount || 0, 'Collected']);
+        });
+        const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `malibora_export_${new Date().toISOString().slice(0, 10)}.csv`;
+        a.click();
+        showToast('Export Ready', 'CSV file downloaded successfully.', 'success');
+    }
+
+    /* ══ CHARTS ══ */
     function renderCharts() {
-        const cP = document.getElementById('chartProfit'); const cE = document.getElementById('chartExpense');
-        if(!cP || !cE) return; if(chartP) chartP.destroy(); if(chartE) chartE.destroy();
-        
-        Chart.defaults.color = '#cbd5e1'; Chart.defaults.scale.grid.color = 'rgba(255,255,255,0.05)';
-        
+        const cP = document.getElementById('chartProfit'), cE = document.getElementById('chartExpense');
+        if (!cP || !cE) return;
+        if (chartP) chartP.destroy();
+        if (chartE) chartE.destroy();
+        Chart.defaults.color = '#cbd5e1';
+        Chart.defaults.scale.grid.color = 'rgba(255,255,255,0.05)';
         let mData = {}, cData = {};
         db.txs.forEach(t => {
-            let m = t.date.substring(0,7);
-            if(!mData[m]) mData[m] = {i:0, e:0};
-            if(t.type==='income') mData[m].i += t.total;
-            else if (t.type==='expense') { mData[m].e += t.amount; cData[t.cat] = (cData[t.cat]||0) + t.amount; }
+            let m = (t.date || '').substring(0, 7);
+            if (!mData[m]) mData[m] = { i: 0, e: 0 };
+            if (t.type === 'income') mData[m].i += t.total || 0;
+            else if (t.type === 'expense') { mData[m].e += t.amount || 0; cData[t.cat] = (cData[t.cat] || 0) + (t.amount || 0); }
         });
-
         const labels = Object.keys(mData).sort();
-        
-        chartP = new Chart(cP, { 
-            type:'bar', 
-            data: { labels:labels.length?labels:['Current'], datasets: [{label:'Income', data:labels.length?labels.map(l=>mData[l].i):[0], backgroundColor:'rgba(52, 211, 153, 0.8)', borderRadius: 6}, {label:'Expense', data:labels.length?labels.map(l=>mData[l].e):[0], backgroundColor:'rgba(248, 113, 113, 0.8)', borderRadius: 6}] }, 
-            options:{
-                responsive:true, maintainAspectRatio:false,
-                animation: { duration: 1500, easing: 'easeOutQuart' }
-            } 
-        });
-        
-        chartE = new Chart(cE, { 
-            type:'doughnut', 
-            data: { labels:Object.keys(cData).length?Object.keys(cData):['None'], datasets: [{ data: Object.keys(cData).length?Object.values(cData):[1], backgroundColor:['#60a5fa','#fbbf24','#f87171','#34d399','#a78bfa', '#ec4899'], borderWidth: 0}] }, 
-            options:{
-                responsive:true, maintainAspectRatio:false,
-                animation: { animateScale: true, animateRotate: true, duration: 1500 }
-            } 
-        });
+        chartP = new Chart(cP, { type: 'bar', data: { labels: labels.length ? labels : ['No Data'], datasets: [{ label: 'Income', data: labels.length ? labels.map(l => mData[l].i) : [0], backgroundColor: 'rgba(52,211,153,0.8)', borderRadius: 6 }, { label: 'Expense', data: labels.length ? labels.map(l => mData[l].e) : [0], backgroundColor: 'rgba(248,113,113,0.8)', borderRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, animation: { duration: 1200, easing: 'easeOutQuart' }, plugins: { legend: { labels: { color: '#94a3b8' } } } } });
+        chartE = new Chart(cE, { type: 'doughnut', data: { labels: Object.keys(cData).length ? Object.keys(cData) : ['None'], datasets: [{ data: Object.keys(cData).length ? Object.values(cData) : [1], backgroundColor: ['#60a5fa','#fbbf24','#f87171','#34d399','#a78bfa','#ec4899'], borderWidth: 0, hoverOffset: 8 }] }, options: { responsive: true, maintainAspectRatio: false, animation: { animateScale: true, animateRotate: true, duration: 1200 }, plugins: { legend: { labels: { color: '#94a3b8' } } } } });
     }
 
-    function renderHistory() {
-        const hDiv = document.getElementById('historyList'); const srch = document.getElementById('histSearch').value.toLowerCase(); hDiv.innerHTML='';
-        let visibleTxs = [...db.txs].reverse();
-        visibleTxs.filter(t=> (t.driver+t.truck+(t.customer||'')+t.cat+(t.desc||'')).toLowerCase().includes(srch)).forEach(t => {
-            let cCls='income', tit=`TRIP: ${t.customer}`, sub=`${t.routeFull||t.truck} • ${t.driver}`, am=`<span class="text-success">+${t.paid}</span>`;
-            if(t.type==='expense'){ cCls='expense'; tit=`EXP: ${t.cat}`; sub=`${t.desc} • ${t.truck}`; am=`<span class="text-danger">-${t.amount}</span>`; }
-            if(t.type==='debt'){ cCls='debt'; tit=`DEBT: ${t.customer}`; sub="Debt Collection"; am=`<span class="text-success">+${t.amount}</span>`; }
-            hDiv.innerHTML += `<div class="history-card ${cCls}"><div style="flex:1;"><div class="h-date">${t.date}</div><div class="h-title">${tit}</div><div class="h-sub">${sub}</div></div><div style="text-align:right;"><div class="h-amt">${am}</div><button onclick="deleteTx(${t.id}, '${t.type}')" style="color:#fca5a5;border:none;background:none; font-size: 1.5rem; cursor:pointer;">×</button></div></div>`;
-        });
-    }
-
+    /* ══ INIT ══ */
     function init() {
         window.regionOpts = REGIONS.map(r => `<option value="${r}">${r}</option>`).join('');
-        document.getElementById('opFrom').innerHTML = `<option value="">Select Origin...</option>` + window.regionOpts;
-        document.getElementById('opTo').innerHTML = `<option value="">Select Destination...</option>` + window.regionOpts;
+        document.getElementById('opFrom').innerHTML = '<option value="">Select Origin...</option>' + window.regionOpts;
+        document.getElementById('opTo').innerHTML = '<option value="">Select Destination...</option>' + window.regionOpts;
         document.getElementById('opDate').valueAsDate = new Date();
+        renderNotifs();
     }
-    
     init();
 </script>
 </body>
